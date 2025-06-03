@@ -1,0 +1,11 @@
+{
+    "id": "R2JUCE",
+    "version": "0.0.1",
+    "name": "R2 JUCE Module",
+    "description": "A custom module for JUCE.",
+    "website": "https://studio-r.tokyo/",
+    "license": "MIT",
+    "dependencies": [],
+    "minimumCppStandard": 17,
+    "JUCECompatible": "8.0.6"
+}

@@ -1,0 +1,1068 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		71DE98B28285161A571DE852 /* WiFiTest - All */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = DECB75EB6C1CDE0E588F21AB;
+			buildPhases = (
+			);
+			dependencies = (
+				B5EE774291078F13CA99B069,
+				9AA1BEF9F3091FB9E41FAE28,
+			);
+			name = "WiFiTest - All";
+			productName = WiFiTest;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		024D8F300FF148A572693259 /* include_juce_audio_plugin_client_Standalone.cpp */ = {isa = PBXBuildFile; fileRef = 70B10A178DC083D8A3051C32; };
+		07E0C3F4BDE7430A4427FD47 /* include_juce_audio_formats.mm */ = {isa = PBXBuildFile; fileRef = 94DC6486F7979D15E1B2C4EC; };
+		11A1075D3477DDA402434104 /* Shared Code */ = {isa = PBXBuildFile; fileRef = 882CC2C2C5EAD925E3E1207C; };
+		1AFF9AC2BAE9729E08E1D285 /* WiFiTestAudioProcessorEditor.cpp */ = {isa = PBXBuildFile; fileRef = 5F33BE0148E668F773D9620E; };
+		2EF9B250C7272B7B51CF5242 /* include_juce_audio_utils.mm */ = {isa = PBXBuildFile; fileRef = 246B29FEE87393D669305D1E; };
+		30BF7C39A1B5668CEC39B1CF /* include_juce_audio_devices.mm */ = {isa = PBXBuildFile; fileRef = D216082DD02D4CCEC1465DEF; };
+		36F224EA6E26241973E74879 /* DiscRecording.framework */ = {isa = PBXBuildFile; fileRef = B6E92C859353F7F9147AC9BF; };
+		447076DAFB8F5C7CC821F4F9 /* include_juce_core_CompilationTime.cpp */ = {isa = PBXBuildFile; fileRef = 56F8DF86B87315FFE3D22109; };
+		44F1EF06604038851F98E02E /* include_juce_gui_basics.mm */ = {isa = PBXBuildFile; fileRef = CEB6574E333101680D1886AE; };
+		4F597C14BDFCF991D01968EE /* Cocoa.framework */ = {isa = PBXBuildFile; fileRef = 09DC2F9B20F927EF324B311D; };
+		5722E249E765EEC73AAF7C25 /* Security.framework */ = {isa = PBXBuildFile; fileRef = 023B1ADA9BE2BFD049B48C02; };
+		58B43812F990490DF5AD0D26 /* include_juce_core.mm */ = {isa = PBXBuildFile; fileRef = 9C541FAF067D0DA3AC55EC06; };
+		594937B88C1E6781D78AC5A7 /* include_juce_graphics_Harfbuzz.cpp */ = {isa = PBXBuildFile; fileRef = 47256D80AF7B59D24ADA8D2F; };
+		5CAED8AEE52271AD3BCB1FB4 /* WiFiTestAudioProcessor.cpp */ = {isa = PBXBuildFile; fileRef = 415206B21D79792E86E354A5; };
+		61559339286F419716A34B13 /* include_juce_audio_basics.mm */ = {isa = PBXBuildFile; fileRef = 8F4DB7C72BD4C8884BDD1E5B; };
+		6450F2D26087E958A2674A92 /* MetalKit.framework */ = {isa = PBXBuildFile; fileRef = 64264E05CDCB94294DE8D245; settings = { ATTRIBUTES = (Weak, ); }; };
+		8FC9FCB133D9C98CF5F2F5DC /* Standalone Plugin */ = {isa = PBXBuildFile; fileRef = 1F81FFF2F35DC5E654096F8D; };
+		90858BE4A51E3D8F3137DF7C /* IOKit.framework */ = {isa = PBXBuildFile; fileRef = E63A03A9FA3E2FCB58458CB0; };
+		957742BE27A3DBFC437705BD /* include_juce_audio_processors_ara.cpp */ = {isa = PBXBuildFile; fileRef = FFC7B47E9357E752C90AB333; };
+		9CC8BAC7D1328FF76CA320B8 /* include_juce_graphics_Sheenbidi.c */ = {isa = PBXBuildFile; fileRef = 505F4453C4832517979933EE; };
+		A3A74DA6CA01FC1E196D40A3 /* AudioToolbox.framework */ = {isa = PBXBuildFile; fileRef = 461FE9DAAADE0F9830C05406; };
+		A6CDF73EDA74CD32AE4ECC6C /* include_juce_audio_plugin_client_ARA.cpp */ = {isa = PBXBuildFile; fileRef = 18443E3C30F96947D6D19693; };
+		AA084BCBAA4DF94AD9D57284 /* include_R2JUCE.cpp */ = {isa = PBXBuildFile; fileRef = B326FD987276521C2EC83401; };
+		B01FF3EF7BCAEF026E46572F /* CoreAudio.framework */ = {isa = PBXBuildFile; fileRef = 790988CD2EC39693763176E7; };
+		B25C58CFBF789B9D9006FD3D /* QuartzCore.framework */ = {isa = PBXBuildFile; fileRef = 53987124A3A7B396AA813393; };
+		CA93E5092CB55E60C9F3BE7F /* WebKit.framework */ = {isa = PBXBuildFile; fileRef = 6E75155BDFACD4FE1D56692E; };
+		CD00A6C77AFDE69072BE5CFB /* include_juce_audio_processors.mm */ = {isa = PBXBuildFile; fileRef = CA369F7500D517C68DAC7E7D; };
+		CFBA524DEBAFE7502E0B16EC /* Metal.framework */ = {isa = PBXBuildFile; fileRef = F43066D6259722F92526CF50; settings = { ATTRIBUTES = (Weak, ); }; };
+		D2880D0A0A70D09D94CE5360 /* CoreAudioKit.framework */ = {isa = PBXBuildFile; fileRef = BD8324EA584E549817428E01; };
+		DB0AE4AB6D6FA816FF0B1FCE /* Accelerate.framework */ = {isa = PBXBuildFile; fileRef = AA9E25A5653E2D5DB6570C77; };
+		DBAB9EB9A05CF621A0F3FB37 /* RecentFilesMenuTemplate.nib */ = {isa = PBXBuildFile; fileRef = DABF752DA622003C7C2D40FA; };
+		DF637FFB574F81A949130D01 /* include_juce_data_structures.mm */ = {isa = PBXBuildFile; fileRef = DE0D12B768745A0FFCB9E3E2; };
+		E34973DC8764044E4C126697 /* include_juce_audio_processors_lv2_libs.cpp */ = {isa = PBXBuildFile; fileRef = DF901249B03D7DAAD48FB0B3; };
+		E6C9E8A7599191FA78D07531 /* Foundation.framework */ = {isa = PBXBuildFile; fileRef = 107740751AB479DDC26EB0E3; };
+		E8836809D6299AD046E82529 /* include_juce_gui_extra.mm */ = {isa = PBXBuildFile; fileRef = B112EBFF33690AA036714E6D; };
+		ED6024050BD1E3435A3B7B5C /* CoreMIDI.framework */ = {isa = PBXBuildFile; fileRef = 9189306F10D78BCBB0660B0C; };
+		F0E3DEB7249527EB23F017BE /* MyStandaloneApp.cpp */ = {isa = PBXBuildFile; fileRef = A47FDCF1AF6A5DB0DF4FCC46; };
+		F8796A6499F84FCB984A3DBA /* include_juce_events.mm */ = {isa = PBXBuildFile; fileRef = DE26FC060896BCEFFF1E1015; };
+		FC91998D2E9899D95CFD6DE9 /* include_juce_graphics.mm */ = {isa = PBXBuildFile; fileRef = 7938F5A55BAE6FBD626FBA1B; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		023B1ADA9BE2BFD049B48C02 /* Security.framework */ /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		09DC2F9B20F927EF324B311D /* Cocoa.framework */ /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		107740751AB479DDC26EB0E3 /* Foundation.framework */ /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		18443E3C30F96947D6D19693 /* include_juce_audio_plugin_client_ARA.cpp */ /* include_juce_audio_plugin_client_ARA.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_plugin_client_ARA.cpp; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_ARA.cpp; sourceTree = SOURCE_ROOT; };
+		1AEB28DD05697500E86435CF /* juce_audio_processors */ /* juce_audio_processors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_processors; path = /Users/ring2/JUCE/modules/juce_audio_processors; sourceTree = "<absolute>"; };
+		1F81FFF2F35DC5E654096F8D /* Standalone Plugin */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WiFiTest.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		216F7145B89FC718065E900B /* JuceHeader.h */ /* JuceHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JuceHeader.h; path = ../../JuceLibraryCode/JuceHeader.h; sourceTree = SOURCE_ROOT; };
+		246B29FEE87393D669305D1E /* include_juce_audio_utils.mm */ /* include_juce_audio_utils.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_utils.mm; path = ../../JuceLibraryCode/include_juce_audio_utils.mm; sourceTree = SOURCE_ROOT; };
+		376A6F39FA2AF5BAB47F6460 /* juce_audio_basics */ /* juce_audio_basics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_basics; path = /Users/ring2/JUCE/modules/juce_audio_basics; sourceTree = "<absolute>"; };
+		3ADDD7FED9AFF359478A6985 /* juce_audio_utils */ /* juce_audio_utils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_utils; path = /Users/ring2/JUCE/modules/juce_audio_utils; sourceTree = "<absolute>"; };
+		415206B21D79792E86E354A5 /* WiFiTestAudioProcessor.cpp */ /* WiFiTestAudioProcessor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = WiFiTestAudioProcessor.cpp; path = ../../Source/WiFiTestAudioProcessor.cpp; sourceTree = SOURCE_ROOT; };
+		461FE9DAAADE0F9830C05406 /* AudioToolbox.framework */ /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		47256D80AF7B59D24ADA8D2F /* include_juce_graphics_Harfbuzz.cpp */ /* include_juce_graphics_Harfbuzz.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_graphics_Harfbuzz.cpp; path = ../../JuceLibraryCode/include_juce_graphics_Harfbuzz.cpp; sourceTree = SOURCE_ROOT; };
+		505F4453C4832517979933EE /* include_juce_graphics_Sheenbidi.c */ /* include_juce_graphics_Sheenbidi.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = include_juce_graphics_Sheenbidi.c; path = ../../JuceLibraryCode/include_juce_graphics_Sheenbidi.c; sourceTree = SOURCE_ROOT; };
+		53987124A3A7B396AA813393 /* QuartzCore.framework */ /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		56F8DF86B87315FFE3D22109 /* include_juce_core_CompilationTime.cpp */ /* include_juce_core_CompilationTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_core_CompilationTime.cpp; path = ../../JuceLibraryCode/include_juce_core_CompilationTime.cpp; sourceTree = SOURCE_ROOT; };
+		5F33BE0148E668F773D9620E /* WiFiTestAudioProcessorEditor.cpp */ /* WiFiTestAudioProcessorEditor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = WiFiTestAudioProcessorEditor.cpp; path = ../../Source/WiFiTestAudioProcessorEditor.cpp; sourceTree = SOURCE_ROOT; };
+		6417EAB031DF46D1BBE57553 /* juce_audio_devices */ /* juce_audio_devices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_devices; path = /Users/ring2/JUCE/modules/juce_audio_devices; sourceTree = "<absolute>"; };
+		64264E05CDCB94294DE8D245 /* MetalKit.framework */ /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
+		6E75155BDFACD4FE1D56692E /* WebKit.framework */ /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		70B10A178DC083D8A3051C32 /* include_juce_audio_plugin_client_Standalone.cpp */ /* include_juce_audio_plugin_client_Standalone.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_plugin_client_Standalone.cpp; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_Standalone.cpp; sourceTree = SOURCE_ROOT; };
+		77F6A9D76F8E1780978EC501 /* juce_gui_basics */ /* juce_gui_basics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_gui_basics; path = /Users/ring2/JUCE/modules/juce_gui_basics; sourceTree = "<absolute>"; };
+		790988CD2EC39693763176E7 /* CoreAudio.framework */ /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
+		7938F5A55BAE6FBD626FBA1B /* include_juce_graphics.mm */ /* include_juce_graphics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_graphics.mm; path = ../../JuceLibraryCode/include_juce_graphics.mm; sourceTree = SOURCE_ROOT; };
+		7A5DD74FE0D9ADE7EC820DF2 /* juce_audio_plugin_client */ /* juce_audio_plugin_client */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_plugin_client; path = /Users/ring2/JUCE/modules/juce_audio_plugin_client; sourceTree = "<absolute>"; };
+		882CC2C2C5EAD925E3E1207C /* Shared Code */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libWiFiTest.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F4DB7C72BD4C8884BDD1E5B /* include_juce_audio_basics.mm */ /* include_juce_audio_basics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_basics.mm; path = ../../JuceLibraryCode/include_juce_audio_basics.mm; sourceTree = SOURCE_ROOT; };
+		8FB9C77237FF96BBF5F5A813 /* WiFiTestAudioProcessor.h */ /* WiFiTestAudioProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WiFiTestAudioProcessor.h; path = ../../Source/WiFiTestAudioProcessor.h; sourceTree = SOURCE_ROOT; };
+		9189306F10D78BCBB0660B0C /* CoreMIDI.framework */ /* CoreMIDI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMIDI.framework; path = System/Library/Frameworks/CoreMIDI.framework; sourceTree = SDKROOT; };
+		94DC6486F7979D15E1B2C4EC /* include_juce_audio_formats.mm */ /* include_juce_audio_formats.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_formats.mm; path = ../../JuceLibraryCode/include_juce_audio_formats.mm; sourceTree = SOURCE_ROOT; };
+		9C541FAF067D0DA3AC55EC06 /* include_juce_core.mm */ /* include_juce_core.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_core.mm; path = ../../JuceLibraryCode/include_juce_core.mm; sourceTree = SOURCE_ROOT; };
+		A47FDCF1AF6A5DB0DF4FCC46 /* MyStandaloneApp.cpp */ /* MyStandaloneApp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = MyStandaloneApp.cpp; path = ../../Source/MyStandaloneApp.cpp; sourceTree = SOURCE_ROOT; };
+		A819BB7E48DBE6712AC4E8D5 /* MyStandAloneApp.h */ /* MyStandAloneApp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MyStandAloneApp.h; path = ../../Source/MyStandAloneApp.h; sourceTree = SOURCE_ROOT; };
+		AA9E25A5653E2D5DB6570C77 /* Accelerate.framework */ /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		B112EBFF33690AA036714E6D /* include_juce_gui_extra.mm */ /* include_juce_gui_extra.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_gui_extra.mm; path = ../../JuceLibraryCode/include_juce_gui_extra.mm; sourceTree = SOURCE_ROOT; };
+		B20FA07A17E9CAF68B6EA54E /* juce_data_structures */ /* juce_data_structures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_data_structures; path = /Users/ring2/JUCE/modules/juce_data_structures; sourceTree = "<absolute>"; };
+		B326FD987276521C2EC83401 /* include_R2JUCE.cpp */ /* include_R2JUCE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_R2JUCE.cpp; path = ../../JuceLibraryCode/include_R2JUCE.cpp; sourceTree = SOURCE_ROOT; };
+		B56EED95F21FE149636D4F10 /* Info-Standalone_Plugin.plist */ /* Info-Standalone_Plugin.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-Standalone_Plugin.plist"; path = "Info-Standalone_Plugin.plist"; sourceTree = SOURCE_ROOT; };
+		B6E92C859353F7F9147AC9BF /* DiscRecording.framework */ /* DiscRecording.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiscRecording.framework; path = System/Library/Frameworks/DiscRecording.framework; sourceTree = SDKROOT; };
+		BA82021EEA1E3A885F359712 /* juce_core */ /* juce_core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_core; path = /Users/ring2/JUCE/modules/juce_core; sourceTree = "<absolute>"; };
+		BD8324EA584E549817428E01 /* CoreAudioKit.framework */ /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
+		C458C53D41B44D06B2C8967C /* juce_graphics */ /* juce_graphics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_graphics; path = /Users/ring2/JUCE/modules/juce_graphics; sourceTree = "<absolute>"; };
+		CA369F7500D517C68DAC7E7D /* include_juce_audio_processors.mm */ /* include_juce_audio_processors.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_processors.mm; path = ../../JuceLibraryCode/include_juce_audio_processors.mm; sourceTree = SOURCE_ROOT; };
+		CEB6574E333101680D1886AE /* include_juce_gui_basics.mm */ /* include_juce_gui_basics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_gui_basics.mm; path = ../../JuceLibraryCode/include_juce_gui_basics.mm; sourceTree = SOURCE_ROOT; };
+		CFB5DBF57D8F1540709A2C60 /* WiFiTestAudioProcessorEditor.h */ /* WiFiTestAudioProcessorEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = WiFiTestAudioProcessorEditor.h; path = ../../Source/WiFiTestAudioProcessorEditor.h; sourceTree = SOURCE_ROOT; };
+		D216082DD02D4CCEC1465DEF /* include_juce_audio_devices.mm */ /* include_juce_audio_devices.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_devices.mm; path = ../../JuceLibraryCode/include_juce_audio_devices.mm; sourceTree = SOURCE_ROOT; };
+		D9E6D6018753EE79C0E08F29 /* R2JUCE */ /* R2JUCE */ = {isa = PBXFileReference; lastKnownFileType = folder; name = R2JUCE; path = ../../../../modules/R2JUCE; sourceTree = SOURCE_ROOT; };
+		DABF752DA622003C7C2D40FA /* RecentFilesMenuTemplate.nib */ /* RecentFilesMenuTemplate.nib */ = {isa = PBXFileReference; lastKnownFileType = file.nib; name = RecentFilesMenuTemplate.nib; path = RecentFilesMenuTemplate.nib; sourceTree = SOURCE_ROOT; };
+		DAF1E377740E68987AFDC2E7 /* juce_gui_extra */ /* juce_gui_extra */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_gui_extra; path = /Users/ring2/JUCE/modules/juce_gui_extra; sourceTree = "<absolute>"; };
+		DE0D12B768745A0FFCB9E3E2 /* include_juce_data_structures.mm */ /* include_juce_data_structures.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_data_structures.mm; path = ../../JuceLibraryCode/include_juce_data_structures.mm; sourceTree = SOURCE_ROOT; };
+		DE26FC060896BCEFFF1E1015 /* include_juce_events.mm */ /* include_juce_events.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_events.mm; path = ../../JuceLibraryCode/include_juce_events.mm; sourceTree = SOURCE_ROOT; };
+		DF901249B03D7DAAD48FB0B3 /* include_juce_audio_processors_lv2_libs.cpp */ /* include_juce_audio_processors_lv2_libs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_processors_lv2_libs.cpp; path = ../../JuceLibraryCode/include_juce_audio_processors_lv2_libs.cpp; sourceTree = SOURCE_ROOT; };
+		E63A03A9FA3E2FCB58458CB0 /* IOKit.framework */ /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		F05DB246DDA1C1AB3E179C19 /* juce_events */ /* juce_events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_events; path = /Users/ring2/JUCE/modules/juce_events; sourceTree = "<absolute>"; };
+		F43066D6259722F92526CF50 /* Metal.framework */ /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
+		F8AF54E461CD36E3D395F309 /* JucePluginDefines.h */ /* JucePluginDefines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JucePluginDefines.h; path = ../../JuceLibraryCode/JucePluginDefines.h; sourceTree = SOURCE_ROOT; };
+		FDE06D71C072AA6E4CC8DFF0 /* juce_audio_formats */ /* juce_audio_formats */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_formats; path = /Users/ring2/JUCE/modules/juce_audio_formats; sourceTree = "<absolute>"; };
+		FFC7B47E9357E752C90AB333 /* include_juce_audio_processors_ara.cpp */ /* include_juce_audio_processors_ara.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_processors_ara.cpp; path = ../../JuceLibraryCode/include_juce_audio_processors_ara.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0BA4767D2B442805EB3671EE = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DB0AE4AB6D6FA816FF0B1FCE,
+				A3A74DA6CA01FC1E196D40A3,
+				4F597C14BDFCF991D01968EE,
+				B01FF3EF7BCAEF026E46572F,
+				D2880D0A0A70D09D94CE5360,
+				ED6024050BD1E3435A3B7B5C,
+				36F224EA6E26241973E74879,
+				E6C9E8A7599191FA78D07531,
+				90858BE4A51E3D8F3137DF7C,
+				B25C58CFBF789B9D9006FD3D,
+				5722E249E765EEC73AAF7C25,
+				CA93E5092CB55E60C9F3BE7F,
+				CFBA524DEBAFE7502E0B16EC,
+				6450F2D26087E958A2674A92,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		49DE84F69041B774B56726B9 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				A47FDCF1AF6A5DB0DF4FCC46,
+				A819BB7E48DBE6712AC4E8D5,
+				5F33BE0148E668F773D9620E,
+				CFB5DBF57D8F1540709A2C60,
+				415206B21D79792E86E354A5,
+				8FB9C77237FF96BBF5F5A813,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		546B556DCE4F98C87F75657E /* WiFiTest */ = {
+			isa = PBXGroup;
+			children = (
+				49DE84F69041B774B56726B9,
+			);
+			name = WiFiTest;
+			sourceTree = "<group>";
+		};
+		5C1AEB568910996B6514099A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				1F81FFF2F35DC5E654096F8D,
+				882CC2C2C5EAD925E3E1207C,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AD9498A6B7BBEEB959A5EA4F /* JUCE Library Code */ = {
+			isa = PBXGroup;
+			children = (
+				8F4DB7C72BD4C8884BDD1E5B,
+				D216082DD02D4CCEC1465DEF,
+				94DC6486F7979D15E1B2C4EC,
+				18443E3C30F96947D6D19693,
+				70B10A178DC083D8A3051C32,
+				CA369F7500D517C68DAC7E7D,
+				FFC7B47E9357E752C90AB333,
+				DF901249B03D7DAAD48FB0B3,
+				246B29FEE87393D669305D1E,
+				9C541FAF067D0DA3AC55EC06,
+				56F8DF86B87315FFE3D22109,
+				DE0D12B768745A0FFCB9E3E2,
+				DE26FC060896BCEFFF1E1015,
+				7938F5A55BAE6FBD626FBA1B,
+				47256D80AF7B59D24ADA8D2F,
+				505F4453C4832517979933EE,
+				CEB6574E333101680D1886AE,
+				B112EBFF33690AA036714E6D,
+				B326FD987276521C2EC83401,
+				216F7145B89FC718065E900B,
+				F8AF54E461CD36E3D395F309,
+			);
+			name = "JUCE Library Code";
+			sourceTree = "<group>";
+		};
+		C1EC9698195F6C686FD8EF6C /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				AA9E25A5653E2D5DB6570C77,
+				461FE9DAAADE0F9830C05406,
+				09DC2F9B20F927EF324B311D,
+				790988CD2EC39693763176E7,
+				BD8324EA584E549817428E01,
+				9189306F10D78BCBB0660B0C,
+				B6E92C859353F7F9147AC9BF,
+				107740751AB479DDC26EB0E3,
+				E63A03A9FA3E2FCB58458CB0,
+				53987124A3A7B396AA813393,
+				023B1ADA9BE2BFD049B48C02,
+				6E75155BDFACD4FE1D56692E,
+				F43066D6259722F92526CF50,
+				64264E05CDCB94294DE8D245,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		C2D9E8622A36B559506420F5 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				546B556DCE4F98C87F75657E,
+				E8C96A819982C466589537A6,
+				AD9498A6B7BBEEB959A5EA4F,
+				DE517E6926211C6704E6FFB4,
+				C1EC9698195F6C686FD8EF6C,
+				5C1AEB568910996B6514099A,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		DE517E6926211C6704E6FFB4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B56EED95F21FE149636D4F10,
+				DABF752DA622003C7C2D40FA,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		E8C96A819982C466589537A6 /* JUCE Modules */ = {
+			isa = PBXGroup;
+			children = (
+				376A6F39FA2AF5BAB47F6460,
+				6417EAB031DF46D1BBE57553,
+				FDE06D71C072AA6E4CC8DFF0,
+				7A5DD74FE0D9ADE7EC820DF2,
+				1AEB28DD05697500E86435CF,
+				3ADDD7FED9AFF359478A6985,
+				BA82021EEA1E3A885F359712,
+				B20FA07A17E9CAF68B6EA54E,
+				F05DB246DDA1C1AB3E179C19,
+				C458C53D41B44D06B2C8967C,
+				77F6A9D76F8E1780978EC501,
+				DAF1E377740E68987AFDC2E7,
+				D9E6D6018753EE79C0E08F29,
+			);
+			name = "JUCE Modules";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		49B1C9E9A8A612F7C26C779D /* WiFiTest - Standalone Plugin */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 93698FA055EB52FFE9E58E48;
+			buildPhases = (
+				15F5CF3E6BC22A37BF6F899F,
+				EA2ACB78BABA2443BC2D59C1,
+				0BA4767D2B442805EB3671EE,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				8DADDD63C9DD710D6D9E675A,
+			);
+			name = "WiFiTest - Standalone Plugin";
+			productName = WiFiTest;
+			productReference = 1F81FFF2F35DC5E654096F8D;
+			productType = "com.apple.product-type.application";
+		};
+		CE266538CB78BB1F71502062 /* WiFiTest - Shared Code */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1B7D5496B48DD4AF4A7C053D;
+			buildPhases = (
+				F9CFEB33DD75BE56A9086564,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "WiFiTest - Shared Code";
+			productName = WiFiTest;
+			productReference = 882CC2C2C5EAD925E3E1207C;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		27E7EBEFDC8AFB11CD331217 = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1340;
+				ORGANIZATIONNAME = "STUDIO-R";
+				TargetAttributes = {
+					49B1C9E9A8A612F7C26C779D = {
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 0;
+							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+					71DE98B28285161A571DE852 = {
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 0;
+							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+					CE266538CB78BB1F71502062 = {
+						SystemCapabilities = {
+							com.apple.ApplicationGroups.iOS = {
+								enabled = 0;
+							};
+							com.apple.HardenedRuntime = {
+								enabled = 0;
+							};
+							com.apple.InAppPurchase = {
+								enabled = 0;
+							};
+							com.apple.InterAppAudio = {
+								enabled = 0;
+							};
+							com.apple.Push = {
+								enabled = 0;
+							};
+							com.apple.Sandbox = {
+								enabled = 0;
+							};
+						};
+					};
+				};
+			};
+			buildConfigurationList = 021A5FF65335208107D905D1;
+			compatibilityVersion = "Xcode 3.2";
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C2D9E8622A36B559506420F5;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				71DE98B28285161A571DE852,
+				49B1C9E9A8A612F7C26C779D,
+				CE266538CB78BB1F71502062,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		15F5CF3E6BC22A37BF6F899F = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DBAB9EB9A05CF621A0F3FB37,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		EA2ACB78BABA2443BC2D59C1 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				024D8F300FF148A572693259,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9CFEB33DD75BE56A9086564 = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				F0E3DEB7249527EB23F017BE,
+				1AFF9AC2BAE9729E08E1D285,
+				5CAED8AEE52271AD3BCB1FB4,
+				61559339286F419716A34B13,
+				30BF7C39A1B5668CEC39B1CF,
+				07E0C3F4BDE7430A4427FD47,
+				A6CDF73EDA74CD32AE4ECC6C,
+				CD00A6C77AFDE69072BE5CFB,
+				957742BE27A3DBFC437705BD,
+				E34973DC8764044E4C126697,
+				2EF9B250C7272B7B51CF5242,
+				58B43812F990490DF5AD0D26,
+				447076DAFB8F5C7CC821F4F9,
+				DF637FFB574F81A949130D01,
+				F8796A6499F84FCB984A3DBA,
+				FC91998D2E9899D95CFD6DE9,
+				594937B88C1E6781D78AC5A7,
+				9CC8BAC7D1328FF76CA320B8,
+				44F1EF06604038851F98E02E,
+				E8836809D6299AD046E82529,
+				AA084BCBAA4DF94AD9D57284,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		8DADDD63C9DD710D6D9E675A = {
+			isa = PBXTargetDependency;
+			target = CE266538CB78BB1F71502062;
+		};
+		9AA1BEF9F3091FB9E41FAE28 = {
+			isa = PBXTargetDependency;
+			target = CE266538CB78BB1F71502062;
+		};
+		B5EE774291078F13CA99B069 = {
+			isa = PBXTargetDependency;
+			target = 49B1C9E9A8A612F7C26C779D;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1FC17DB38F1A299D51157A00 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		42716802996575E78EC02B77 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				DEAD_CODE_STRIPPING = YES;
+				EXCLUDED_ARCHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_NDEBUG=1",
+					"NDEBUG=1",
+					"JUCE_DISPLAY_SPLASH_SCREEN=1",
+					"JUCE_USE_DARK_SPLASH_SCREEN=1",
+					"JUCE_PROJUCER_VERSION=0x7000c",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_MODULE_AVAILABLE_R2JUCE=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=1",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"WiFiTest\\\"",
+					"JucePlugin_Desc=\\\"WiFiTest\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"www.STUDIOR.com\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x57467473",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=0",
+					"JucePlugin_ProducesMidiOutput=0",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=WiFiTestAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"WiFiTestAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.wifitest",
+					"JucePlugin_AAXIdentifier=com.STUDIOR.WiFiTest",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757267",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ WiFiTest\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.STUDIOR.WiFiTest.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.STUDIOR.WiFiTest.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/ring2/JUCE/modules",
+					"$(SRCROOT)/../../../../modules",
+					"/Users/ring2/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
+				INFOPLIST_PREPROCESS = NO;
+				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_LDFLAGS = "-lWiFiTest";
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.wifitest;
+				PRODUCT_NAME = "WiFiTest";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Release;
+		};
+		51E8B34DB097F92BB7EFAA77 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				COPY_PHASE_STRIP = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG=1",
+					"DEBUG=1",
+					"JUCE_DISPLAY_SPLASH_SCREEN=1",
+					"JUCE_USE_DARK_SPLASH_SCREEN=1",
+					"JUCE_PROJUCER_VERSION=0x7000c",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_MODULE_AVAILABLE_R2JUCE=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=1",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"WiFiTest\\\"",
+					"JucePlugin_Desc=\\\"WiFiTest\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"www.STUDIOR.com\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x57467473",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=0",
+					"JucePlugin_ProducesMidiOutput=0",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=WiFiTestAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"WiFiTestAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.wifitest",
+					"JucePlugin_AAXIdentifier=com.STUDIOR.WiFiTest",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757267",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ WiFiTest\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.STUDIOR.WiFiTest.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.STUDIOR.WiFiTest.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+					"JUCE_SHARED_CODE=1",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/ring2/JUCE/modules",
+					"$(SRCROOT)/../../../../modules",
+					"/Users/ring2/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.wifitest;
+				PRODUCT_NAME = "WiFiTest";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Debug;
+		};
+		73A17A4259F4C272887321DD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				DEAD_CODE_STRIPPING = YES;
+				EXCLUDED_ARCHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_NDEBUG=1",
+					"NDEBUG=1",
+					"JUCE_DISPLAY_SPLASH_SCREEN=1",
+					"JUCE_USE_DARK_SPLASH_SCREEN=1",
+					"JUCE_PROJUCER_VERSION=0x7000c",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_MODULE_AVAILABLE_R2JUCE=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=1",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"WiFiTest\\\"",
+					"JucePlugin_Desc=\\\"WiFiTest\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"www.STUDIOR.com\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x57467473",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=0",
+					"JucePlugin_ProducesMidiOutput=0",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=WiFiTestAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"WiFiTestAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.wifitest",
+					"JucePlugin_AAXIdentifier=com.STUDIOR.WiFiTest",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757267",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ WiFiTest\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.STUDIOR.WiFiTest.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.STUDIOR.WiFiTest.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+					"JUCE_SHARED_CODE=1",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/ring2/JUCE/modules",
+					"$(SRCROOT)/../../../../modules",
+					"/Users/ring2/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.wifitest;
+				PRODUCT_NAME = "WiFiTest";
+				SKIP_INSTALL = YES;
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Release;
+		};
+		92B239E1607AC0DCA24483E0 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CODE_SIGN_FLAGS = --timestamp;
+				PRODUCT_NAME = "WiFiTest";
+				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wreorder";
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		9917AA19B1BDD82F28CE1BD9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				COPY_PHASE_STRIP = NO;
+				EXCLUDED_ARCHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG=1",
+					"DEBUG=1",
+					"JUCE_DISPLAY_SPLASH_SCREEN=1",
+					"JUCE_USE_DARK_SPLASH_SCREEN=1",
+					"JUCE_PROJUCER_VERSION=0x7000c",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_MODULE_AVAILABLE_R2JUCE=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=1",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"WiFiTest\\\"",
+					"JucePlugin_Desc=\\\"WiFiTest\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"www.STUDIOR.com\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x57467473",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=0",
+					"JucePlugin_ProducesMidiOutput=0",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=WiFiTestAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"WiFiTestAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.wifitest",
+					"JucePlugin_AAXIdentifier=com.STUDIOR.WiFiTest",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757267",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ WiFiTest\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.STUDIOR.WiFiTest.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.STUDIOR.WiFiTest.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCE_USE_CUSTOM_PLUGIN_STANDALONE_APP=1",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/ring2/JUCE/modules",
+					"$(SRCROOT)/../../../../modules",
+					"/Users/ring2/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-Standalone_Plugin.plist;
+				INFOPLIST_PREPROCESS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_HEADER_SEARCH_PATHS = "$(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_LDFLAGS = "-lWiFiTest";
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.wifitest;
+				PRODUCT_NAME = "WiFiTest";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Debug;
+		};
+		AB1F9DDBFFE60F58491013D9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		B57A5E6EED3D5267CC11A490 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = NO;
+				GCC_C_LANGUAGE_STANDARD = c11;
+				GCC_INLINES_ARE_PRIVATE_EXTERN = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				OTHER_CODE_SIGN_FLAGS = --timestamp;
+				PRODUCT_NAME = "WiFiTest";
+				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wreorder";
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		021A5FF65335208107D905D1 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				92B239E1607AC0DCA24483E0,
+				B57A5E6EED3D5267CC11A490,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		1B7D5496B48DD4AF4A7C053D = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				51E8B34DB097F92BB7EFAA77,
+				73A17A4259F4C272887321DD,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		93698FA055EB52FFE9E58E48 = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9917AA19B1BDD82F28CE1BD9,
+				42716802996575E78EC02B77,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		DECB75EB6C1CDE0E588F21AB = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1FC17DB38F1A299D51157A00,
+				AB1F9DDBFFE60F58491013D9,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 27E7EBEFDC8AFB11CD331217 /* Project object */;
+}
