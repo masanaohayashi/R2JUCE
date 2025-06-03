@@ -14,6 +14,8 @@
 #include <list>
 #include "R2ScreenKeyboard.h"
 
+namespace r2juce {
+
 class R2TextEditor;
 class R2TextEditorListener
 {
@@ -27,12 +29,12 @@ class R2TextEditor : public juce::TextEditor
 {
 public:
     R2TextEditor(const juce::String& componentName = juce::String(), wchar_t passwordCharacter = 0);
-
+    
     void focusGained (FocusChangeType) override;
     void focusLost(FocusChangeType) override;
-
+    
     void setFocusChangeCallback(std::function<void(bool)> callback) { focusChangedCallback = callback; }
-
+    
     void addListener (R2TextEditorListener* listener);
     void removeListener (R2TextEditorListener* listener);
     
@@ -43,3 +45,6 @@ private:
     std::function<void(bool)> focusChangedCallback = nullptr;
     std::unique_ptr<R2ScreenKeyboard> keyboard = nullptr;
 };
+
+}   //  namespace r2juce
+

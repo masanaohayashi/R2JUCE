@@ -24,6 +24,7 @@
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
+namespace r2juce {
 //[/MiscUserDefs]
 
 //==============================================================================
@@ -34,182 +35,182 @@ R2ScreenKeyboard::R2ScreenKeyboard ()
     shiftEnabled = false;
     numericEnabled = false;
     //[/Constructor_pre]
-
+    
     buttonQ.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonQ.get());
     buttonQ->setButtonText (TRANS ("q"));
     buttonQ->addListener (this);
-
+    
     buttonW.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonW.get());
     buttonW->setButtonText (TRANS ("w"));
     buttonW->addListener (this);
-
+    
     buttonE.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonE.get());
     buttonE->setButtonText (TRANS ("e"));
     buttonE->addListener (this);
-
+    
     buttonR.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonR.get());
     buttonR->setButtonText (TRANS ("r"));
     buttonR->addListener (this);
-
+    
     buttonT.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonT.get());
     buttonT->setButtonText (TRANS ("t"));
     buttonT->addListener (this);
-
+    
     buttonY.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonY.get());
     buttonY->setButtonText (TRANS ("y"));
     buttonY->addListener (this);
-
+    
     buttonU.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonU.get());
     buttonU->setButtonText (TRANS ("u"));
     buttonU->addListener (this);
-
+    
     buttonI.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonI.get());
     buttonI->setButtonText (TRANS ("i"));
     buttonI->addListener (this);
-
+    
     buttonO.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonO.get());
     buttonO->setButtonText (TRANS ("o"));
     buttonO->addListener (this);
-
+    
     buttonP.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonP.get());
     buttonP->setButtonText (TRANS ("p"));
     buttonP->addListener (this);
-
+    
     buttonA.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonA.get());
     buttonA->setButtonText (TRANS ("a"));
     buttonA->addListener (this);
-
+    
     buttonS.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonS.get());
     buttonS->setButtonText (TRANS ("s"));
     buttonS->addListener (this);
-
+    
     buttonD.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonD.get());
     buttonD->setButtonText (TRANS ("d"));
     buttonD->addListener (this);
-
+    
     buttonF.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonF.get());
     buttonF->setButtonText (TRANS ("f"));
     buttonF->addListener (this);
-
+    
     buttonG.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonG.get());
     buttonG->setButtonText (TRANS ("g"));
     buttonG->addListener (this);
-
+    
     buttonH.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonH.get());
     buttonH->setButtonText (TRANS ("h"));
     buttonH->addListener (this);
-
+    
     buttonJ.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonJ.get());
     buttonJ->setButtonText (TRANS ("j"));
     buttonJ->addListener (this);
-
+    
     buttonK.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonK.get());
     buttonK->setButtonText (TRANS ("k"));
     buttonK->addListener (this);
-
+    
     buttonL.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonL.get());
     buttonL->setButtonText (TRANS ("l"));
     buttonL->addListener (this);
-
+    
     buttonShift.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonShift.get());
     buttonShift->setButtonText (TRANS ("Shift"));
     buttonShift->addListener (this);
-
+    
     buttonZ.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonZ.get());
     buttonZ->setButtonText (TRANS ("z"));
     buttonZ->addListener (this);
-
+    
     buttonX.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonX.get());
     buttonX->setButtonText (TRANS ("x"));
     buttonX->addListener (this);
-
+    
     buttonC.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonC.get());
     buttonC->setButtonText (TRANS ("c"));
     buttonC->addListener (this);
-
+    
     buttonV.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonV.get());
     buttonV->setButtonText (TRANS ("v"));
     buttonV->addListener (this);
-
+    
     buttonB.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonB.get());
     buttonB->setButtonText (TRANS ("b"));
     buttonB->addListener (this);
-
+    
     buttonN.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonN.get());
     buttonN->setButtonText (TRANS ("n"));
     buttonN->addListener (this);
-
+    
     buttonM.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonM.get());
     buttonM->setButtonText (TRANS ("m"));
     buttonM->addListener (this);
-
+    
     buttonBackspace.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonBackspace.get());
     buttonBackspace->setButtonText (TRANS ("<X]"));
     buttonBackspace->addListener (this);
-
+    
     buttonNumeric.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonNumeric.get());
     buttonNumeric->setButtonText (TRANS ("123"));
     buttonNumeric->addListener (this);
-
+    
     buttonSpace.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonSpace.get());
     buttonSpace->addListener (this);
-
+    
     buttonEnter.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonEnter.get());
     buttonEnter->setButtonText (TRANS ("Enter"));
     buttonEnter->addListener (this);
-
+    
     buttonCursorLeft.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonCursorLeft.get());
     buttonCursorLeft->setButtonText (TRANS ("<-"));
     buttonCursorLeft->addListener (this);
-
+    
     buttonCursorRight.reset (new juce::TextButton (juce::String()));
     addAndMakeVisible (buttonCursorRight.get());
     buttonCursorRight->setButtonText (TRANS ("->"));
     buttonCursorRight->addListener (this);
-
-
+    
+    
     //[UserPreSize]
     //[/UserPreSize]
-
+    
     setSize (568, 152);
-
-
+    
+    
     //[Constructor] You can add your own custom stuff here..
     setWantsKeyboardFocus (false);
     setMouseClickGrabsKeyboardFocus (false);
-
+    
     for (int i = 0; i < getNumChildComponents(); i++)
     {
         auto comp = dynamic_cast<juce::TextButton*>(getChildComponent(i));
@@ -229,7 +230,7 @@ R2ScreenKeyboard::~R2ScreenKeyboard()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
     //[/Destructor_pre]
-
+    
     buttonQ = nullptr;
     buttonW = nullptr;
     buttonE = nullptr;
@@ -263,8 +264,8 @@ R2ScreenKeyboard::~R2ScreenKeyboard()
     buttonEnter = nullptr;
     buttonCursorLeft = nullptr;
     buttonCursorRight = nullptr;
-
-
+    
+    
     //[Destructor]. You can add your own custom destruction code here..
     //[/Destructor]
 }
@@ -274,9 +275,9 @@ void R2ScreenKeyboard::paint (juce::Graphics& g)
 {
     //[UserPrePaint] Add your own custom painting code here..
     //[/UserPrePaint]
-
+    
     g.fillAll (juce::Colour (0xff424242));
-
+    
     //[UserPaint] Add your own custom painting code here..
     //[/UserPaint]
 }
@@ -285,7 +286,7 @@ void R2ScreenKeyboard::resized()
 {
     //[UserPreResize] Add your own custom resize code here..
     //[/UserPreResize]
-
+    
     buttonQ->setBounds ((getWidth() / 2) + -252 - (48 / 2), 16, 48, 24);
     buttonW->setBounds ((getWidth() / 2) + -196 - (48 / 2), 16, 48, 24);
     buttonE->setBounds ((getWidth() / 2) + -140 - (48 / 2), 16, 48, 24);
@@ -327,7 +328,7 @@ void R2ScreenKeyboard::buttonClicked (juce::Button* buttonThatWasClicked)
 {
     //[UserbuttonClicked_Pre]
     //[/UserbuttonClicked_Pre]
-
+    
     if (buttonThatWasClicked == buttonQ.get())
     {
         //[UserButtonCode_buttonQ] -- add your button handler code here..
@@ -524,7 +525,7 @@ void R2ScreenKeyboard::buttonClicked (juce::Button* buttonThatWasClicked)
         return;
         //[/UserButtonCode_buttonCursorRight]
     }
-
+    
     //[UserbuttonClicked_Post]
     auto buttonKey = dynamic_cast<juce::TextButton*>(buttonThatWasClicked);
     if (buttonKey != nullptr)
@@ -533,7 +534,7 @@ void R2ScreenKeyboard::buttonClicked (juce::Button* buttonThatWasClicked)
         {
             textEditor->insertTextAtCaret (buttonKey->getButtonText());
         }
-
+        
         for (auto itr = listeners.cbegin(), end_ = listeners.cend(); itr != end_; itr++)
         {
             (*itr)->onSoftKeyboardKeyPressed (this, buttonKey->getButtonText());
@@ -576,7 +577,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonI->setButtonText(juce::String("*"));
             buttonO->setButtonText(juce::String("+"));
             buttonP->setButtonText(juce::String("="));
-
+            
             buttonA->setButtonText(juce::String("_"));
             buttonS->setButtonText(juce::String("\\"));
             buttonD->setButtonText(juce::String("|"));
@@ -586,7 +587,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonJ->setButtonText(juce::String("$"));
             buttonK->setButtonText(juce::String(" "));
             buttonL->setButtonText(juce::String(" "));
-
+            
             buttonZ->setButtonText(juce::String("."));
             buttonX->setButtonText(juce::String(","));
             buttonC->setButtonText(juce::String("?"));
@@ -594,7 +595,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonB->setButtonText(juce::String("'"));
             buttonN->setButtonText(juce::String("\""));
             buttonM->setButtonText(juce::String("@"));
-
+            
             buttonShift->setButtonText(juce::String("123"));
             buttonNumeric->setButtonText(juce::String("ABC"));
         }
@@ -610,7 +611,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonI->setButtonText(juce::String("I"));
             buttonO->setButtonText(juce::String("O"));
             buttonP->setButtonText(juce::String("P"));
-
+            
             buttonA->setButtonText(juce::String("A"));
             buttonS->setButtonText(juce::String("S"));
             buttonD->setButtonText(juce::String("D"));
@@ -620,7 +621,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonJ->setButtonText(juce::String("J"));
             buttonK->setButtonText(juce::String("K"));
             buttonL->setButtonText(juce::String("L"));
-
+            
             buttonZ->setButtonText(juce::String("Z"));
             buttonX->setButtonText(juce::String("X"));
             buttonC->setButtonText(juce::String("C"));
@@ -628,7 +629,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonB->setButtonText(juce::String("B"));
             buttonN->setButtonText(juce::String("N"));
             buttonM->setButtonText(juce::String("M"));
-
+            
             buttonShift->setButtonText(juce::String("Shift"));
             buttonNumeric->setButtonText(juce::String("123"));
         }
@@ -647,7 +648,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonI->setButtonText(juce::String("8"));
             buttonO->setButtonText(juce::String("9"));
             buttonP->setButtonText(juce::String("0"));
-
+            
             buttonA->setButtonText(juce::String("-"));
             buttonS->setButtonText(juce::String("/"));
             buttonD->setButtonText(juce::String(":"));
@@ -657,7 +658,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonJ->setButtonText(juce::String("&"));
             buttonK->setButtonText(juce::String("@"));
             buttonL->setButtonText(juce::String("\""));
-
+            
             buttonZ->setButtonText(juce::String("."));
             buttonX->setButtonText(juce::String(","));
             buttonC->setButtonText(juce::String("?"));
@@ -665,7 +666,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonB->setButtonText(juce::String("'"));
             buttonN->setButtonText(juce::String(" "));
             buttonM->setButtonText(juce::String(" "));
-
+            
             buttonShift->setButtonText(juce::String("#+="));
             buttonNumeric->setButtonText(juce::String("ABC"));
         }
@@ -681,7 +682,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonI->setButtonText(juce::String("i"));
             buttonO->setButtonText(juce::String("o"));
             buttonP->setButtonText(juce::String("p"));
-
+            
             buttonA->setButtonText(juce::String("a"));
             buttonS->setButtonText(juce::String("s"));
             buttonD->setButtonText(juce::String("d"));
@@ -691,7 +692,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonJ->setButtonText(juce::String("j"));
             buttonK->setButtonText(juce::String("k"));
             buttonL->setButtonText(juce::String("l"));
-
+            
             buttonZ->setButtonText(juce::String("z"));
             buttonX->setButtonText(juce::String("x"));
             buttonC->setButtonText(juce::String("c"));
@@ -699,7 +700,7 @@ void R2ScreenKeyboard::updateButtons()
             buttonB->setButtonText(juce::String("b"));
             buttonN->setButtonText(juce::String("n"));
             buttonM->setButtonText(juce::String("m"));
-
+            
             buttonShift->setButtonText(juce::String("Shift"));
             buttonNumeric->setButtonText(juce::String("123"));
         }
@@ -829,5 +830,6 @@ END_JUCER_METADATA
 
 
 //[EndFile] You can add extra defines here...
+}   //  namespace r2juce
 //[/EndFile]
 

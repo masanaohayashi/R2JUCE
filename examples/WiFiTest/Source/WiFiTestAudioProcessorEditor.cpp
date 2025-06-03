@@ -33,8 +33,9 @@ WiFiTestAudioProcessorEditor::WiFiTestAudioProcessorEditor (WiFiTestAudioProcess
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
 
-    wifiSelector.reset (new R2WiFiSelector ([this](){ wifiSelector = nullptr; }));
+    wifiSelector.reset (new r2juce::R2WiFiSelector ([this](){ wifiSelector = nullptr; }));
     addAndMakeVisible (wifiSelector.get());
+
 
     //[UserPreSize]
     //[/UserPreSize]
@@ -101,9 +102,9 @@ BEGIN_JUCER_METADATA
                  snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330"
                  fixedSize="1" initialWidth="568" initialHeight="320">
   <BACKGROUND backgroundColour="ff323e44"/>
-  <JUCERCOMP name="" id="3621ab1cebcd9a49" memberName="wifiSelector" virtualName=""
-             explicitFocusOrder="0" pos="0Cc 0Cc 0M 0M" sourceFile="../../../modules/R2JUCE/src/R2WiFiSelector.cpp"
-             constructorParams="[this](){ wifiSelector = nullptr; }"/>
+  <GENERICCOMPONENT name="" id="5d6801b9ed44862a" memberName="wifiSelector" virtualName=""
+                    explicitFocusOrder="0" pos="0Cc 0Cc 0M 0M" class="r2juce::R2WiFiSelector"
+                    params="[this](){ wifiSelector = nullptr; }"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

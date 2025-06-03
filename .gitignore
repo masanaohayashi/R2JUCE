@@ -24,6 +24,10 @@ DerivedData/
 *.ipa
 *.dSYM.zip
 *.dSYM
+*.xcworkspacedata
+*.xcuserstate
+**/xcschememanagement.plist
+
 
 build/
 

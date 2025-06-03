@@ -22,6 +22,8 @@
 //[Headers]     -- You can add your own extra header files here --
 #include <JuceHeader.h>
 
+namespace r2juce {
+
 struct WifiNetwork
 {
     juce::String ssid;
@@ -39,9 +41,9 @@ class PasswordInputOverlay;
 //==============================================================================
 /**
                                                                     //[Comments]
-    An auto-generated component, created by the Projucer.
+ An auto-generated component, created by the Projucer.
 
-    Describe your class and how it works here!
+ Describe your class and how it works here!
                                                                     //[/Comments]
 */
 class R2WiFiSelector  : public juce::Component,
@@ -115,13 +117,13 @@ private:
 //[EndFile] You can add extra defines here...
 //==============================================================================
 /**
-    接続中オーバーレイコンポーネント
-*/
+ 接続中オーバーレイコンポーネント
+ */
 class ConnectingOverlay : public juce::Component,
-                          public juce::Button::Listener,
-                          private juce::Timer
+public juce::Button::Listener,
+private juce::Timer
 {
-public:
+    public:
     ConnectingOverlay(R2WiFiSelector* parent);
     ~ConnectingOverlay() override;
 
@@ -133,7 +135,7 @@ public:
     void setConnecting(const juce::String& ssid);
     void setFailed(const juce::String& message);
 
-private:
+    private:
     R2WiFiSelector* parentSelector;
     std::unique_ptr<juce::Label> statusLabel;
     std::unique_ptr<juce::TextButton> actionButton;
@@ -146,13 +148,13 @@ private:
 
 //==============================================================================
 /**
-    パスワード入力オーバーレイコンポーネント
-*/
+ パスワード入力オーバーレイコンポーネント
+ */
 class PasswordInputOverlay : public juce::Component,
-                            public juce::Button::Listener,
-                            public juce::TextEditor::Listener
+public juce::Button::Listener,
+public juce::TextEditor::Listener
 {
-public:
+    public:
     PasswordInputOverlay(R2WiFiSelector* parent);
     ~PasswordInputOverlay() override;
 
@@ -164,7 +166,7 @@ public:
     void setSSID(const juce::String& ssid);
     void grabPasswordFocus();
 
-private:
+    private:
     R2WiFiSelector* parentSelector;
     std::unique_ptr<juce::Label> titleLabel;
     std::unique_ptr<juce::Label> ssidLabel;
@@ -175,5 +177,7 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PasswordInputOverlay)
 };
+
+}   //  namespace r2juce
 //[/EndFile]
 

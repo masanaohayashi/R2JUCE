@@ -58,7 +58,7 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    std::unique_ptr<R2TextEditor> textEditor;
+    std::unique_ptr<r2juce::R2TextEditor> textEditor;
     std::unique_ptr<juce::Label> label;
 
 

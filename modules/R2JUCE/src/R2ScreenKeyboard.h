@@ -22,6 +22,9 @@
 //[Headers]     -- You can add your own extra header files here --
 #include <JuceHeader.h>
 #include <list>
+
+namespace r2juce {
+
 class R2ScreenKeyboard;
 class R2ScreenKeyboardListener
 {
@@ -35,20 +38,20 @@ public:
 
 //==============================================================================
 /**
-                                                                    //[Comments]
-    An auto-generated component, created by the Projucer.
-
-    Describe your class and how it works here!
-                                                                    //[/Comments]
-*/
+ //[Comments]
+ An auto-generated component, created by the Projucer.
+ 
+ Describe your class and how it works here!
+ //[/Comments]
+ */
 class R2ScreenKeyboard  : public juce::Component,
-                          public juce::Button::Listener
+public juce::Button::Listener
 {
 public:
     //==============================================================================
     R2ScreenKeyboard ();
     ~R2ScreenKeyboard() override;
-
+    
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
     void setTextEditor(juce::TextEditor* editor);
@@ -56,24 +59,24 @@ public:
     void removeListener (R2ScreenKeyboardListener* listener);
     void setEnterCallback(std::function<void()> callback) { enterCallback = callback; }
     //[/UserMethods]
-
+    
     void paint (juce::Graphics& g) override;
     void resized() override;
     void buttonClicked (juce::Button* buttonThatWasClicked) override;
-
-
-
+    
+    
+    
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     void updateButtons();
-
+    
     std::list<R2ScreenKeyboardListener*> listeners;
     juce::TextEditor* textEditor;
     bool shiftEnabled;
     bool numericEnabled;
     std::function<void()> enterCallback = nullptr;
     //[/UserVariables]
-
+    
     //==============================================================================
     std::unique_ptr<juce::TextButton> buttonQ;
     std::unique_ptr<juce::TextButton> buttonW;
@@ -108,12 +111,13 @@ private:
     std::unique_ptr<juce::TextButton> buttonEnter;
     std::unique_ptr<juce::TextButton> buttonCursorLeft;
     std::unique_ptr<juce::TextButton> buttonCursorRight;
-
-
+    
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (R2ScreenKeyboard)
 };
 
 //[EndFile] You can add extra defines here...
+}   //  namespace r2juce
 //[/EndFile]
 

@@ -24,7 +24,6 @@
 #include "WiFiTestAudioProcessor.h"
 //[/Headers]
 
-#include "../../../modules/R2JUCE/src/R2WiFiSelector.h"
 
 
 //==============================================================================
@@ -57,7 +56,7 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    std::unique_ptr<R2WiFiSelector> wifiSelector;
+    std::unique_ptr<r2juce::R2WiFiSelector> wifiSelector;
 
 
     //==============================================================================

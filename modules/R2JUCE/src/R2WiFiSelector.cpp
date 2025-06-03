@@ -24,6 +24,7 @@
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
+namespace r2juce {
 //[/MiscUserDefs]
 
 //==============================================================================
@@ -78,17 +79,17 @@ R2WiFiSelector::R2WiFiSelector (std::function<void()> closeCallback)
 
 
     //[Constructor] You can add your own custom stuff here..
-/*
-    // Test on Mac
-    passwordInputOverlay.reset(new PasswordInputOverlay(this));
-    addAndMakeVisible(passwordInputOverlay.get());
-    passwordInputOverlay->setBounds(getLocalBounds());
-    passwordInputOverlay->setSSID("Test SSID");
+    /*
+     // Test on Mac
+     passwordInputOverlay.reset(new PasswordInputOverlay(this));
+     addAndMakeVisible(passwordInputOverlay.get());
+     passwordInputOverlay->setBounds(getLocalBounds());
+     passwordInputOverlay->setSSID("Test SSID");
 
-    connectingOverlay.reset (new ConnectingOverlay (this));
-    addAndMakeVisible (connectingOverlay.get());
-    connectingOverlay->setBounds (getLocalBounds());
- */
+     connectingOverlay.reset (new ConnectingOverlay (this));
+     addAndMakeVisible (connectingOverlay.get());
+     connectingOverlay->setBounds (getLocalBounds());
+     */
 
     startTimer (3000); // 3秒ごとにスキャン更新
     scanNetworks();
@@ -196,7 +197,7 @@ int R2WiFiSelector::getNumRows()
 }
 
 void R2WiFiSelector::paintListBoxItem (int rowNumber, juce::Graphics& g,
-                                                int width, int height, bool rowIsSelected)
+                                       int width, int height, bool rowIsSelected)
 {
     // Background
     if (rowIsSelected)
@@ -407,7 +408,7 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
 
     // バックグラウンドで接続処理を実行
     juce::Thread::launch ([this, ssid, password]()
-    {
+                          {
         DBG("=== WiFi Connection Debug ===");
         DBG("Timestamp: " + juce::Time::getCurrentTime().toString(true, true));
         DBG("SSID: " + ssid);
@@ -527,7 +528,7 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
         if (isConnecting)  // キャンセルされていないかチェック
         {
             juce::MessageManager::callAsync ([this, success, message]()
-            {
+                                             {
                 onConnectionResult (success, message);
             });
         }
@@ -644,7 +645,7 @@ void R2WiFiSelector::drawWiFiStrengthArcs(juce::Graphics& g, int centerX, int ce
 // ConnectingOverlay Implementation
 //==============================================================================
 ConnectingOverlay::ConnectingOverlay(R2WiFiSelector* parent)
-    : parentSelector(parent), isFailedState(false), spinnerIndex(0)  // spinnerIndex(0)を追加
+: parentSelector(parent), isFailedState(false), spinnerIndex(0)  // spinnerIndex(0)を追加
 {
     // Status label
     statusLabel.reset (new juce::Label (juce::String(), "Connecting..."));
@@ -712,7 +713,7 @@ void ConnectingOverlay::timerCallback()
         spinnerIndex = (spinnerIndex + 1) % spinChars.size();
 
         juce::String baseText = currentSSID.isNotEmpty() ?
-            "Connecting to: " + currentSSID + " " : "Connecting... ";
+        "Connecting to: " + currentSSID + " " : "Connecting... ";
 
         statusLabel->setText(baseText + spinChars[spinnerIndex], juce::dontSendNotification);
     }
@@ -740,7 +741,7 @@ void ConnectingOverlay::setFailed(const juce::String& message)
 //==============================================================================
 
 PasswordInputOverlay::PasswordInputOverlay(R2WiFiSelector* parent)
-    : parentSelector(parent)
+: parentSelector(parent)
 {
     // Title label
     titleLabel.reset(new juce::Label(juce::String(), "Enter WiFi Password"));
@@ -907,5 +908,6 @@ END_JUCER_METADATA
 
 
 //[EndFile] You can add extra defines here...
+}   //  namespace r2juce
 //[/EndFile]
 

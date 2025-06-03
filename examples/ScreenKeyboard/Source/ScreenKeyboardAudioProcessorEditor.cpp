@@ -33,7 +33,7 @@ ScreenKeyboardAudioProcessorEditor::ScreenKeyboardAudioProcessorEditor (ScreenKe
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
 
-    textEditor.reset (new R2TextEditor (juce::String()));
+    textEditor.reset (new r2juce::R2TextEditor (juce::String()));
     addAndMakeVisible (textEditor.get());
     textEditor->setMultiLine (false);
     textEditor->setReturnKeyStartsNewLine (false);
@@ -129,7 +129,7 @@ BEGIN_JUCER_METADATA
                  snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330"
                  fixedSize="1" initialWidth="568" initialHeight="320">
   <BACKGROUND backgroundColour="ff323e44"/>
-  <TEXTEDITOR name="" id="d3ab75d3ee28df2e" memberName="textEditor" virtualName="R2TextEditor"
+  <TEXTEDITOR name="" id="d3ab75d3ee28df2e" memberName="textEditor" virtualName="r2juce::R2TextEditor"
               explicitFocusOrder="0" pos="0Cc 40 32M 24" initialText="" multiline="0"
               retKeyStartsLine="0" readonly="0" scrollbars="1" caret="1" popupmenu="1"/>
   <LABEL name="" id="48e4c4280397cfb9" memberName="label" virtualName=""
