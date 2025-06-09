@@ -95,8 +95,11 @@ if [[ "$BUILD_IMAGE" == "true" ]]; then
     fi
 fi
 
-PROJECT_PATH="/Users/ring2/Documents/src/R2JUCE"
-JUCE_PATH="/Users/ring2/JUCE"
+#PROJECT_PATH="/Users/ring2/Documents/src/R2JUCE"
+# スクリプトの置き場から相対でプロジェクトルートを取得
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_PATH="$(cd "$SCRIPT_DIR/../../../../" && pwd)"
+JUCE_PATH=~/JUCE
 
 echo "=== $CONFIG ビルド開始 ==="
 
@@ -108,4 +111,3 @@ docker run --rm -it \
   -w /mnt/project/examples/ScreenKeyboard/Builds/raspi \
   "$IMAGE_NAME" \
   make CONFIG="$CONFIG" -j12
-

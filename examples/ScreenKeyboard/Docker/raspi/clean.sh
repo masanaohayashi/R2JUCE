@@ -49,7 +49,8 @@ if ! docker info >/dev/null 2>&1; then
     fi
 fi
 
-PROJECT_PATH="/Users/ring2/Documents/src/R2JUCE"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_PATH="$(cd "$SCRIPT_DIR/../../../../" && pwd)"
 BUILD_PATH="$PROJECT_PATH/examples/ScreenKeyboard/Builds/raspi"
 
 # ビルドファイルのクリーンアップ
