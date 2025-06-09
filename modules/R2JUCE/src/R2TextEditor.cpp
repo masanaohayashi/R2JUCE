@@ -22,6 +22,8 @@ R2TextEditor::R2TextEditor (const juce::String& componentName, wchar_t passwordC
 void R2TextEditor::focusGained (FocusChangeType type)
 {
     juce::TextEditor::focusGained (type);
+
+    if (!useScreenKeyboard) return;
     
     juce::Component* parent = nullptr;
     if (getKeyboardParent != nullptr) {
@@ -55,6 +57,8 @@ void R2TextEditor::focusLost (FocusChangeType type)
 {
     TextEditor::focusLost (type);
     
+    if (!useScreenKeyboard) return;
+
     if (keyboard != nullptr) {
         auto parent = keyboard->getParentComponent();
         parent->removeChildComponent(keyboard.get());

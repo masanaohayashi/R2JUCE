@@ -44,6 +44,11 @@ private:
     std::list<R2TextEditorListener*> listeners;
     std::function<void(bool)> focusChangedCallback = nullptr;
     std::unique_ptr<R2ScreenKeyboard> keyboard = nullptr;
+#if JUCE_RASPI || JUCE_RASPI_SIMULATE
+    bool useScreenKeyboard = true;
+#else
+    bool useScreenKeyboard = false;
+#endif
 };
 
 }   //  namespace r2juce
