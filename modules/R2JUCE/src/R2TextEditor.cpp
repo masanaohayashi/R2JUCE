@@ -17,11 +17,37 @@ static int test_variable_r2texteditor = 42;
 R2TextEditor::R2TextEditor (const juce::String& componentName, wchar_t passwordCharacter)
 : TextEditor (componentName, passwordCharacter)
 {
+    exitedWithEscape = false;
+}
+
+bool R2TextEditor::keyPressed(const juce::KeyPress& key)
+{
+    // ESCキーの処理
+    if (key == juce::KeyPress::escapeKey)
+    {
+        exitedWithEscape = true;
+        giveAwayKeyboardFocus();
+        return true;  // キーイベントを消費
+    }
+    
+    // Enterキーの処理
+    if (key == juce::KeyPress::returnKey)
+    {
+        exitedWithEscape = false;
+        giveAwayKeyboardFocus();
+        return true;  // キーイベントを消費
+    }
+    
+    // その他のキーは親クラスに任せる
+    return juce::TextEditor::keyPressed(key);
 }
 
 void R2TextEditor::focusGained (FocusChangeType type)
 {
     juce::TextEditor::focusGained (type);
+
+    // ESCフラグをリセット
+    exitedWithEscape = false;
 
     if (!useScreenKeyboard) return;
     
@@ -47,10 +73,6 @@ void R2TextEditor::focusGained (FocusChangeType type)
     if (focusChangedCallback != nullptr) {
         focusChangedCallback(true);
     }
-    
-    for (auto& i : listeners) {
-        i->onR2TextEditorFocusGained (this);
-    }
 }
 
 void R2TextEditor::focusLost (FocusChangeType type)
@@ -68,21 +90,6 @@ void R2TextEditor::focusLost (FocusChangeType type)
     if (focusChangedCallback != nullptr) {
         focusChangedCallback(false);
     }
-    
-    for (auto& i : listeners) {
-        i->onR2TextEditorFocusLost(this);
-    }
-}
-
-void R2TextEditor::addListener(R2TextEditorListener* listener)
-{
-    listeners.push_back (listener);
-}
-
-void R2TextEditor::removeListener(R2TextEditorListener* listener)
-{
-    listeners.remove (listener);
 }
 
 }   //  namespace r2juce
-

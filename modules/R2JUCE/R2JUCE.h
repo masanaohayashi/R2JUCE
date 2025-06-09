@@ -15,7 +15,10 @@ END_JUCE_MODULE_DECLARATION
 
 #include <juce_gui_basics/juce_gui_basics.h>
 
-#include "src/R2ScreenKeyboard.h"
+#include "src/R2LookAndFeel.h"
 #include "src/R2TextEditor.h"
+#include "src/R2Label.h"
+#include "src/R2Slider.h"
 #include "src/R2WiFiSelector.h"
+#include "src/R2ScreenKeyboard.h"
 #include "src/R2AudioConfigManager.h"

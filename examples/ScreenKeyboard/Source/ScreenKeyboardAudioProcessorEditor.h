@@ -35,7 +35,8 @@
     Describe your class and how it works here!
                                                                     //[/Comments]
 */
-class ScreenKeyboardAudioProcessorEditor  : public juce::AudioProcessorEditor
+class ScreenKeyboardAudioProcessorEditor  : public juce::AudioProcessorEditor,
+                                            public juce::Slider::Listener
 {
 public:
     //==============================================================================
@@ -49,6 +50,7 @@ public:
 
     void paint (juce::Graphics& g) override;
     void resized() override;
+    void sliderValueChanged (juce::Slider* sliderThatWasMoved) override;
 
 
 
@@ -58,8 +60,15 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    std::unique_ptr<r2juce::R2TextEditor> textEditor;
+    std::unique_ptr<r2juce::R2TextEditor> textEditorR2JUCE;
     std::unique_ptr<juce::Label> label;
+    std::unique_ptr<juce::Label> labelR2JUCE;
+    std::unique_ptr<juce::Label> labelJUCE;
+    std::unique_ptr<juce::TextEditor> textEditorJUCE;
+    std::unique_ptr<r2juce::R2Slider> sliderR2JUCE;
+    std::unique_ptr<juce::Slider> sliderJUCE;
+    std::unique_ptr<r2juce::R2Slider> sliderR2JUCE2;
+    std::unique_ptr<juce::Slider> sliderJUCE2;
 
 
     //==============================================================================
