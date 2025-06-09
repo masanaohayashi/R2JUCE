@@ -108,8 +108,12 @@ void R2Label::startCustomEditing()
         customEditor->setColour(juce::TextEditor::focusedOutlineColourId, findColour(juce::Label::outlineColourId));
     }
     
-    // キーボード設定
-    if (keyboardParentCallback != nullptr) {
+    // スクリーンキーボード親コンポーネント設定
+    if (screenKeyboardParentCallback != nullptr) {
+        customEditor->getKeyboardParent = screenKeyboardParentCallback;
+    }
+    // フォールバック：従来のキーボード設定
+    else if (keyboardParentCallback != nullptr) {
         customEditor->getKeyboardParent = keyboardParentCallback;
     }
     
@@ -199,6 +203,11 @@ void R2Label::paint(juce::Graphics& g)
 void R2Label::setKeyboardParentCallback(std::function<juce::Component*()> callback)
 {
     keyboardParentCallback = callback;
+}
+
+void R2Label::setScreenKeyboardParent(std::function<juce::Component*()> callback)
+{
+    screenKeyboardParentCallback = callback;
 }
 
 void R2Label::showEditor()

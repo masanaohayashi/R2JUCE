@@ -26,6 +26,9 @@ public:
     void setKeyboardParent(juce::Component* parent);
     void setKeyboardParentCallback(std::function<juce::Component*()> callback);
     
+    // スクリーンキーボード親コンポーネント設定
+    void setScreenKeyboardParent(std::function<juce::Component*()> callback);
+    
     // R2TextEditorのフォーカス変化コールバック
     void setFocusChangeCallback(std::function<void(bool)> callback);
     
@@ -37,6 +40,7 @@ public:
 private:
     std::unique_ptr<R2LookAndFeel> r2LookAndFeel;
     std::function<juce::Component*()> keyboardParentCallback = nullptr;
+    std::function<juce::Component*()> screenKeyboardParentCallback = nullptr;
     std::function<void(bool)> focusChangeCallback = nullptr;
     
     void updateLookAndFeel();
