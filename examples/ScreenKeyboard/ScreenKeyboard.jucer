@@ -5,6 +5,10 @@
               headerPath="../../../../Source" pluginFormats="buildStandalone">
   <MAINGROUP id="OuaA0k" name="ScreenKeyboard">
     <GROUP id="{2107246A-E65F-B2F6-1461-10DA8B777581}" name="Source">
+      <FILE id="qLjeaB" name="R2Widgets.cpp" compile="1" resource="0" file="Source/R2Widgets.cpp"/>
+      <FILE id="MFhreh" name="R2Widgets.h" compile="0" resource="0" file="Source/R2Widgets.h"/>
+      <FILE id="vOUCID" name="JuceWidgets.cpp" compile="1" resource="0" file="Source/JuceWidgets.cpp"/>
+      <FILE id="gFZzZB" name="JuceWidgets.h" compile="0" resource="0" file="Source/JuceWidgets.h"/>
       <FILE id="WGN81W" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="WlSjMn" name="PluginProcessor.h" compile="0" resource="0"
