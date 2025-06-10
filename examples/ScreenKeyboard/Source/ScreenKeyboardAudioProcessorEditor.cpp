@@ -33,46 +33,34 @@ ScreenKeyboardAudioProcessorEditor::ScreenKeyboardAudioProcessorEditor (ScreenKe
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
 
-    label.reset (new juce::Label (juce::String(),
-                                  TRANS ("Screen keyboard is enabled for R2JUCE widgets")));
-    addAndMakeVisible (label.get());
-    label->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
-    label->setJustificationType (juce::Justification::centredLeft);
-    label->setEditable (false, false, false);
-    label->setColour (juce::TextEditor::textColourId, juce::Colours::black);
-    label->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
-
-    r2Widgets.reset (new R2Widgets());
-    addAndMakeVisible (r2Widgets.get());
-    r2Widgets->setBounds (16, 32, 264, 264);
-
-    juceWidgets.reset (new JuceWidgets());
-    addAndMakeVisible (juceWidgets.get());
 
     //[UserPreSize]
-    setWantsKeyboardFocus(true);
-    /*
-    textEditor->getKeyboardParent = [this](){
-        return this;
-    };
-*/
+    setWantsKeyboardFocus (true);
+    mainComponent.reset (new MainComponent);
+    addAndMakeVisible (mainComponent.get());
     //[/UserPreSize]
 
     setSize (568, 320);
 
 
     //[Constructor] You can add your own custom stuff here..
+#if JUCE_IOS || JUCE_ANDROID || JUCE_RASPI
+    //  For mobile devices with fullscreen, set editor size as desktop size.
+    auto r = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
+    setSize (r.getWidth(), r.getHeight());
+#elif JUCE_RASPI_SIMULATE
+    //  When simulating Raspberry Pi, use defined size in Projucer.
+    setSize (JUCE_RASPI_SIMULATE_WIDTH, JUCE_RASPI_SIMULATE_HEIGHT);
+#endif
     //[/Constructor]
 }
 
 ScreenKeyboardAudioProcessorEditor::~ScreenKeyboardAudioProcessorEditor()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
+    mainComponent = nullptr;
     //[/Destructor_pre]
 
-    label = nullptr;
-    r2Widgets = nullptr;
-    juceWidgets = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -85,7 +73,7 @@ void ScreenKeyboardAudioProcessorEditor::paint (juce::Graphics& g)
     //[UserPrePaint] Add your own custom painting code here..
     //[/UserPrePaint]
 
-    g.fillAll (juce::Colour (0xff323e44));
+    g.fillAll (juce::Colours::black);
 
     //[UserPaint] Add your own custom painting code here..
     //[/UserPaint]
@@ -96,9 +84,46 @@ void ScreenKeyboardAudioProcessorEditor::resized()
     //[UserPreResize] Add your own custom resize code here..
     //[/UserPreResize]
 
-    label->setBounds ((getWidth() / 2) - ((getWidth() - 32) / 2), 0, getWidth() - 32, 24);
-    juceWidgets->setBounds (getWidth() - 16 - 264, 32, 264, 264);
     //[UserResized] Add your own custom resize handling here..
+    if (mainComponent != nullptr)
+    {
+        // エディターのサイズを取得
+        int editorWidth = getWidth();
+        int editorHeight = getHeight();
+
+        // mainComponentの元のサイズ（基準サイズ）
+        int componentOriginalWidth = 568;  // 元の幅
+        int componentOriginalHeight = 320; // 元の高さ
+
+        // アスペクト比を計算
+        float componentAspectRatio = (float)componentOriginalWidth / (float)componentOriginalHeight;
+        float editorAspectRatio = (float)editorWidth / (float)editorHeight;
+
+        float scaleX, scaleY, offsetX, offsetY;
+
+        if (componentAspectRatio > editorAspectRatio)
+        {
+            // mainComponentの方が横長 → 幅に合わせてスケール
+            scaleX = scaleY = (float)editorWidth / (float)componentOriginalWidth;
+            offsetX = 0;
+            offsetY = (editorHeight - componentOriginalHeight * scaleY) * 0.5f; // 縦方向センタリング
+        }
+        else
+        {
+            // mainComponentの方が縦長（または同じ比率） → 高さに合わせてスケール
+            scaleX = scaleY = (float)editorHeight / (float)componentOriginalHeight;
+            offsetX = (editorWidth - componentOriginalWidth * scaleX) * 0.5f; // 横方向センタリング
+            offsetY = 0;
+        }
+
+        // mainComponentを元のサイズに設定
+        mainComponent->setBounds(0, 0, componentOriginalWidth, componentOriginalHeight);
+
+        // AffineTransformを適用してスケール&オフセット
+        juce::AffineTransform transform = juce::AffineTransform::scale(scaleX, scaleY)
+                                                                .translated(offsetX, offsetY);
+        mainComponent->setTransform(transform);
+    }
     //[/UserResized]
 }
 
@@ -122,19 +147,7 @@ BEGIN_JUCER_METADATA
                  constructorParams="ScreenKeyboardAudioProcessor&amp; p" variableInitialisers="AudioProcessorEditor (&amp;p), audioProcessor (p)"
                  snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330"
                  fixedSize="1" initialWidth="568" initialHeight="320">
-  <BACKGROUND backgroundColour="ff323e44"/>
-  <LABEL name="" id="48e4c4280397cfb9" memberName="label" virtualName=""
-         explicitFocusOrder="0" pos="0Cc 0 32M 24" edTextCol="ff000000"
-         edBkgCol="0" labelText="Screen keyboard is enabled for R2JUCE widgets"
-         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
-         fontname="Default font" fontsize="15.0" kerning="0.0" bold="0"
-         italic="0" justification="33"/>
-  <JUCERCOMP name="" id="d8957cd045c74b" memberName="r2Widgets" virtualName=""
-             explicitFocusOrder="0" pos="16 32 264 264" sourceFile="R2Widgets.cpp"
-             constructorParams=""/>
-  <JUCERCOMP name="" id="a25e48cded657280" memberName="juceWidgets" virtualName=""
-             explicitFocusOrder="0" pos="16Rr 32 264 264" sourceFile="JuceWidgets.cpp"
-             constructorParams=""/>
+  <BACKGROUND backgroundColour="ff000000"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

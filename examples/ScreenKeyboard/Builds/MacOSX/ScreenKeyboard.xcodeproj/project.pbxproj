@@ -25,6 +25,7 @@
 		03ED80E0B2D9F5F039F41380 /* include_juce_core_CompilationTime.cpp */ = {isa = PBXBuildFile; fileRef = B8AE640B6BE83CEFC840DA0D; };
 		05C6D211A9813ACF967DC7E3 /* IOKit.framework */ = {isa = PBXBuildFile; fileRef = FB957A014FA6D0EC8F4E1743; };
 		07340D7A17317587E7F379CA /* CoreMIDI.framework */ = {isa = PBXBuildFile; fileRef = 21A1524FCA7A8D15F79BE7C1; };
+		10DDDA49A9BB1FE5F1D3ECB7 /* MainComponent.cpp */ = {isa = PBXBuildFile; fileRef = 5206BD92119A365C3CE3DF63; };
 		1824C31808388AD2A69B2EC6 /* Accelerate.framework */ = {isa = PBXBuildFile; fileRef = FDD08163E9FA6E67371DC942; };
 		22C3109C8CBF85A57BA32421 /* include_juce_audio_plugin_client_ARA.cpp */ = {isa = PBXBuildFile; fileRef = 374E097DBBA44E36359C20A6; };
 		2EC806164ACDD7DE28F79C6B /* include_juce_data_structures.mm */ = {isa = PBXBuildFile; fileRef = 23919489BC0D120050639115; };
@@ -90,6 +91,7 @@
 		3F1F1B0E03301F6D9BC4BFF6 /* include_juce_graphics_Sheenbidi.c */ /* include_juce_graphics_Sheenbidi.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = include_juce_graphics_Sheenbidi.c; path = ../../JuceLibraryCode/include_juce_graphics_Sheenbidi.c; sourceTree = SOURCE_ROOT; };
 		490375617D4336B64EAAE47A /* Cocoa.framework */ /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		4F00B266C37EABA2FB8C2454 /* juce_audio_utils */ /* juce_audio_utils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_utils; path = /Users/ring2/JUCE/modules/juce_audio_utils; sourceTree = "<absolute>"; };
+		5206BD92119A365C3CE3DF63 /* MainComponent.cpp */ /* MainComponent.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = MainComponent.cpp; path = ../../Source/MainComponent.cpp; sourceTree = SOURCE_ROOT; };
 		522AF6C4043B02A2B0AEE7C2 /* DiscRecording.framework */ /* DiscRecording.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiscRecording.framework; path = System/Library/Frameworks/DiscRecording.framework; sourceTree = SDKROOT; };
 		53F61B4490F4C02CEABE5803 /* JuceHeader.h */ /* JuceHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = JuceHeader.h; path = ../../JuceLibraryCode/JuceHeader.h; sourceTree = SOURCE_ROOT; };
 		594345F8122D1B23680D6B0E /* ScreenKeyboardAudioProcessorEditor.h */ /* ScreenKeyboardAudioProcessorEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ScreenKeyboardAudioProcessorEditor.h; path = ../../Source/ScreenKeyboardAudioProcessorEditor.h; sourceTree = SOURCE_ROOT; };
@@ -109,6 +111,7 @@
 		A9316B97AD69349A6B70AC95 /* juce_audio_devices */ /* juce_audio_devices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_devices; path = /Users/ring2/JUCE/modules/juce_audio_devices; sourceTree = "<absolute>"; };
 		ABC2077A79D0234BAB93E582 /* include_R2JUCE.cpp */ /* include_R2JUCE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_R2JUCE.cpp; path = ../../JuceLibraryCode/include_R2JUCE.cpp; sourceTree = SOURCE_ROOT; };
 		ABD593B92F66452AD3510D95 /* include_juce_gui_extra.mm */ /* include_juce_gui_extra.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_gui_extra.mm; path = ../../JuceLibraryCode/include_juce_gui_extra.mm; sourceTree = SOURCE_ROOT; };
+		AFB5991E3CB7D00148086BDD /* MainComponent.h */ /* MainComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MainComponent.h; path = ../../Source/MainComponent.h; sourceTree = SOURCE_ROOT; };
 		B6CE388A15B9AF8C0AD93020 /* R2Widgets.h */ /* R2Widgets.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = R2Widgets.h; path = ../../Source/R2Widgets.h; sourceTree = SOURCE_ROOT; };
 		B8AE640B6BE83CEFC840DA0D /* include_juce_core_CompilationTime.cpp */ /* include_juce_core_CompilationTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_core_CompilationTime.cpp; path = ../../JuceLibraryCode/include_juce_core_CompilationTime.cpp; sourceTree = SOURCE_ROOT; };
 		BBE01689503AF3E921ABE3F1 /* include_juce_audio_formats.mm */ /* include_juce_audio_formats.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_formats.mm; path = ../../JuceLibraryCode/include_juce_audio_formats.mm; sourceTree = SOURCE_ROOT; };
@@ -192,6 +195,8 @@
 		46485E328432B846ED31F7D2 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				5206BD92119A365C3CE3DF63,
+				AFB5991E3CB7D00148086BDD,
 				6BB61A367ACB4FFE6D2C2176,
 				B6CE388A15B9AF8C0AD93020,
 				6409C235ED4909D39C1057A6,
@@ -431,6 +436,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				10DDDA49A9BB1FE5F1D3ECB7,
 				6F784A9F0357297F9A429EC8,
 				D2A41E29092811C865049648,
 				43C9C6B79C74F160D644CE8B,
@@ -616,6 +622,8 @@
 					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
 					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
 					"JUCE_RASPI_SIMULATE=1",
+					"JUCE_RASPI_SIMULATE_WIDTH=800",
+					"JUCE_RASPI_SIMULATE_HEIGHT=480",
 					"JUCER_XCODE_MAC_F6D2F4CF=1",
 					"JUCE_APP_VERSION=1.0.0",
 					"JUCE_APP_VERSION_HEX=0x10000",
@@ -736,6 +744,8 @@
 					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
 					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
 					"JUCE_RASPI_SIMULATE=1",
+					"JUCE_RASPI_SIMULATE_WIDTH=800",
+					"JUCE_RASPI_SIMULATE_HEIGHT=480",
 					"JUCER_XCODE_MAC_F6D2F4CF=1",
 					"JUCE_APP_VERSION=1.0.0",
 					"JUCE_APP_VERSION_HEX=0x10000",
@@ -847,6 +857,8 @@
 					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
 					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
 					"JUCE_RASPI_SIMULATE=1",
+					"JUCE_RASPI_SIMULATE_WIDTH=800",
+					"JUCE_RASPI_SIMULATE_HEIGHT=480",
 					"JUCER_XCODE_MAC_F6D2F4CF=1",
 					"JUCE_APP_VERSION=1.0.0",
 					"JUCE_APP_VERSION_HEX=0x10000",
@@ -1007,6 +1019,8 @@
 					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
 					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
 					"JUCE_RASPI_SIMULATE=1",
+					"JUCE_RASPI_SIMULATE_WIDTH=800",
+					"JUCE_RASPI_SIMULATE_HEIGHT=480",
 					"JUCER_XCODE_MAC_F6D2F4CF=1",
 					"JUCE_APP_VERSION=1.0.0",
 					"JUCE_APP_VERSION_HEX=0x10000",

@@ -43,7 +43,7 @@ R2Widgets::R2Widgets ()
     textEditor->setText (juce::String());
 
     label.reset (new juce::Label (juce::String(),
-                                  TRANS ("R2JUCE")));
+                                  TRANS ("R2JUCE (supports screen keyboard)")));
     addAndMakeVisible (label.get());
     label->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
     label->setJustificationType (juce::Justification::centredLeft);
@@ -65,11 +65,33 @@ R2Widgets::R2Widgets ()
     knob->setTextBoxStyle (juce::Slider::TextBoxAbove, false, 80, 20);
     knob->addListener (this);
 
+    labelKnob.reset (new juce::Label (juce::String(),
+                                      TRANS ("This guy shows wrong keyboard")));
+    addAndMakeVisible (labelKnob.get());
+    labelKnob->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
+    labelKnob->setJustificationType (juce::Justification::centred);
+    labelKnob->setEditable (false, false, false);
+    labelKnob->setColour (juce::TextEditor::textColourId, juce::Colours::black);
+    labelKnob->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
+
+    labelKnob->setBounds (8, 104, 80, 88);
+
+    labelKnob2.reset (new juce::Label (juce::String(),
+                                       TRANS ("Can be fixed by specifying right parent")));
+    addAndMakeVisible (labelKnob2.get());
+    labelKnob2->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
+    labelKnob2->setJustificationType (juce::Justification::centred);
+    labelKnob2->setEditable (false, false, false);
+    labelKnob2->setColour (juce::TextEditor::textColourId, juce::Colours::black);
+    labelKnob2->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
+
+    labelKnob2->setBounds (176, 104, 80, 88);
+
 
     //[UserPreSize]
     setWantsKeyboardFocus(true);
-    textEditor->getKeyboardParent = [this]() { return getParentComponent(); };
-    slider->setScreenKeyboardParent([this]() { return getParentComponent(); });
+    textEditor->setKeyboardParentCallback([this]() { return getParentComponent(); });
+    slider->setKeyboardParentCallback([this]() { return getParentComponent(); });
     //[/UserPreSize]
 
     setSize (264, 264);
@@ -88,6 +110,8 @@ R2Widgets::~R2Widgets()
     label = nullptr;
     slider = nullptr;
     knob = nullptr;
+    labelKnob = nullptr;
+    labelKnob2 = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -164,9 +188,9 @@ BEGIN_JUCER_METADATA
               retKeyStartsLine="0" readonly="0" scrollbars="1" caret="1" popupmenu="1"/>
   <LABEL name="" id="4bb406791d8d250f" memberName="label" virtualName=""
          explicitFocusOrder="0" pos="0Cc 0 0M 24" edTextCol="ff000000"
-         edBkgCol="0" labelText="R2JUCE" editableSingleClick="0" editableDoubleClick="0"
-         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
-         kerning="0.0" bold="0" italic="0" justification="33"/>
+         edBkgCol="0" labelText="R2JUCE (supports screen keyboard)" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
   <SLIDER name="" id="ed207941c82e33d5" memberName="slider" virtualName="r2juce::R2Slider"
           explicitFocusOrder="0" pos="0Cc 64 0M 24" min="0.0" max="10.0"
           int="0.0" style="LinearHorizontal" textBoxPos="TextBoxRight"
@@ -176,6 +200,17 @@ BEGIN_JUCER_METADATA
           explicitFocusOrder="0" pos="0Cc 96 88 120" min="0.0" max="10.0"
           int="0.0" style="Rotary" textBoxPos="TextBoxAbove" textBoxEditable="1"
           textBoxWidth="80" textBoxHeight="20" skewFactor="1.0" needsCallback="1"/>
+  <LABEL name="" id="230dca745abcc9f5" memberName="labelKnob" virtualName=""
+         explicitFocusOrder="0" pos="8 104 80 88" edTextCol="ff000000"
+         edBkgCol="0" labelText="This guy shows wrong keyboard" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="36"/>
+  <LABEL name="" id="1783fd842fea48e3" memberName="labelKnob2" virtualName=""
+         explicitFocusOrder="0" pos="176 104 80 88" edTextCol="ff000000"
+         edBkgCol="0" labelText="Can be fixed by specifying right parent"
+         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
+         fontname="Default font" fontsize="15.0" kerning="0.0" bold="0"
+         italic="0" justification="36"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

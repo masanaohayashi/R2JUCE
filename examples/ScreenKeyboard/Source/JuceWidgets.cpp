@@ -33,7 +33,7 @@ JuceWidgets::JuceWidgets ()
     //[/Constructor_pre]
 
     label.reset (new juce::Label (juce::String(),
-                                  TRANS ("JUCE")));
+                                  TRANS ("JUCE (don\'t support that...)")));
     addAndMakeVisible (label.get());
     label->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
     label->setJustificationType (juce::Justification::centredLeft);
@@ -158,9 +158,9 @@ BEGIN_JUCER_METADATA
   <BACKGROUND backgroundColour="ff323e44"/>
   <LABEL name="" id="1ded676a2c1dea14" memberName="label" virtualName=""
          explicitFocusOrder="0" pos="0Cc 0 0M 24" edTextCol="ff000000"
-         edBkgCol="0" labelText="JUCE" editableSingleClick="0" editableDoubleClick="0"
-         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
-         kerning="0.0" bold="0" italic="0" justification="33"/>
+         edBkgCol="0" labelText="JUCE (don't support that...)" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
   <TEXTEDITOR name="" id="bbbdd1760ae1ac81" memberName="textEditor" virtualName=""
               explicitFocusOrder="0" pos="0Cc 32 0M 24" initialText="" multiline="0"
               retKeyStartsLine="0" readonly="0" scrollbars="1" caret="1" popupmenu="1"/>

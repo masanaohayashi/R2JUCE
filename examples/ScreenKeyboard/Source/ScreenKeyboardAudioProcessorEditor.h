@@ -23,10 +23,9 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "R2JUCE/R2JUCE.h"
+#include "MainComponent.h"
 //[/Headers]
 
-#include "R2Widgets.h"
-#include "JuceWidgets.h"
 
 
 //==============================================================================
@@ -57,12 +56,10 @@ public:
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     ScreenKeyboardAudioProcessor& audioProcessor;
+    std::unique_ptr<MainComponent> mainComponent;
     //[/UserVariables]
 
     //==============================================================================
-    std::unique_ptr<juce::Label> label;
-    std::unique_ptr<R2Widgets> r2Widgets;
-    std::unique_ptr<JuceWidgets> juceWidgets;
 
 
     //==============================================================================

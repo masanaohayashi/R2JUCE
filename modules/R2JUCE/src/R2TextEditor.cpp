@@ -52,8 +52,8 @@ void R2TextEditor::focusGained (FocusChangeType type)
     if (!useScreenKeyboard) return;
     
     juce::Component* parent = nullptr;
-    if (getKeyboardParent != nullptr) {
-        parent = getKeyboardParent();
+    if (keyboardParentCallback != nullptr) {
+        parent = keyboardParentCallback();
     }
     
     if (parent == nullptr) {

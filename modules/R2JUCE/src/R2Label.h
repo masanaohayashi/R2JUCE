@@ -37,11 +37,8 @@ public:
     // JUCEのshowEditorを隠す
     void showEditor();
     
-    // R2TextEditor設定
+    // キーボード親コンポーネント設定
     void setKeyboardParentCallback(std::function<juce::Component*()> callback);
-    
-    // スクリーンキーボード親コンポーネント設定（R2TextEditorに転送）
-    void setScreenKeyboardParent(std::function<juce::Component*()> callback);
     
     // Component overrides
     void paint(juce::Graphics& g) override;
@@ -55,7 +52,6 @@ public:
     
 private:
     std::function<juce::Component*()> keyboardParentCallback = nullptr;
-    std::function<juce::Component*()> screenKeyboardParentCallback = nullptr;
     std::unique_ptr<R2TextEditor> customEditor;
     bool isCustomEditing = false;
     bool customEditOnSingleClick = false;

@@ -23,6 +23,8 @@
 #include <JuceHeader.h>
 //[/Headers]
 
+#include "R2Widgets.h"
+#include "JuceWidgets.h"
 
 
 //==============================================================================
@@ -33,22 +35,19 @@
     Describe your class and how it works here!
                                                                     //[/Comments]
 */
-class R2Widgets  : public juce::Component,
-                   public juce::Slider::Listener
+class MainComponent  : public juce::Component
 {
 public:
     //==============================================================================
-    R2Widgets ();
-    ~R2Widgets() override;
+    MainComponent ();
+    ~MainComponent() override;
 
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
-    void mouseDown (const juce::MouseEvent &event) override { grabKeyboardFocus(); }
     //[/UserMethods]
 
     void paint (juce::Graphics& g) override;
     void resized() override;
-    void sliderValueChanged (juce::Slider* sliderThatWasMoved) override;
 
 
 
@@ -57,16 +56,13 @@ private:
     //[/UserVariables]
 
     //==============================================================================
-    std::unique_ptr<r2juce::R2TextEditor> textEditor;
     std::unique_ptr<juce::Label> label;
-    std::unique_ptr<r2juce::R2Slider> slider;
-    std::unique_ptr<r2juce::R2Slider> knob;
-    std::unique_ptr<juce::Label> labelKnob;
-    std::unique_ptr<juce::Label> labelKnob2;
+    std::unique_ptr<R2Widgets> r2Widgets;
+    std::unique_ptr<JuceWidgets> juceWidgets;
 
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (R2Widgets)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
 
 //[EndFile] You can add extra defines here...

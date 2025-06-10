@@ -28,10 +28,11 @@ public:
     
     bool wasExitedWithEscape() const { return exitedWithEscape; }
     
-    std::function<juce::Component*()> getKeyboardParent = nullptr;
-    
+    void setKeyboardParentCallback(std::function<juce::Component*()> callback) { keyboardParentCallback = callback; }
+
 private:
     std::function<void(bool)> focusChangedCallback = nullptr;
+    std::function<juce::Component*()> keyboardParentCallback = nullptr;
     std::unique_ptr<R2ScreenKeyboard> keyboard = nullptr;
     bool exitedWithEscape = false;
 #if JUCE_RASPI || JUCE_RASPI_SIMULATE

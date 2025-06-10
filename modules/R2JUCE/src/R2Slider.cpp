@@ -37,30 +37,17 @@ R2Slider::~R2Slider()
     setLookAndFeel(nullptr);
 }
 
-void R2Slider::setKeyboardParent(juce::Component* parent)
-{
-    keyboardParentCallback = [parent]() -> juce::Component* {
-        return parent;
-    };
-    updateLookAndFeel();
-}
-
 void R2Slider::setKeyboardParentCallback(std::function<juce::Component*()> callback)
 {
     keyboardParentCallback = callback;
     updateLookAndFeel();
-}
-
-void R2Slider::setScreenKeyboardParent(std::function<juce::Component*()> callback)
-{
-    screenKeyboardParentCallback = callback;
     
     // 既存のR2Labelがあれば直接設定
     for (int i = 0; i < getNumChildComponents(); ++i)
     {
         if (auto* r2Label = dynamic_cast<R2Label*>(getChildComponent(i)))
         {
-            r2Label->setScreenKeyboardParent(callback);
+            r2Label->setKeyboardParentCallback(callback);
         }
     }
 }
