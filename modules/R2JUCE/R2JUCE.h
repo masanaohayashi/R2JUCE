@@ -19,6 +19,7 @@ END_JUCE_MODULE_DECLARATION
 #include "src/R2TextEditor.h"
 #include "src/R2Label.h"
 #include "src/R2Slider.h"
+#include "src/R2Led.h"
 #include "src/R2WiFiSelector.h"
 #include "src/R2ScreenKeyboard.h"
 #include "src/R2AudioConfigManager.h"

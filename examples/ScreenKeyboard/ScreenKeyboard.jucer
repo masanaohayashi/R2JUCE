@@ -21,6 +21,9 @@
       <FILE id="VGRk2i" name="ScreenKeyboardAudioProcessorEditor.h" compile="0"
             resource="0" file="Source/ScreenKeyboardAudioProcessorEditor.h"/>
     </GROUP>
+    <GROUP id="{414F5626-8F2F-8FC2-842D-8F550DD43D65}" name="Images">
+      <FILE id="TwYaGf" name="Led.png" compile="0" resource="1" file="Images/Led.png"/>
+    </GROUP>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

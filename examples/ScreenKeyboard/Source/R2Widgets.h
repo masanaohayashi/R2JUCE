@@ -63,6 +63,7 @@ private:
     std::unique_ptr<r2juce::R2Slider> knob;
     std::unique_ptr<juce::Label> labelKnob;
     std::unique_ptr<juce::Label> labelKnob2;
+    std::unique_ptr<r2juce::R2Led> led;
 
 
     //==============================================================================

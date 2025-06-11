@@ -87,11 +87,22 @@ R2Widgets::R2Widgets ()
 
     labelKnob2->setBounds (176, 104, 80, 88);
 
+    led.reset (new r2juce::R2Led (juce::ImageCache::getFromMemory (BinaryData::Led_png, BinaryData::Led_pngSize), 11));
+    addAndMakeVisible (led.get());
+
 
     //[UserPreSize]
     setWantsKeyboardFocus(true);
     textEditor->setKeyboardParentCallback([this]() { return getParentComponent(); });
     slider->setKeyboardParentCallback([this]() { return getParentComponent(); });
+
+    led->onMouseDown([this](){
+        led->setValue(1.0f);
+    });
+
+    led->onMouseUp([this](){
+        led->setValue(0.0f);
+    });
     //[/UserPreSize]
 
     setSize (264, 264);
@@ -112,6 +123,7 @@ R2Widgets::~R2Widgets()
     knob = nullptr;
     labelKnob = nullptr;
     labelKnob2 = nullptr;
+    led = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -136,9 +148,10 @@ void R2Widgets::resized()
     //[/UserPreResize]
 
     textEditor->setBounds (0, 32, getWidth() - 0, 24);
-    label->setBounds ((getWidth() / 2) - ((getWidth() - 0) / 2), 0, getWidth() - 0, 24);
+    label->setBounds ((getWidth() / 2) + -20 - ((getWidth() - 40) / 2), 0, getWidth() - 40, 24);
     slider->setBounds ((getWidth() / 2) - ((getWidth() - 0) / 2), 64, getWidth() - 0, 24);
     knob->setBounds ((getWidth() / 2) - (88 / 2), 96, 88, 120);
+    led->setBounds (getWidth() - 22, 4, 22, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -187,7 +200,7 @@ BEGIN_JUCER_METADATA
               explicitFocusOrder="0" pos="0 32 0M 24" initialText="" multiline="0"
               retKeyStartsLine="0" readonly="0" scrollbars="1" caret="1" popupmenu="1"/>
   <LABEL name="" id="4bb406791d8d250f" memberName="label" virtualName=""
-         explicitFocusOrder="0" pos="0Cc 0 0M 24" edTextCol="ff000000"
+         explicitFocusOrder="0" pos="-20Cc 0 40M 24" edTextCol="ff000000"
          edBkgCol="0" labelText="R2JUCE (supports screen keyboard)" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
@@ -211,6 +224,9 @@ BEGIN_JUCER_METADATA
          editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
          fontname="Default font" fontsize="15.0" kerning="0.0" bold="0"
          italic="0" justification="36"/>
+  <GENERICCOMPONENT name="" id="cfb8089368a70c2e" memberName="led" virtualName="r2juce::R2Led"
+                    explicitFocusOrder="0" pos="0Rr 4 22 24" class="juce::Component"
+                    params="juce::ImageCache::getFromMemory (BinaryData::Led_png, BinaryData::Led_pngSize), 11"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA
