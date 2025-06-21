@@ -27,8 +27,110 @@ DerivedData/
 *.xcworkspacedata
 *.xcuserstate
 **/xcschememanagement.plist
+*.xcbkptlist
 
+# Visual Studio 2022
+.vs/
+*.vcxproj.user
+*.vcxproj.filters
+*.suo
+*.sdf
+*.opensdf
+*.sln.docstates
+*.vcxproj.filters.user
+*.vcxproj.user
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+*.pdb
+*.obj
+*.tlog
+*.log
+*.res
+*.idb
+*.ipch
+*.lastbuildstate
+unsuccessfulbuild
+*.ilk
+*.pch
+*.exp
+*.lib
+*.dll
+*.exe
+*.app
 
+# JUCE Build Files
+JuceLibraryCode/
+Builds/*/
+!Builds/*/*.jucer
+!Builds/*/Makefile
+!Builds/*/CMakeLists.txt
+!Builds/*/*.vcxproj
+!Builds/*/*.vcxproj.filters
+!Builds/*/*.sln
+!Builds/*/*.xcodeproj/
+!Builds/*/*.entitlements
+!Builds/*/*.plist
+!Builds/*/*.nib
+!Builds/*/*.storyboard
+!Builds/*/*.rc
+!Builds/*/resources.rc
+!Builds/*/make_helpers/
+!Builds/*/Docker/
+!Builds/*/pre_build/
+!Builds/*/Images.xcassets/
+
+# Compiled Object files
+*.o
+*.a
+*.so
+*.dylib
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Makefile
+cmake_install.cmake
+install_manifest.txt
+
+# Node.js (if using for any build tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+*.tmp
+*.temp
+*~
+*.swp
+*.swo
+
+# IDE files
+*.sublime-project
+*.sublime-workspace
+.vscode/
+.idea/
+
+# Build outputs
 build/
+dist/
+out/
 
+# Docker
 examples/WiFiTest/Docker/raspi/ifw@*
+
+# Log files
+*.log
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Credentials and sensitive files
+**/Credentials.h

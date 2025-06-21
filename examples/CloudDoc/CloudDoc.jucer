@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="qzbJJs" name="CloudDoc" projectType="audioplug" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+  <MAINGROUP id="ki0yX7" name="CloudDoc">
+    <GROUP id="{50A2EEAC-711C-56EB-C6BD-B71D082BF47F}" name="Source">
+      <FILE id="PrKsCh" name="CloudDocAudioProcessor.cpp" compile="1" resource="0"
+            file="Source/CloudDocAudioProcessor.cpp"/>
+      <FILE id="nswA5j" name="CloudDocAudioProcessor.h" compile="0" resource="0"
+            file="Source/CloudDocAudioProcessor.h"/>
+      <FILE id="VKTUeA" name="CloudDocAudioProcessorEditor.cpp" compile="1"
+            resource="0" file="Source/CloudDocAudioProcessorEditor.cpp"/>
+      <FILE id="eeWSwK" name="CloudDocAudioProcessorEditor.h" compile="0"
+            resource="0" file="Source/CloudDocAudioProcessorEditor.h"/>
+      <FILE id="Bd5cus" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+      <FILE id="LwcX1N" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_plugin_client" showAllCode="1" useLocalCopy="0"
+            useGlobalPath="1"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="R2JUCE" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX" extraDefs="JUCE_RASPI_SIMULATE=1&#10;JUCE_RASPI_SIMULATE_WIDTH=800&#10;JUCE_RASPI_SIMULATE_HEIGHT=480&#10;"
+               appSandbox="1" hardenedRuntime="1" appSandboxOptions="com.apple.security.network.client,com.apple.security.network.server">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="CloudDoc"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="CloudDoc"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="R2JUCE" path="../../modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+    <XCODE_IPHONE targetFolder="Builds/iOS">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="R2JUCE" path="../../modules"/>
+      </MODULEPATHS>
+    </XCODE_IPHONE>
+    <LINUX_MAKE targetFolder="Builds/raspi" extraDefs="JUCE_RASPI=1">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="/Users/ring2/JUCE/modules"/>
+        <MODULEPATH id="R2JUCE" path="../../modules"/>
+      </MODULEPATHS>
+    </LINUX_MAKE>
+  </EXPORTFORMATS>
+</JUCERPROJECT>

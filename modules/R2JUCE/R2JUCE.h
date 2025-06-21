@@ -23,3 +23,8 @@ END_JUCE_MODULE_DECLARATION
 #include "src/R2WiFiSelector.h"
 #include "src/R2ScreenKeyboard.h"
 #include "src/R2AudioConfigManager.h"
+#include "src/R2CloudStorageProvider.h"
+#include "src/R2LocalStorageProvider.h"
+#include "src/R2GoogleDriveProvider.h"
+#include "src/R2CloudManager.h"
+#include "src/R2CloudAuthComponent.h"
