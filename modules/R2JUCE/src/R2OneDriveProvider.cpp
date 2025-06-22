@@ -2,19 +2,12 @@
 
 namespace r2juce {
 
-//==============================================================================
-// R2OneDriveProvider::OAuth2Handler - OneDrive認証ハンドラー
-//==============================================================================
-
 R2OneDriveProvider::OAuth2Handler::OAuth2Handler(R2OneDriveProvider& parent) : provider(parent)
 {
-    // JUCE 8の正しいAPIを使用してWebBrowserComponentを設定
     juce::WebBrowserComponent::Options options;
     
-    // ネイティブ統合を有効化（必須）
     options = options.withNativeIntegrationEnabled(true);
     
-    // JavaScript関数を登録して認証コードを受信
     options = options.withNativeFunction("authComplete",
         [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
         {
@@ -52,7 +45,6 @@ R2OneDriveProvider::OAuth2Handler::OAuth2Handler(R2OneDriveProvider& parent) : p
             completion(juce::var());
         });
     
-    // URLナビゲーションイベントを監視
     options = options.withEventListener("urlChanged",
         [this](const juce::var& eventData)
         {
@@ -68,7 +60,6 @@ R2OneDriveProvider::OAuth2Handler::OAuth2Handler(R2OneDriveProvider& parent) : p
             }
         });
     
-    // 初期化時にURL監視スクリプトを注入
     juce::String monitoringScript = R"(
         // Script to monitor URL changes for OneDrive auth
         let lastUrl = window.location.href;
@@ -83,8 +74,7 @@ R2OneDriveProvider::OAuth2Handler::OAuth2Handler(R2OneDriveProvider& parent) : p
                     window.__JUCE__.backend.emitEvent('urlChanged', { url: currentUrl });
                 }
                 
-                // Check if this is an auth callback URL
-                if (currentUrl.includes('localhost:8080/callback')) {
+                if (currentUrl.includes('login.microsoftonline.com/common/oauth2/nativeclient')) {
                     const params = new URLSearchParams(window.location.search);
                     const code = params.get('code');
                     const error = params.get('error');
@@ -116,7 +106,6 @@ R2OneDriveProvider::OAuth2Handler::OAuth2Handler(R2OneDriveProvider& parent) : p
     
     options = options.withUserScript(monitoringScript);
     
-    // UserAgentを設定
     options = options.withUserAgent("CloudDoc/1.0 (JUCE WebBrowser)");
     
     webBrowser = std::make_unique<juce::WebBrowserComponent>(options);
@@ -125,25 +114,23 @@ R2OneDriveProvider::OAuth2Handler::OAuth2Handler(R2OneDriveProvider& parent) : p
 
 void R2OneDriveProvider::OAuth2Handler::startAuthentication(const juce::String& clientId, R2CloudStorageProvider::AuthCallback callback)
 {
-    authCallback = callback;
-    currentClientId = clientId;
-    
-    // リダイレクトURIを設定
-    redirectUri = "http://localhost:8080/callback";
-    
-    // Microsoft OAuth2認証URLを構築
-    juce::String authUrl = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?";
-    authUrl += "client_id=" + juce::URL::addEscapeChars(clientId, false);
-    authUrl += "&redirect_uri=" + juce::URL::addEscapeChars(redirectUri, false);
-    authUrl += "&response_type=code";
-    authUrl += "&scope=" + juce::URL::addEscapeChars("Files.ReadWrite offline_access", false);
-    authUrl += "&response_mode=query";
-    authUrl += "&state=" + generateStateParameter();
-    
-    DBG("Starting OneDrive authentication with URL: " + authUrl);
-    
-    // 認証URLに移動
-    webBrowser->goToURL(authUrl);
+   authCallback = callback;
+   currentClientId = clientId;
+   
+   redirectUri = "https://login.microsoftonline.com/common/oauth2/nativeclient";
+   
+   juce::String authUrl = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize?";
+   authUrl += "client_id=" + juce::URL::addEscapeChars(clientId, false);
+   authUrl += "&redirect_uri=" + juce::URL::addEscapeChars(redirectUri, false);
+   authUrl += "&response_type=code";
+   authUrl += "&scope=" + juce::URL::addEscapeChars("Files.ReadWrite offline_access", false);
+   authUrl += "&response_mode=query";
+   authUrl += "&state=" + generateStateParameter();
+   
+   DBG("Starting OneDrive authentication with URL: " + authUrl);
+   DBG("Platform: " + juce::SystemStats::getOperatingSystemName());
+   
+   webBrowser->goToURL(authUrl);
 }
 
 void R2OneDriveProvider::OAuth2Handler::resized()
@@ -153,7 +140,6 @@ void R2OneDriveProvider::OAuth2Handler::resized()
 
 juce::String R2OneDriveProvider::OAuth2Handler::generateStateParameter()
 {
-    // CSRF攻撃防止のための状態パラメータ生成
     auto randomValue = juce::Random::getSystemRandom().nextInt64();
     stateParameter = juce::String::toHexString(static_cast<juce::int64>(randomValue));
     return stateParameter;
@@ -163,15 +149,14 @@ void R2OneDriveProvider::OAuth2Handler::checkAuthCallback(const juce::String& ur
 {
     DBG("OneDrive Checking URL: " + url);
     
-    if (url.startsWith(redirectUri))
+    if (url.startsWith("https://login.microsoftonline.com/common/oauth2/nativeclient"))
     {
-        DBG("OneDrive Redirect URI matched, extracting auth code");
+        DBG("OneDrive nativeclient redirect URI matched, extracting auth code");
         
         auto authCode = extractAuthCode(url);
         auto state = extractState(url);
         auto error = extractError(url);
         
-        // 状態パラメータの検証
         if (state != stateParameter && stateParameter.isNotEmpty())
         {
             handleAuthError("Invalid state parameter - possible CSRF attack");
@@ -193,7 +178,6 @@ void R2OneDriveProvider::OAuth2Handler::checkAuthCallback(const juce::String& ur
     }
     else if (url.contains("error"))
     {
-        // URLにエラーが含まれている場合
         auto error = extractError(url);
         if (error.isNotEmpty())
         {
@@ -206,31 +190,34 @@ void R2OneDriveProvider::OAuth2Handler::handleAuthSuccess(const juce::String& au
 {
     DBG("OneDrive Authentication successful");
     showSuccessPage();
-    
-    // プロバイダーに認証コードを伝達してトークン交換を開始
-    provider.exchangeAuthCodeForTokens(authCode, [this](bool success, const juce::String& errorMessage)
-    {
-        if (authCallback)
+
+    auto currentCallback = authCallback;
+
+    provider.exchangeAuthCodeForTokens(authCode, [this, currentCallback](bool success, const juce::String& errorMessage)
         {
-            juce::MessageManager::callAsync([authCallback = this->authCallback, success, errorMessage]()
+            if (currentCallback)
             {
-                authCallback(success, errorMessage);
-            });
-        }
-    });
+                juce::MessageManager::callAsync([currentCallback, success, errorMessage]()
+                    {
+                        currentCallback(success, errorMessage);
+                    });
+            }
+        });
 }
 
 void R2OneDriveProvider::OAuth2Handler::handleAuthError(const juce::String& error)
 {
     DBG("OneDrive Authentication error: " + error);
     showErrorPage(error);
-    
-    if (authCallback)
+
+    auto currentCallback = authCallback;
+
+    if (currentCallback)
     {
-        juce::MessageManager::callAsync([authCallback = this->authCallback, error]()
-        {
-            authCallback(false, error);
-        });
+        juce::MessageManager::callAsync([currentCallback, error]()
+            {
+                currentCallback(false, error);
+            });
     }
 }
 
@@ -285,7 +272,7 @@ void R2OneDriveProvider::OAuth2Handler::showSuccessPage()
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>認証成功</title>
+    <title>Authentication Success</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -328,9 +315,9 @@ void R2OneDriveProvider::OAuth2Handler::showSuccessPage()
 <body>
     <div class="container">
         <div class="checkmark">✓</div>
-        <h1>認証成功！</h1>
-        <p>OneDriveへの接続が完了しました。</p>
-        <p>このウィンドウは閉じて構いません。</p>
+        <h1>Authentication Success!</h1>
+        <p>OneDrive connection completed.</p>
+        <p>You can close this window.</p>
     </div>
 </body>
 </html>
@@ -347,7 +334,7 @@ void R2OneDriveProvider::OAuth2Handler::showErrorPage(const juce::String& error)
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>認証エラー</title>
+    <title>Authentication Error</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -399,10 +386,10 @@ void R2OneDriveProvider::OAuth2Handler::showErrorPage(const juce::String& error)
 <body>
     <div class="container">
         <div class="error-icon">✗</div>
-        <h1>認証失敗</h1>
-        <p>OneDrive認証中にエラーが発生しました。</p>
+        <h1>Authentication Failed</h1>
+        <p>An error occurred during OneDrive authentication.</p>
         <div class="error-detail">)" + error + R"(</div>
-        <p>ウィンドウを閉じて再試行してください。</p>
+        <p>Please close this window and try again.</p>
     </div>
 </body>
 </html>
@@ -412,30 +399,33 @@ void R2OneDriveProvider::OAuth2Handler::showErrorPage(const juce::String& error)
                        juce::URL::addEscapeChars(errorHTML, false));
 }
 
-//==============================================================================
-// R2OneDriveProvider - メイン実装
-//==============================================================================
-
 R2OneDriveProvider::R2OneDriveProvider()
 {
     DBG("=== R2OneDriveProvider Constructor ===");
     currentStatus = Status::NotAuthenticated;
-    bool tokensLoaded = loadTokens(); // 保存されたトークンをロード
-    DBG("Tokens loaded: " + juce::String(tokensLoaded ? "true" : "false"));
-    DBG("Current status: " + juce::String((int)currentStatus));
+    bool tokensLoaded = loadTokens();
+    DBG("Tokens loaded from file: " + juce::String(tokensLoaded ? "true" : "false"));
+    if (tokensLoaded)
+    {
+        DBG("Current status after loading: " + juce::String((int)currentStatus));
+    }
 }
 
 void R2OneDriveProvider::setClientCredentials(const juce::String& clientId, const juce::String& clientSecret)
 {
     this->clientId = clientId;
     this->clientSecret = clientSecret;
+    DBG("OneDrive credentials set - clientId: " + clientId + ", clientSecret: " + (clientSecret.isEmpty() ? "empty" : "provided"));
 }
 
 void R2OneDriveProvider::authenticate(AuthCallback callback)
 {
     DBG("=== R2OneDriveProvider::authenticate() ===");
+    DBG("Current status at start: " + juce::String((int)currentStatus));
     DBG("Token valid: " + juce::String(isTokenValid() ? "true" : "false"));
     DBG("Refresh token empty: " + juce::String(refreshToken.isEmpty() ? "true" : "false"));
+    DBG("Access token length: " + juce::String(accessToken.length()));
+    DBG("Refresh token length: " + juce::String(refreshToken.length()));
 
     if (clientId.isEmpty() || clientSecret.isEmpty())
     {
@@ -447,10 +437,18 @@ void R2OneDriveProvider::authenticate(AuthCallback callback)
     
     DBG("OneDrive Client credentials are set");
     
-    // 既存の有効なトークンがある場合
+    // CRITICAL: Check current status first!
+    if (currentStatus == Status::Authenticated && isTokenValid())
+    {
+        DBG("OneDrive ALREADY AUTHENTICATED with valid token!");
+        if (callback)
+            callback(true, "Already authenticated");
+        return;
+    }
+    
     if (isTokenValid())
     {
-        DBG("OneDrive Token is valid, already authenticated");
+        DBG("OneDrive Token is valid, setting authenticated status");
         currentStatus = Status::Authenticated;
         if (callback)
             callback(true, "Already authenticated");
@@ -459,7 +457,6 @@ void R2OneDriveProvider::authenticate(AuthCallback callback)
     
     DBG("OneDrive Token not valid, checking refresh token");
     
-    // リフレッシュトークンがある場合は先にそれを試す
     if (refreshToken.isNotEmpty())
     {
         DBG("OneDrive Refresh token available, trying to refresh");
@@ -474,17 +471,19 @@ void R2OneDriveProvider::authenticate(AuthCallback callback)
             }
             else
             {
-                // リフレッシュに失敗した場合、新しい認証フローを開始
-                startNewAuthFlow(callback);
+                currentStatus = Status::NotAuthenticated;
+                if (callback)
+                    callback(false, "device flow authentication required");
             }
         });
         return;
     }
     
-    DBG("OneDrive No refresh token, starting new auth flow");
+    DBG("OneDrive No refresh token, device flow authentication required");
     
-    // 新しい認証フローを開始
-    startNewAuthFlow(callback);
+    currentStatus = Status::NotAuthenticated;
+    if (callback)
+        callback(false, "device flow authentication required");
 }
 
 void R2OneDriveProvider::startNewAuthFlow(AuthCallback callback)
@@ -501,24 +500,22 @@ void R2OneDriveProvider::startNewAuthFlow(AuthCallback callback)
 
 void R2OneDriveProvider::exchangeAuthCodeForTokens(const juce::String& authCode, std::function<void(bool, juce::String)> callback)
 {
-    // Microsoft Graph API用のトークン交換
+    DBG("=== OneDrive exchangeAuthCodeForTokens ===");
+    DBG("Auth code: " + authCode.substring(0, 20) + "...");
+    
     juce::String postData = "grant_type=authorization_code";
     postData += "&code=" + juce::URL::addEscapeChars(authCode, false);
-    postData += "&redirect_uri=" + juce::URL::addEscapeChars("http://localhost:8080/callback", false);
+    postData += "&redirect_uri=" + juce::URL::addEscapeChars("https://login.microsoftonline.com/common/oauth2/nativeclient", false);
     postData += "&client_id=" + juce::URL::addEscapeChars(clientId, false);
     postData += "&client_secret=" + juce::URL::addEscapeChars(clientSecret, false);
-    postData += "&scope=" + juce::URL::addEscapeChars("Files.ReadWrite offline_access", false);
     
-    // HTTPリクエストを作成（Microsoft用エンドポイント）
     juce::URL tokenUrl("https://login.microsoftonline.com/common/oauth2/v2.0/token");
     tokenUrl = tokenUrl.withPOSTData(postData);
-    
-    // HTTPヘッダーを設定
+
     juce::StringPairArray headers;
     headers.set("Content-Type", "application/x-www-form-urlencoded");
     headers.set("Accept", "application/json");
-    
-    // バックグラウンドスレッドでリクエストを実行
+      
     juce::Thread::launch([this, tokenUrl, headers, callback]()
     {
         juce::String headerString;
@@ -539,6 +536,7 @@ void R2OneDriveProvider::exchangeAuthCodeForTokens(const juce::String& authCode,
         if (stream != nullptr)
         {
             auto response = stream->readEntireStreamAsString();
+            DBG("Token exchange response: " + response);
             
             juce::MessageManager::callAsync([this, response, callback]()
             {
@@ -547,6 +545,7 @@ void R2OneDriveProvider::exchangeAuthCodeForTokens(const juce::String& authCode,
         }
         else
         {
+            DBG("Failed to create HTTP request for token exchange");
             juce::MessageManager::callAsync([callback]()
             {
                 if (callback)
@@ -558,13 +557,17 @@ void R2OneDriveProvider::exchangeAuthCodeForTokens(const juce::String& authCode,
 
 void R2OneDriveProvider::setTokens(const juce::String& accessToken, const juce::String& refreshToken)
 {
+    DBG("=== OneDrive setTokens ===");
+    DBG("Access token preview: " + accessToken.substring(0, 20) + "...");
+    DBG("Refresh token preview: " + refreshToken.substring(0, 20) + "...");
+    
     this->accessToken = accessToken;
     this->refreshToken = refreshToken;
     
-    // 1時間後に期限切れとして設定（安全のため）
-    this->tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::hours(1);
+    this->tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::hours(1) - juce::RelativeTime::seconds(300);
     
     this->currentStatus = Status::Authenticated;
+    
     saveTokens();
     
     DBG("OneDrive Tokens set successfully");
@@ -572,62 +575,252 @@ void R2OneDriveProvider::setTokens(const juce::String& accessToken, const juce::
 
 void R2OneDriveProvider::downloadFileWithPath(const juce::String& filePath, DownloadCallback callback)
 {
-    juce::String endpoint = "https://graph.microsoft.com/v1.0/me/drive/root:/" + juce::URL::addEscapeChars(filePath, false) + ":/content";
+    DBG("=== OneDrive downloadFileWithPath DEBUG ===");
+    DBG("File path: " + filePath);
+    DBG("Access token available: " + juce::String(accessToken.isNotEmpty() ? "true" : "false"));
     
-    juce::Thread::launch([this, endpoint, callback]()
+    if (accessToken.isEmpty())
     {
+        DBG("ERROR: No access token available for download.");
+        juce::MessageManager::callAsync([callback]()
+        {
+            if (callback)
+                callback(false, {}, "Authentication required: No access token.");
+        });
+        return;
+    }
+
+    DBG("Token first 30 chars: " + accessToken.substring(0, juce::jmin (30, accessToken.length())) + "...");
+    DBG("Token length: " + juce::String(accessToken.length()));
+
+    juce::String endpoint = "https://graph.microsoft.com/v1.0/me/drive/root:/" + juce::URL::addEscapeChars(filePath, false) + ":/content";
+    DBG("Endpoint: " + endpoint);
+
+    auto performDownloadRequest = [this, endpoint, callback, filePath](bool initialCall)
+    {
+        DBG("=== OneDrive Token Validation (before download request) ===");
+        DBG("Has access token: " + juce::String(accessToken.isNotEmpty() ? "true" : "false"));
+        DBG("Token not expired: " + juce::String(tokenExpiry == juce::Time() || tokenExpiry > juce::Time::getCurrentTime() ? "true" : "false"));
+        DBG("Token preview: " + accessToken.substring(0, juce::jmin (30, accessToken.length())) + "...");
+        DBG("Token expiry: " + tokenExpiry.toString(true, true, true, true));
+        DBG("Current time: " + juce::Time::getCurrentTime().toString(true, true, true, true));
+        DBG("Token valid: " + juce::String(isTokenValid() ? "true" : "false"));
+
         if (!isTokenValid())
         {
-            juce::MessageManager::callAsync([callback]()
+            DBG("Token validation failed before download request. Attempting refresh if not a retry.");
+            if (initialCall)
             {
-                if (callback)
-                    callback(false, {}, "Authentication required");
-            });
+                juce::MessageManager::callAsync([this, filePath, callback]()
+                {
+                    refreshAccessToken([this, filePath, callback](bool refreshSuccess)
+                    {
+                        if (refreshSuccess)
+                        {
+                            DBG("Token refreshed successfully, retrying download.");
+                            downloadFileWithPath(filePath, callback);
+                        }
+                        else
+                        {
+                            DBG("Failed to refresh token, download failed.");
+                            if (callback)
+                                callback(false, {}, "Authentication required: Token refresh failed.");
+                        }
+                    });
+                });
+            }
+            else
+            {
+                 juce::MessageManager::callAsync([callback]()
+                    {
+                        if (callback)
+                            callback(false, {}, "Authentication required: Token invalid after refresh attempt.");
+                    });
+            }
             return;
         }
-        
+
         juce::URL url(endpoint);
         juce::StringPairArray headers;
         headers.set("Authorization", "Bearer " + accessToken);
+        headers.set("User-Agent", "CloudDoc/1.0");
+        headers.set("Accept", "*/*");
         
-        juce::String headerString;
+        headers.set("Accept-Encoding", "");
+
+        #if JUCE_WINDOWS
+        headers.set("Cache-Control", "no-cache");
+        headers.set("Connection", "keep-alive");
+        #endif
+
+        DBG("=== Headers being sent for download ===");
+        juce::String headerDebugString;
         for (int i = 0; i < headers.size(); ++i)
         {
-            headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
+            juce::String headerName = headers.getAllKeys()[i];
+            juce::String headerValue = headers.getAllValues()[i];
+
+            if (headerName == "Authorization")
+            {
+                headerDebugString += headerName + ": Bearer " + headerValue.substring(7, juce::jmin (37, headerValue.length())) + "...\n";
+            }
+            else
+            {
+                headerDebugString += headerName + ": " + headerValue + "\n";
+            }
+        }
+        DBG(headerDebugString.trim());
+
+        juce::String finalHeaderString;
+        for (int i = 0; i < headers.size(); ++i)
+        {
+            finalHeaderString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
             if (i < headers.size() - 1)
-                headerString += "\r\n";
+                finalHeaderString += "\r\n";
         }
 
+        DBG("=== Final header string for download ===");
+        DBG("Header string length: " + juce::String(finalHeaderString.length()));
+
+        #if JUCE_WINDOWS
         auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-                        .withExtraHeaders(headerString)
-                        .withConnectionTimeoutMs(30000);
-        
-        auto stream = url.createInputStream(options);
-        
-        if (stream != nullptr)
-        {
-            juce::MemoryBlock data;
-            stream->readIntoMemoryBlock(data);
+                           .withExtraHeaders(finalHeaderString)
+                           .withConnectionTimeoutMs(30000)
+                           .withNumRedirectsToFollow(10)
+                           .withHttpRequestCmd("GET");
+        #else
+        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                           .withExtraHeaders(finalHeaderString)
+                           .withConnectionTimeoutMs(30000)
+                           .withNumRedirectsToFollow(10);
+        #endif
+
+        DBG("Creating input stream for download...");
+        juce::Thread::launch([this, url, options, callback, initialCall, filePath]() mutable {
+            std::unique_ptr<juce::InputStream> baseStream;
+            juce::WebInputStream* webStream = nullptr;
             
-            juce::MessageManager::callAsync([callback, data]()
+            try {
+                baseStream = url.createInputStream(options);
+                webStream = dynamic_cast<juce::WebInputStream*>(baseStream.get());
+
+                if (webStream == nullptr)
+                {
+                    DBG("ERROR: Stream is not a WebInputStream. Cannot get HTTP status code.");
+                    juce::MessageManager::callAsync([callback]() {
+                        if (callback)
+                            callback(false, {}, "Failed to get HTTP stream type.");
+                    });
+                    return;
+                }
+                
+            } catch (const std::exception& e) {
+                DBG("GENERAL EXCEPTION during stream creation: " + juce::String(e.what()));
+                juce::MessageManager::callAsync([callback, errorMsg = juce::String(e.what())]() {
+                    if (callback)
+                        callback(false, {}, "General error creating stream: " + errorMsg);
+                });
+                return;
+            }
+
+            if (baseStream != nullptr && webStream != nullptr)
             {
-                if (callback)
-                    callback(true, data, "");
-            });
-        }
-        else
-        {
-            juce::MessageManager::callAsync([callback]()
+                DBG("Stream created successfully for download.");
+                int statusCode = webStream->getStatusCode();
+                DBG("HTTP Status Code: " + juce::String(statusCode));
+
+                juce::MemoryBlock data;
+                size_t bytesRead = baseStream->readIntoMemoryBlock(data);
+
+                DBG("Data read, size: " + juce::String(static_cast<int>(data.getSize())) + " (bytesRead: " + juce::String(static_cast<int>(bytesRead)) + ")");
+
+                juce::String responseContent = juce::String::createStringFromData(data.getData(), static_cast<int>(data.getSize()));
+                DBG("Full response from download: " + responseContent);
+
+                if (statusCode == 401 || (responseContent.contains("error") && responseContent.contains("unauthenticated")))
+                {
+                    DBG("ERROR: Received unauthenticated (401) response for download! Attempting token refresh if not already attempted.");
+                    
+                    if (initialCall)
+                    {
+                        juce::MessageManager::callAsync([this, filePath, callback]()
+                        {
+                            refreshAccessToken([this, filePath, callback](bool refreshSuccess)
+                            {
+                                if (refreshSuccess)
+                                {
+                                    DBG("Token refreshed successfully, retrying download.");
+                                    downloadFileWithPath(filePath, callback);
+                                }
+                                else
+                                {
+                                    DBG("Failed to refresh token, download failed.");
+                                    if (callback)
+                                        callback(false, {}, "Authentication required: Token refresh failed.");
+                                }
+                            });
+                        });
+                    }
+                    else
+                    {
+                         juce::MessageManager::callAsync([callback, responseContent]()
+                            {
+                                if (callback)
+                                    callback(false, {}, "Unauthenticated after retry: " + responseContent);
+                            });
+                    }
+                    return;
+                }
+                else if (statusCode >= 400)
+                {
+                    juce::MessageManager::callAsync([callback, responseContent, statusCode]()
+                        {
+                            if (callback)
+                                callback(false, {}, "API Error (Status " + juce::String(statusCode) + "): " + responseContent);
+                        });
+                    return;
+                }
+                
+                juce::MessageManager::callAsync([callback, data]()
+                    {
+                        if (callback)
+                            callback(true, data, "");
+                    });
+            }
+            else
             {
-                if (callback)
-                    callback(false, {}, "Failed to download file");
-            });
-        }
+                DBG("Failed to create input stream for download (stream == nullptr).");
+                juce::MessageManager::callAsync([callback]()
+                    {
+                        if (callback)
+                            callback(false, {}, "Failed to create input stream for download (nullptr).");
+                    });
+            }
+        });
+    };
+
+    juce::MessageManager::callAsync([performDownloadRequest]() {
+        performDownloadRequest(true);
     });
+}
+
+void R2OneDriveProvider::cancelAuthentication()
+{
+    DBG("R2OneDriveProvider::cancelAuthentication() called");
+    
+    if (oauth2Handler)
+    {
+        oauth2Handler.reset();
+    }
+    
+    currentStatus = Status::NotAuthenticated;
 }
 
 void R2OneDriveProvider::parseTokenResponse(const juce::String& response, std::function<void(bool, juce::String)> callback)
 {
+    DBG("=== OneDrive parseTokenResponse ===");
+    DBG("Response: " + response);
+    
     try
     {
         auto json = juce::JSON::parse(response);
@@ -638,21 +831,38 @@ void R2OneDriveProvider::parseTokenResponse(const juce::String& response, std::f
             
             if (obj->hasProperty("access_token"))
             {
-                accessToken = obj->getProperty("access_token").toString();
+                juce::String newAccessToken = obj->getProperty("access_token").toString();
+                juce::String newRefreshToken;
                 
                 if (obj->hasProperty("refresh_token"))
                 {
-                    refreshToken = obj->getProperty("refresh_token").toString();
+                    newRefreshToken = obj->getProperty("refresh_token").toString();
+                }
+                else
+                {
+                    // Keep existing refresh token during token refresh
+                    newRefreshToken = refreshToken;
                 }
                 
+                juce::Time newTokenExpiry;
                 if (obj->hasProperty("expires_in"))
                 {
                     auto expiresIn = static_cast<int>(obj->getProperty("expires_in"));
-                    tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(expiresIn - 300); // 5分の余裕
+                    newTokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(expiresIn - 300);
+                }
+                else
+                {
+                    newTokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::hours(1) - juce::RelativeTime::seconds(300);
                 }
                 
+                accessToken = newAccessToken;
+                refreshToken = newRefreshToken;
+                tokenExpiry = newTokenExpiry;
+                
                 currentStatus = Status::Authenticated;
+                
                 saveTokens();
+                DBG("Tokens saved");
                 
                 if (callback)
                     callback(true, "Authentication successful");
@@ -666,6 +876,7 @@ void R2OneDriveProvider::parseTokenResponse(const juce::String& response, std::f
                 if (errorDesc.isNotEmpty())
                     errorMessage += ": " + errorDesc;
                     
+                DBG("Token response error: " + errorMessage);
                 currentStatus = Status::Error;
                 if (callback)
                     callback(false, errorMessage);
@@ -673,12 +884,14 @@ void R2OneDriveProvider::parseTokenResponse(const juce::String& response, std::f
             }
         }
         
+        DBG("Invalid token response format");
         currentStatus = Status::Error;
         if (callback)
             callback(false, "Invalid token response");
     }
     catch (...)
     {
+        DBG("Exception parsing token response");
         currentStatus = Status::Error;
         if (callback)
             callback(false, "Failed to parse token response");
@@ -687,16 +900,17 @@ void R2OneDriveProvider::parseTokenResponse(const juce::String& response, std::f
 
 void R2OneDriveProvider::signOut()
 {
+    DBG("OneDrive signOut called");
     accessToken.clear();
     refreshToken.clear();
     tokenExpiry = juce::Time();
     currentStatus = Status::NotAuthenticated;
     
-    // 保存されたトークンファイルを削除
     auto tokenFile = getTokenFile();
     if (tokenFile.exists())
     {
-        tokenFile.deleteFile();
+        bool deleted = tokenFile.deleteFile();
+        DBG("Token file deleted: " + juce::String(deleted ? "true" : "false"));
     }
 }
 
@@ -712,14 +926,33 @@ juce::String R2OneDriveProvider::getDisplayName() const
 
 bool R2OneDriveProvider::isTokenValid() const
 {
-    return accessToken.isNotEmpty() &&
-           (tokenExpiry == juce::Time() || juce::Time::getCurrentTime() < tokenExpiry);
+    bool hasToken = accessToken.isNotEmpty();
+    bool notExpired = (tokenExpiry == juce::Time() || juce::Time::getCurrentTime() < tokenExpiry);
+    
+    DBG("=== OneDrive Token Validation ===");
+    DBG("Has access token: " + juce::String(hasToken ? "true" : "false"));
+    DBG("Token not expired: " + juce::String(notExpired ? "true" : "false"));
+    if (hasToken)
+    {
+        DBG("Token preview: " + accessToken.substring(0, 20) + "...");
+    }
+    if (tokenExpiry != juce::Time())
+    {
+        DBG("Token expiry: " + tokenExpiry.toString(true, true));
+        DBG("Current time: " + juce::Time::getCurrentTime().toString(true, true));
+    }
+    
+    return hasToken && notExpired;
 }
 
 void R2OneDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
 {
+    DBG("=== OneDrive Refresh Token ===");
+    DBG("Refresh token available: " + juce::String(refreshToken.isNotEmpty() ? "true" : "false"));
+    
     if (refreshToken.isEmpty())
     {
+        DBG("No refresh token available");
         if (callback)
             callback(false);
         return;
@@ -729,47 +962,71 @@ void R2OneDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
     postData += "&refresh_token=" + juce::URL::addEscapeChars(refreshToken, false);
     postData += "&client_id=" + juce::URL::addEscapeChars(clientId, false);
     postData += "&client_secret=" + juce::URL::addEscapeChars(clientSecret, false);
-    postData += "&scope=" + juce::URL::addEscapeChars("Files.ReadWrite offline_access", false);
-    
+
     juce::URL tokenUrl("https://login.microsoftonline.com/common/oauth2/v2.0/token");
     tokenUrl = tokenUrl.withPOSTData(postData);
-    
+
     juce::StringPairArray headers;
     headers.set("Content-Type", "application/x-www-form-urlencoded");
     headers.set("Accept", "application/json");
+    headers.set("User-Agent", "CloudDoc/1.0");
     
     juce::Thread::launch([this, tokenUrl, headers, callback]()
     {
-        // StringPairArrayをHTTPヘッダー文字列に変換
-        juce::String headerString;
-        for (int i = 0; i < headers.size(); ++i)
+        try
         {
-            headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
-            if (i < headers.size() - 1)
-                headerString += "\r\n";
-        }
-        
-        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-                        .withExtraHeaders(headerString)
-                        .withConnectionTimeoutMs(30000);
-        
-        auto stream = tokenUrl.createInputStream(options);
-        
-        if (stream != nullptr)
-        {
-            auto response = stream->readEntireStreamAsString();
-            
-            juce::MessageManager::callAsync([this, response, callback]()
+            juce::String headerString;
+            for (int i = 0; i < headers.size(); ++i)
             {
-                parseTokenResponse(response, [callback](bool success, const juce::String&)
+                headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
+                if (i < headers.size() - 1)
+                    headerString += "\r\n";
+            }
+            
+            auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                            .withExtraHeaders(headerString)
+                            .withConnectionTimeoutMs(30000);
+            
+            auto stream = tokenUrl.createInputStream(options);
+            
+            if (stream != nullptr)
+            {
+                auto response = stream->readEntireStreamAsString();
+                
+                DBG("=== Refresh Token Response ===");
+                DBG("Response: " + response);
+                
+                juce::MessageManager::callAsync([this, response, callback]()
+                {
+                    parseTokenResponse(response, [callback](bool success, const juce::String&)
+                    {
+                        if (callback)
+                            callback(success);
+                    });
+                });
+            }
+            else
+            {
+                DBG("Failed to connect for token refresh");
+                juce::MessageManager::callAsync([callback]()
                 {
                     if (callback)
-                        callback(success);
+                        callback(false);
                 });
+            }
+        }
+        catch (const std::exception& e)
+        {
+            DBG("Exception in refreshAccessToken: " + juce::String(e.what()));
+            juce::MessageManager::callAsync([callback]()
+            {
+                if (callback)
+                    callback(false);
             });
         }
-        else
+        catch (...)
         {
+            DBG("Unknown exception in refreshAccessToken");
             juce::MessageManager::callAsync([callback]()
             {
                 if (callback)
@@ -785,7 +1042,6 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
 {
     if (!isTokenValid())
     {
-        // トークンが無効な場合はリフレッシュを試行
         refreshAccessToken([this, endpoint, method, headers, postData, callback](bool refreshSuccess)
         {
             if (refreshSuccess)
@@ -809,6 +1065,7 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
         juce::StringPairArray requestHeaders = headers;
         requestHeaders.set("Authorization", "Bearer " + accessToken);
         requestHeaders.set("Accept", "application/json");
+        requestHeaders.set("User-Agent", "CloudDoc/1.0");
         
         if (method == "POST" && postData.isNotEmpty())
         {
@@ -819,7 +1076,6 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
             }
         }
         
-        // StringPairArrayをHTTPヘッダー文字列に変換
         juce::String headerString;
         for (int i = 0; i < requestHeaders.size(); ++i)
         {
@@ -836,17 +1092,21 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
         auto stream = url.createInputStream(options);
         
         auto streamPtr = stream.release();
-        juce::MessageManager::callAsync([streamPtr, callback]()
+        juce::MessageManager::callAsync([streamPtr, callback, endpoint]()
         {
             std::unique_ptr<juce::InputStream> stream(streamPtr);
             if (stream != nullptr)
             {
                 auto response = stream->readEntireStreamAsString();
+                DBG("=== OneDrive API Response ===");
+                DBG("Endpoint: " + endpoint);
+                DBG("Response: " + response);
                 if (callback)
                     callback(true, response);
             }
             else
             {
+                DBG("=== OneDrive API Request Failed ===");
                 if (callback)
                     callback(false, "Request failed");
             }
@@ -856,10 +1116,8 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
 
 void R2OneDriveProvider::listFiles(const juce::String& folderId, FileListCallback callback)
 {
-    // Microsoft Graph API を使用してファイル一覧を取得
     juce::String endpoint = "https://graph.microsoft.com/v1.0/me/drive/root/children";
     
-    // 特定のフォルダIDが指定されている場合
     if (folderId.isNotEmpty() && folderId != "root")
     {
         endpoint = "https://graph.microsoft.com/v1.0/me/drive/items/" + folderId + "/children";
@@ -899,10 +1157,8 @@ void R2OneDriveProvider::listFiles(const juce::String& folderId, FileListCallbac
                                 fileInfo.id = fileObj->getProperty("id").toString();
                                 fileInfo.name = fileObj->getProperty("name").toString();
                                 
-                                // フォルダかファイルかの判定
                                 fileInfo.isFolder = fileObj->hasProperty("folder");
                                 
-                                // MIMEタイプの設定
                                 if (fileInfo.isFolder)
                                 {
                                     fileInfo.mimeType = "application/vnd.microsoft.onedrive.folder";
@@ -928,7 +1184,6 @@ void R2OneDriveProvider::listFiles(const juce::String& folderId, FileListCallbac
                                     }
                                 }
                                 
-                                // ファイルサイズ
                                 if (fileObj->hasProperty("size"))
                                 {
                                     auto sizeVar = fileObj->getProperty("size");
@@ -958,7 +1213,6 @@ void R2OneDriveProvider::listFiles(const juce::String& folderId, FileListCallbac
                                     fileInfo.size = 0;
                                 }
                                 
-                                // 最終更新日時
                                 if (fileObj->hasProperty("lastModifiedDateTime"))
                                 {
                                     auto timeStr = fileObj->getProperty("lastModifiedDateTime").toString();
@@ -991,12 +1245,10 @@ void R2OneDriveProvider::uploadFile(const juce::String& fileName, const juce::Me
     DBG("Folder ID: " + folderId);
     DBG("Data size: " + juce::String(data.getSize()));
     
-    // Microsoft Graph API を使用してファイルをアップロード
     juce::String endpoint;
     
     if (folderId == "path")
     {
-        // パス形式での保存（フォルダ込みのファイル名）
         endpoint = "https://graph.microsoft.com/v1.0/me/drive/root:/" + juce::URL::addEscapeChars(fileName, false) + ":/content";
     }
     else if (folderId.isEmpty() || folderId == "root")
@@ -1022,11 +1274,9 @@ void R2OneDriveProvider::uploadFile(const juce::String& fileName, const juce::Me
             return;
         }
         
-        // MemoryOutputStreamを使ってバイナリデータを準備
         juce::MemoryOutputStream bodyStream;
         bodyStream.write(data.getData(), data.getSize());
         
-        // URLにPOSTデータとして設定
         juce::URL url(endpoint);
         url = url.withPOSTData(bodyStream.toString());
         
@@ -1090,7 +1340,6 @@ void R2OneDriveProvider::downloadFile(const juce::String& fileId, DownloadCallba
         juce::StringPairArray headers;
         headers.set("Authorization", "Bearer " + accessToken);
         
-        // StringPairArrayをHTTPヘッダー文字列に変換
         juce::String headerString;
         for (int i = 0; i < headers.size(); ++i)
         {
@@ -1145,7 +1394,6 @@ void R2OneDriveProvider::deleteFile(const juce::String& fileId, FileOperationCal
 void R2OneDriveProvider::createFolder(const juce::String& folderName, const juce::String& parentId,
                                      FileOperationCallback callback)
 {
-    // Microsoft Graph API を使用してフォルダを作成
     juce::String endpoint;
     
     if (parentId.isEmpty() || parentId == "root")
@@ -1180,7 +1428,10 @@ void R2OneDriveProvider::createFolder(const juce::String& folderName, const juce
 
 void R2OneDriveProvider::saveTokens()
 {
+    DBG("=== OneDrive saveTokens ===");
+    
     auto tokenFile = getTokenFile();
+    DBG("Token file path: " + tokenFile.getFullPathName());
     
     juce::DynamicObject::Ptr tokenData = new juce::DynamicObject();
     tokenData->setProperty("access_token", accessToken);
@@ -1188,10 +1439,25 @@ void R2OneDriveProvider::saveTokens()
     tokenData->setProperty("token_expiry", static_cast<juce::int64>(tokenExpiry.toMilliseconds()));
     
     auto json = juce::JSON::toString(juce::var(tokenData.get()));
+    DBG("Saving token data: " + json);
     
-    if (tokenFile.replaceWithText(json))
+    auto parentDir = tokenFile.getParentDirectory();
+    if (!parentDir.exists())
+    {
+        bool dirCreated = parentDir.createDirectory();
+        DBG("Parent directory created: " + juce::String(dirCreated ? "true" : "false"));
+    }
+    
+    bool saved = tokenFile.replaceWithText(json);
+    
+    if (saved)
     {
         DBG("OneDrive Tokens saved successfully");
+        if (tokenFile.exists())
+        {
+            auto savedContent = tokenFile.loadFileAsString();
+            DBG("Saved content verification: " + savedContent.substring(0, 100) + "...");
+        }
     }
     else
     {
@@ -1201,12 +1467,20 @@ void R2OneDriveProvider::saveTokens()
 
 bool R2OneDriveProvider::loadTokens()
 {
+    DBG("=== OneDrive loadTokens ===");
+    
     auto tokenFile = getTokenFile();
+    DBG("Token file path: " + tokenFile.getFullPathName());
     
     if (!tokenFile.exists())
+    {
+        DBG("Token file does not exist");
         return false;
+    }
     
     auto json = tokenFile.loadFileAsString();
+    DBG("Loaded token data: " + json);
+    
     auto tokenData = juce::JSON::parse(json);
     
     if (tokenData.isObject())
@@ -1225,20 +1499,28 @@ bool R2OneDriveProvider::loadTokens()
             tokenExpiry = juce::Time(expiryMs);
         }
         
-        // トークンが有効な場合は認証済み状態に設定
+        DBG("Loaded access token preview: " + accessToken.substring(0, 20) + "...");
+        DBG("Loaded refresh token preview: " + refreshToken.substring(0, 20) + "...");
+        DBG("Token expiry: " + tokenExpiry.toString(true, true));
+        
+        // Remove the old v1.0 token check - this was causing tokens to be deleted!
+        // OneDrive v2.0 tokens can start with "EwB" which is valid for Microsoft Graph API
+        
         if (isTokenValid())
         {
             currentStatus = Status::Authenticated;
-            DBG("OneDrive Tokens loaded successfully");
+            DBG("OneDrive Tokens loaded successfully - status set to Authenticated");
             return true;
         }
         else if (refreshToken.isNotEmpty())
         {
             DBG("OneDrive Access token expired, but refresh token available");
+            currentStatus = Status::Authenticated;
             return true;
         }
     }
     
+    DBG("Failed to parse token data");
     return false;
 }
 

@@ -122,7 +122,27 @@ R2CloudAuthComponent::R2CloudAuthComponent ()
 R2CloudAuthComponent::~R2CloudAuthComponent()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
-    stopAuthentication();
+    DBG("R2CloudAuthComponent destructor called");
+    
+    // Stop any active authentication process
+    deviceFlowActive = false;
+    if (isTimerRunning())
+    {
+        stopTimer();
+    }
+    
+    // Clear callbacks to prevent crashes
+    onAuthenticationComplete = nullptr;
+    onAuthenticationCancelled = nullptr;
+    
+    // Cancel any pending HTTP requests by clearing state
+    deviceCode.clear();
+    userCode.clear();
+    verificationUrl.clear();
+    
+    // Wait briefly for any pending operations
+    juce::Thread::sleep(10);
+
     //[/Destructor_pre]
 
     labelTitle = nullptr;
@@ -177,21 +197,35 @@ void R2CloudAuthComponent::buttonClicked (juce::Button* buttonThatWasClicked)
     if (buttonThatWasClicked == buttonCancel.get())
     {
         //[UserButtonCode_buttonCancel] -- add your button handler code here..
-        if (onAuthenticationCancelled)
-            onAuthenticationCancelled();
+        DBG("Cancel button clicked");
+        
         stopAuthentication();
+        
+        if (onAuthenticationCancelled)
+        {
+            try
+            {
+                onAuthenticationCancelled();
+            }
+            catch (...)
+            {
+                DBG("Exception in onAuthenticationCancelled callback");
+            }
+        }
         //[/UserButtonCode_buttonCancel]
     }
     else if (buttonThatWasClicked == buttonCopyUrl.get())
     {
         //[UserButtonCode_buttonCopyUrl] -- add your button handler code here..
-        copyToClipboard(verificationUrl);
+        if (!verificationUrl.isEmpty())
+            copyToClipboard(verificationUrl);
         //[/UserButtonCode_buttonCopyUrl]
     }
     else if (buttonThatWasClicked == buttonCopyCode.get())
     {
         //[UserButtonCode_buttonCopyCode] -- add your button handler code here..
-        copyToClipboard (userCode);
+        if (!userCode.isEmpty())
+            copyToClipboard (userCode);
         //[/UserButtonCode_buttonCopyCode]
     }
 
@@ -226,10 +260,6 @@ void R2CloudAuthComponent::setServiceType(ServiceType type)
         case ServiceType::OneDrive:
             labelTitle->setText (TRANS("OneDrive Authentication"), juce::dontSendNotification);
             break;
-        // 今後追加予定
-        // case ServiceType::Dropbox:
-        //     labelTitle->setText(TRANS("Dropbox Authentication"), juce::dontSendNotification);
-        //     break;
     }
 }
 
@@ -255,15 +285,62 @@ void R2CloudAuthComponent::startAuthentication()
 
 void R2CloudAuthComponent::stopAuthentication()
 {
+    DBG("R2CloudAuthComponent::stopAuthentication() called");
+    
     deviceFlowActive = false;
-    stopTimer();
+    
+    if (isTimerRunning())
+    {
+        stopTimer();
+    }
     
     deviceCode.clear();
     userCode.clear();
     verificationUrl.clear();
     pollCount = 0;
+    interval = 5;
+    progressValue = 0.0;
     
-    setVisible(false);
+    auto updateUI = [this]()
+    {
+        if (labelCodeDisplay != nullptr)
+            labelCodeDisplay->setText(TRANS("Waiting for code..."), juce::dontSendNotification);
+        
+        if (buttonURL != nullptr)
+        {
+            buttonURL->setButtonText(TRANS("Waiting for code..."));
+            buttonURL->setTooltip(TRANS("Waiting for code..."));
+            buttonURL->setEnabled(false);
+        }
+        
+        if (buttonCopyUrl != nullptr)
+            buttonCopyUrl->setEnabled(false);
+            
+        if (buttonCopyCode != nullptr)
+            buttonCopyCode->setEnabled(false);
+        
+        if (labelStatus != nullptr)
+        {
+            labelStatus->setText(TRANS("Authentication cancelled"), juce::dontSendNotification);
+            labelStatus->setColour(juce::Label::textColourId, juce::Colours::orange);
+        }
+        
+        if (progressBar != nullptr)
+            progressBar->repaint();
+        
+        setVisible(false);
+    };
+    
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+    {
+        updateUI();
+    }
+    else
+    {
+        juce::MessageManager::callAsync(updateUI);
+    }
+    
+    DBG("R2CloudAuthComponent::stopAuthentication() completed");
 }
 
 void R2CloudAuthComponent::requestDeviceCode()
@@ -337,14 +414,13 @@ void R2CloudAuthComponent::parseDeviceCodeResponse(const juce::String& response)
         deviceCode = obj->getProperty("device_code").toString();
         userCode = obj->getProperty("user_code").toString();
         
-        // Google DriveとOneDriveでverification_urlのプロパティ名が異なる
         if (serviceType == ServiceType::GoogleDrive)
         {
             verificationUrl = obj->getProperty("verification_url").toString();
         }
         else if (serviceType == ServiceType::OneDrive)
         {
-            verificationUrl = obj->getProperty("verification_uri").toString();  // Microsoftは"verification_uri"
+            verificationUrl = obj->getProperty("verification_uri").toString();
         }
         
         if (obj->hasProperty("interval"))
@@ -380,7 +456,6 @@ void R2CloudAuthComponent::updateUI()
     buttonCopyUrl->setEnabled (true);
     buttonCopyCode->setEnabled (true);
     
-    // サービス別のメッセージ表示
     juce::String instructionText;
     if (serviceType == ServiceType::GoogleDrive)
     {
@@ -412,7 +487,6 @@ void R2CloudAuthComponent::pollForAccessToken()
         return;
     }
     
-    // プログレス更新
     progressValue = 0.3 + (static_cast<double>(pollCount) / maxPolls) * 0.6;
     progressBar->repaint();
     
@@ -477,12 +551,10 @@ void R2CloudAuthComponent::parseTokenResponse(const juce::String& response)
             
             if (error == "authorization_pending")
             {
-                // 継続
                 return;
             }
             else if (error == "slow_down")
             {
-                // レート制限 - 間隔を延長
                 interval += 5;
                 stopTimer();
                 startTimer(interval * 1000);
@@ -490,7 +562,6 @@ void R2CloudAuthComponent::parseTokenResponse(const juce::String& response)
             }
             else
             {
-                // その他のエラー
                 auto errorDesc = obj->getProperty("error_description").toString();
                 showError(error + (errorDesc.isNotEmpty() ? ": " + errorDesc : ""));
                 return;
@@ -499,7 +570,7 @@ void R2CloudAuthComponent::parseTokenResponse(const juce::String& response)
     }
     catch (...)
     {
-        // 継続
+
     }
 }
 
@@ -510,34 +581,79 @@ void R2CloudAuthComponent::updateStatus(const juce::String& status)
 
 void R2CloudAuthComponent::showError(const juce::String& error)
 {
-    stopTimer();
+    DBG("R2CloudAuthComponent::showError: " + error);
+    
+    if (isTimerRunning())
+    {
+        stopTimer();
+    }
     deviceFlowActive = false;
     
-    updateStatus(TRANS("Error: ") + error);
-    progressValue = 0.0;
-    progressBar->repaint();
+    auto updateErrorUI = [this, error]()
+    {
+        updateStatus(TRANS("Error: ") + error);
+        progressValue = 0.0;
+        
+        if (progressBar != nullptr)
+            progressBar->repaint();
+        
+        if (labelStatus != nullptr)
+            labelStatus->setColour(juce::Label::textColourId, juce::Colours::red);
+    };
     
-    labelStatus->setColour(juce::Label::textColourId, juce::Colours::red);
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+    {
+        updateErrorUI();
+    }
+    else
+    {
+        juce::MessageManager::callAsync(updateErrorUI);
+    }
     
     if (onAuthenticationComplete)
-        onAuthenticationComplete(false, error, "", "");
+    {
+        try
+        {
+            onAuthenticationComplete(false, error, "", "");
+        }
+        catch (...)
+        {
+            DBG("Exception in onAuthenticationComplete callback");
+        }
+    }
 }
 
 void R2CloudAuthComponent::showSuccess()
 {
-    stopTimer();
+    DBG("R2CloudAuthComponent::showSuccess");
+    
+    if (isTimerRunning())
+    {
+        stopTimer();
+    }
     deviceFlowActive = false;
     
-    updateStatus(TRANS("Authentication successful!"));
-    progressValue = 1.0;
-    progressBar->repaint();
+    auto updateSuccessUI = [this]()
+    {
+        updateStatus(TRANS("Authentication successful!"));
+        progressValue = 1.0;
+        
+        if (progressBar != nullptr)
+            progressBar->repaint();
+        
+        if (labelStatus != nullptr)
+            labelStatus->setColour(juce::Label::textColourId, juce::Colours::green);
+    };
     
-    labelStatus->setColour(juce::Label::textColourId, juce::Colours::green);
+    if (juce::MessageManager::getInstance()->isThisTheMessageThread())
+    {
+        updateSuccessUI();
+    }
+    else
+    {
+        juce::MessageManager::callAsync(updateSuccessUI);
+    }
     
-    // 即座にstopAuthenticationを呼び、表示だけ1秒後に消す
-    stopAuthentication();
-    
-    // 表示だけ1秒後に消す
     juce::Timer::callAfterDelay(1000, [safeThis = juce::Component::SafePointer<R2CloudAuthComponent>(this)]()
     {
         if (safeThis != nullptr)
@@ -551,18 +667,25 @@ void R2CloudAuthComponent::copyToClipboard(const juce::String& text)
 {
     juce::SystemClipboard::copyTextToClipboard(text);
     
-    // 一時的にボタンテキストを変更してフィードバック
     if (text == userCode)
     {
         auto prevText = buttonCopyCode->getButtonText();
-        buttonCopyCode->setButtonText (TRANS("Copied!"));
-        juce::Timer::callAfterDelay (1000, [this, prevText]() { buttonCopyCode->setButtonText(prevText); });
+        buttonCopyCode->setButtonText(TRANS("Copied!"));
+        juce::Timer::callAfterDelay(1000, [safeThis = juce::Component::SafePointer<R2CloudAuthComponent>(this), prevText]()
+        {
+            if (safeThis != nullptr && safeThis->buttonCopyCode != nullptr)
+                safeThis->buttonCopyCode->setButtonText(prevText);
+        });
     }
     else if (text == verificationUrl)
     {
         auto prevText = buttonCopyUrl->getButtonText();
         buttonCopyUrl->setButtonText(TRANS("Copied!"));
-        juce::Timer::callAfterDelay(1000, [this, prevText]() { buttonCopyUrl->setButtonText(prevText); });
+        juce::Timer::callAfterDelay(1000, [safeThis = juce::Component::SafePointer<R2CloudAuthComponent>(this), prevText]()
+        {
+            if (safeThis != nullptr && safeThis->buttonCopyUrl != nullptr)
+                safeThis->buttonCopyUrl->setButtonText(prevText);
+        });
     }
 }
 
@@ -616,7 +739,7 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
                 int statusCode = webStream->getStatusCode();
                 bool success = (statusCode >= 200 && statusCode < 300);
                 
-                DBG("=== OneDrive HTTP Response ===");
+                DBG("=== HTTP Response ===");
                 DBG("Status Code: " + juce::String(statusCode));
                 DBG("Response: " + response);
 
@@ -628,7 +751,7 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
             }
             else
             {
-                DBG("=== OneDrive HTTP Connection Failed ===");
+                DBG("=== HTTP Connection Failed ===");
                 juce::MessageManager::callAsync([callback]()
                 {
                     if (callback)

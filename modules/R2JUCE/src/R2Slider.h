@@ -14,7 +14,7 @@
 
 namespace r2juce {
 
-class R2LookAndFeel;  // 前方宣言
+class R2LookAndFeel;
 
 class R2Slider : public juce::Slider
 {
@@ -22,13 +22,10 @@ public:
     R2Slider(const juce::String& componentName = juce::String());
     ~R2Slider() override;
     
-    // キーボード親コンポーネントを設定
     void setKeyboardParentCallback(std::function<juce::Component*()> callback);
     
-    // R2TextEditorのフォーカス変化コールバック
     void setFocusChangeCallback(std::function<void(bool)> callback);
     
-    // マウス操作時に編集をキャンセル
     void mouseDown(const juce::MouseEvent& e) override;
     void mouseDrag(const juce::MouseEvent& e) override;
     void mouseWheelMove(const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel) override;

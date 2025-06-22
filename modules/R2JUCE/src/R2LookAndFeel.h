@@ -21,13 +21,10 @@ public:
     R2LookAndFeel();
     ~R2LookAndFeel() override;
     
-    // SliderのTextBoxにR2Labelを使用
     juce::Label* createSliderTextBox(juce::Slider& slider) override;
     
-    // キーボード親コンポーネントを取得するためのコールバック
     void setKeyboardParentCallback(std::function<juce::Component*()> callback);
     
-    // R2TextEditorの見た目をカスタマイズ
     void fillTextEditorBackground(juce::Graphics& g, int width, int height,
                                   juce::TextEditor& textEditor) override;
     

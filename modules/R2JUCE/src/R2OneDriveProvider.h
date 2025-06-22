@@ -28,6 +28,7 @@ public:
     void exchangeAuthCodeForTokens(const juce::String& authCode, std::function<void(bool, juce::String)> callback);
     void setTokens(const juce::String& accessToken, const juce::String& refreshToken);
     void downloadFileWithPath(const juce::String& filePath, DownloadCallback callback);
+    void cancelAuthentication(); // OAuth2Handlerを安全に閉じるメソッド
 
 private:
     void startNewAuthFlow(AuthCallback callback);

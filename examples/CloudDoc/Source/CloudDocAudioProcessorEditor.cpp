@@ -57,7 +57,14 @@ CloudDocAudioProcessorEditor::CloudDocAudioProcessorEditor (CloudDocAudioProcess
 CloudDocAudioProcessorEditor::~CloudDocAudioProcessorEditor()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
-    mainComponent = nullptr;
+    if (mainComponent != nullptr)
+    {
+        // Remove from parent before destroying to prevent access after deletion
+        removeChildComponent(mainComponent.get());
+        
+        // Clear the component pointer
+        mainComponent = nullptr;
+    }
     //[/Destructor_pre]
 
 
@@ -86,15 +93,12 @@ void CloudDocAudioProcessorEditor::resized()
     //[UserResized] Add your own custom resize handling here..
     if (mainComponent != nullptr)
     {
-        // エディターのサイズを取得
         int editorWidth = getWidth();
         int editorHeight = getHeight();
 
-        // mainComponentの元のサイズ（基準サイズ）
-        int componentOriginalWidth = 568;  // 元の幅
-        int componentOriginalHeight = 320; // 元の高さ
+        int componentOriginalWidth = 568;
+        int componentOriginalHeight = 320;
 
-        // アスペクト比を計算
         float componentAspectRatio = (float)componentOriginalWidth / (float)componentOriginalHeight;
         float editorAspectRatio = (float)editorWidth / (float)editorHeight;
 
@@ -102,23 +106,19 @@ void CloudDocAudioProcessorEditor::resized()
 
         if (componentAspectRatio > editorAspectRatio)
         {
-            // mainComponentの方が横長 → 幅に合わせてスケール
             scaleX = scaleY = (float)editorWidth / (float)componentOriginalWidth;
             offsetX = 0;
-            offsetY = (editorHeight - componentOriginalHeight * scaleY) * 0.5f; // 縦方向センタリング
+            offsetY = (editorHeight - componentOriginalHeight * scaleY) * 0.5f;
         }
         else
         {
-            // mainComponentの方が縦長（または同じ比率） → 高さに合わせてスケール
             scaleX = scaleY = (float)editorHeight / (float)componentOriginalHeight;
-            offsetX = (editorWidth - componentOriginalWidth * scaleX) * 0.5f; // 横方向センタリング
+            offsetX = (editorWidth - componentOriginalWidth * scaleX) * 0.5f;
             offsetY = 0;
         }
 
-        // mainComponentを元のサイズに設定
         mainComponent->setBounds(0, 0, componentOriginalWidth, componentOriginalHeight);
 
-        // AffineTransformを適用してスケール&オフセット
         juce::AffineTransform transform = juce::AffineTransform::scale(scaleX, scaleY)
                                                                 .translated(offsetX, offsetY);
         mainComponent->setTransform(transform);

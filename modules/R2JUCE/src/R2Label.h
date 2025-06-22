@@ -21,32 +21,24 @@ public:
     R2Label(const juce::String& componentName = juce::String(),
             const juce::String& labelText = juce::String());
     
-    // 編集機能を独自実装
     void setEditable(bool editOnSingleClick, bool editOnDoubleClick = false,
                      bool lossOfFocusDiscardsChanges = false);
     
-    // マウスイベント
     void mouseDoubleClick(const juce::MouseEvent& e) override;
-    void mouseUp(const juce::MouseEvent& e) override;  // JUCEのshowEditor()呼び出しを防ぐ
+    void mouseUp(const juce::MouseEvent& e) override;
     
-    // 独自編集メソッド
     void startCustomEditing();
     void stopCustomEditing(bool applyChanges);
     bool isBeingEdited() const { return isCustomEditing; }
     
-    // JUCEのshowEditorを隠す
     void showEditor();
     
-    // キーボード親コンポーネント設定
     void setKeyboardParentCallback(std::function<juce::Component*()> callback);
     
-    // Component overrides
     void paint(juce::Graphics& g) override;
     
-    // JUCEの編集機能は使用しない
     juce::TextEditor* createEditorComponent() override;
     
-    // TextEditor::Listener overrides (juce::Labelが既に継承しているのでオーバーライドのみ)
     void textEditorReturnKeyPressed(juce::TextEditor&) override;
     void textEditorEscapeKeyPressed(juce::TextEditor&) override;
     

@@ -22,23 +22,20 @@ R2TextEditor::R2TextEditor (const juce::String& componentName, wchar_t passwordC
 
 bool R2TextEditor::keyPressed(const juce::KeyPress& key)
 {
-    // ESCキーの処理
     if (key == juce::KeyPress::escapeKey)
     {
         exitedWithEscape = true;
         giveAwayKeyboardFocus();
-        return true;  // キーイベントを消費
+        return true;
     }
     
-    // Enterキーの処理
     if (key == juce::KeyPress::returnKey)
     {
         exitedWithEscape = false;
         giveAwayKeyboardFocus();
-        return true;  // キーイベントを消費
+        return true;
     }
     
-    // その他のキーは親クラスに任せる
     return juce::TextEditor::keyPressed(key);
 }
 
@@ -46,7 +43,6 @@ void R2TextEditor::focusGained (FocusChangeType type)
 {
     juce::TextEditor::focusGained (type);
 
-    // ESCフラグをリセット
     exitedWithEscape = false;
 
     if (!useScreenKeyboard) return;

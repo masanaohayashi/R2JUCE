@@ -53,23 +53,18 @@ public:
         OneDrive
     };
 
-    // === 設定 ===
     void setGoogleCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void setServiceType(ServiceType type);
 
-    // === 認証開始/停止 ===
     void startAuthentication();
     void stopAuthentication();
 
-    // === コールバック ===
     std::function<void(bool success, juce::String errorMessage, juce::String accessToken, juce::String refreshToken)> onAuthenticationComplete;
     std::function<void()> onAuthenticationCancelled;
 
-    // === Timer ===
     void timerCallback() override;
 
-    // === キー入力でESCで閉じる ===
     bool keyPressed(const juce::KeyPress& key) override;
     //[/UserMethods]
 
@@ -99,15 +94,12 @@ private:
 
     ServiceType serviceType = ServiceType::GoogleDrive;
 
-    // Google OAuth設定
     juce::String googleClientId;
     juce::String googleClientSecret;
 
-    // OneDrive OAuth設定
     juce::String oneDriveClientId;
     juce::String oneDriveClientSecret;
 
-    // Device Flow状態
     bool deviceFlowActive = false;
     juce::String deviceCode;
     juce::String userCode;

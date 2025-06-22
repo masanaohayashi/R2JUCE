@@ -17,23 +17,19 @@ namespace r2juce {
 R2Slider::R2Slider(const juce::String& componentName)
     : juce::Slider(componentName)
 {
-    // R2LookAndFeelを作成
     r2LookAndFeel = std::make_unique<R2LookAndFeel>();
     
-    // デフォルトのキーボード親コンポーネント設定
     keyboardParentCallback = [this]() -> juce::Component* {
         return this->getParentComponent();
     };
     
     updateLookAndFeel();
     
-    // デフォルトのテキストボックススタイル
     setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 30);
 }
 
 R2Slider::~R2Slider()
 {
-    // LookAndFeelを解除
     setLookAndFeel(nullptr);
 }
 
@@ -42,7 +38,6 @@ void R2Slider::setKeyboardParentCallback(std::function<juce::Component*()> callb
     keyboardParentCallback = callback;
     updateLookAndFeel();
     
-    // 既存のR2Labelがあれば直接設定
     for (int i = 0; i < getNumChildComponents(); ++i)
     {
         if (auto* r2Label = dynamic_cast<R2Label*>(getChildComponent(i)))
@@ -59,14 +54,13 @@ void R2Slider::setFocusChangeCallback(std::function<void(bool)> callback)
 
 void R2Slider::cancelEditing()
 {
-    // 子コンポーネントでR2Labelを探してキャンセル
     for (int i = 0; i < getNumChildComponents(); ++i)
     {
         if (auto* r2Label = dynamic_cast<R2Label*>(getChildComponent(i)))
         {
             if (r2Label->isBeingEdited())
             {
-                r2Label->stopCustomEditing(false);  // false = 変更を適用しない
+                r2Label->stopCustomEditing(false);
                 break;
             }
         }
@@ -75,28 +69,22 @@ void R2Slider::cancelEditing()
 
 void R2Slider::mouseDown(const juce::MouseEvent& e)
 {
-    // Slider部分がクリックされた時に編集をキャンセル
     cancelEditing();
     
-    // 親クラスの処理を呼ぶ
     juce::Slider::mouseDown(e);
 }
 
 void R2Slider::mouseDrag(const juce::MouseEvent& e)
 {
-    // ドラッグ時に編集をキャンセル
     cancelEditing();
     
-    // 親クラスの処理を呼ぶ
     juce::Slider::mouseDrag(e);
 }
 
 void R2Slider::mouseWheelMove(const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel)
 {
-    // マウスホイール操作時に編集をキャンセル
     cancelEditing();
     
-    // 親クラスの処理を呼ぶ
     juce::Slider::mouseWheelMove(e, wheel);
 }
 

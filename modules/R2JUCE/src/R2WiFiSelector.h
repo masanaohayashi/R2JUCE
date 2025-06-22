@@ -94,7 +94,7 @@ private:
     juce::OwnedArray<WifiNetwork> networks;
     int selectedNetworkIndex = -1;
     juce::String sudoPassword;
-    juce::String previouslySelectedSSID;  // 更新後も選択を維持するため
+    juce::String previouslySelectedSSID;
     bool isConnecting = false;
     std::unique_ptr<ConnectingOverlay> connectingOverlay;
     std::unique_ptr<PasswordInputOverlay> passwordInputOverlay;
@@ -116,9 +116,6 @@ private:
 
 //[EndFile] You can add extra defines here...
 //==============================================================================
-/**
- 接続中オーバーレイコンポーネント
- */
 class ConnectingOverlay : public juce::Component,
 public juce::Button::Listener,
 private juce::Timer
@@ -130,7 +127,7 @@ private juce::Timer
     void paint(juce::Graphics& g) override;
     void resized() override;
     void buttonClicked(juce::Button* button) override;
-    void timerCallback() override;  // この行を追加
+    void timerCallback() override;
 
     void setConnecting(const juce::String& ssid);
     void setFailed(const juce::String& message);
@@ -140,16 +137,13 @@ private juce::Timer
     std::unique_ptr<juce::Label> statusLabel;
     std::unique_ptr<juce::TextButton> actionButton;
     bool isFailedState = false;
-    int spinnerIndex = 0;  // この行を追加
-    juce::String currentSSID;  // この行を追加
+    int spinnerIndex = 0;
+    juce::String currentSSID;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ConnectingOverlay)
 };
 
 //==============================================================================
-/**
- パスワード入力オーバーレイコンポーネント
- */
 class PasswordInputOverlay : public juce::Component,
 public juce::Button::Listener,
 public juce::TextEditor::Listener

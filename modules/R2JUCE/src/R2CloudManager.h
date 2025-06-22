@@ -9,10 +9,6 @@ namespace r2juce {
 class R2CloudStorageProvider;
 class R2CloudAuthComponent;
 
-/**
- * クラウドストレージ管理のメインAPIクラス
- * シンプルで使いやすいインターフェースを提供
- */
 class R2CloudManager
 {
 public:
@@ -23,8 +19,7 @@ public:
     {
         Local,
         GoogleDrive,
-        OneDrive  // ← 追加
-        // 今後追加予定: iCloud, Dropbox
+        OneDrive
     };
     
     enum class AuthStatus
@@ -35,18 +30,14 @@ public:
         Error
     };
     
-    // === 設定API ===
     void setGoogleCredentials(const juce::String& clientId, const juce::String& clientSecret);
-    void setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret);  // ← 追加
+    void setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void setLocalStorageDirectory(const juce::File& directory);
-    // 今後追加予定: setDropboxCredentials, setiCloudCredentials
     
-    // === サービス選択・認証 ===
     void selectService(ServiceType serviceType);
     ServiceType getCurrentService() const { return currentServiceType; }
     AuthStatus getAuthStatus() const;
     
-    // === ファイル操作（シンプルAPI） ===
     using FileOperationCallback = std::function<void(bool success, juce::String errorMessage)>;
     using FileContentCallback = std::function<void(bool success, juce::String content, juce::String errorMessage)>;
     
@@ -55,13 +46,13 @@ public:
     void loadFile(const juce::String& filename, FileContentCallback callback);
     void loadFileWithPath(const juce::String& filePath, FileContentCallback callback);
 
-    // === 認証関連 ===
     bool needsAuthentication() const;
     void showAuthenticationUI(juce::Component* parentComponent);
     void hideAuthenticationUI();
     void signOut();
+    void cancelAuthentication();
+
     
-    // === コールバック設定 ===
     std::function<void(AuthStatus)> onAuthStatusChanged;
     std::function<void(ServiceType)> onServiceChanged;
 
@@ -72,18 +63,15 @@ private:
     // Providers
     std::unique_ptr<R2CloudStorageProvider> localProvider;
     std::unique_ptr<R2CloudStorageProvider> googleDriveProvider;
-    std::unique_ptr<R2CloudStorageProvider> oneDriveProvider;  // ← 追加
-    // 今後追加予定: iCloudProvider, dropboxProvider
+    std::unique_ptr<R2CloudStorageProvider> oneDriveProvider;
     
-    // 認証UI
     std::unique_ptr<R2CloudAuthComponent> authComponent;
     juce::Component* parentForAuth = nullptr;
     
     // Settings
     juce::String googleClientId, googleClientSecret;
-    juce::String oneDriveClientId, oneDriveClientSecret;  // ← 追加
+    juce::String oneDriveClientId, oneDriveClientSecret;
     juce::File localStorageDir;
-    // 今後追加予定: dropbox, iCloud用の設定
     
     // Internal methods
     R2CloudStorageProvider* getCurrentProvider();
@@ -93,6 +81,7 @@ private:
                                      const juce::String& accessToken, const juce::String& refreshToken);
     void updateAuthStatus();
     void setAuthStatus(AuthStatus newStatus);
+    void startDeviceFlowAuthentication(juce::Component* parent);
     
     // Factory pattern for future extensibility
     static std::unique_ptr<R2CloudStorageProvider> createProvider(ServiceType type);

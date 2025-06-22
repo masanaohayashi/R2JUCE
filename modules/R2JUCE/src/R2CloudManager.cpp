@@ -1,7 +1,7 @@
 #include "R2CloudManager.h"
 #include "R2LocalStorageProvider.h"
 #include "R2GoogleDriveProvider.h"
-#include "R2OneDriveProvider.h"  // â† è¿½åŠ 
+#include "R2OneDriveProvider.h"
 #include "R2CloudAuthComponent.h"
 
 namespace r2juce {
@@ -13,16 +13,29 @@ R2CloudManager::R2CloudManager()
 
 R2CloudManager::~R2CloudManager()
 {
-    hideAuthenticationUI();
+    DBG("R2CloudManager destructor called");
+    
+    // Cancel authentication and clear callbacks first
+    cancelAuthentication();
+    
+    // Clear callbacks explicitly
+    onAuthStatusChanged = nullptr;
+    onServiceChanged = nullptr;
+    
+    juce::Thread::sleep(10);
+    
+    // Reset providers (this will trigger their destructors)
+    localProvider.reset();
+    googleDriveProvider.reset();
+    oneDriveProvider.reset();
 }
 
 void R2CloudManager::initializeProviders()
 {
     localProvider = createProvider(ServiceType::Local);
     googleDriveProvider = createProvider(ServiceType::GoogleDrive);
-    oneDriveProvider = createProvider(ServiceType::OneDrive);  // â† è¿½åŠ 
+    oneDriveProvider = createProvider(ServiceType::OneDrive);
     
-    // ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆã®ãƒ­ãƒ¼ã‚«ãƒ«ã‚¹ãƒˆãƒ¬ãƒ¼ã‚¸ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’è¨­å®š
     auto documentsDir = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
     auto cloudDocDir = documentsDir.getChildFile("CloudDoc");
     setLocalStorageDirectory(cloudDocDir);
@@ -34,14 +47,11 @@ std::unique_ptr<R2CloudStorageProvider> R2CloudManager::createProvider(ServiceTy
     {
         case ServiceType::GoogleDrive:
             return std::make_unique<R2GoogleDriveProvider>();
-        case ServiceType::OneDrive:  // â† è¿½åŠ 
+        case ServiceType::OneDrive:
             return std::make_unique<R2OneDriveProvider>();
         case ServiceType::Local:
         default:
             return std::make_unique<R2LocalStorageProvider>();
-            // ä»Šå¾Œè¿½åŠ äºˆå®š:
-            // case ServiceType::Dropbox: return std::make_unique<R2DropboxProvider>();
-            // case ServiceType::iCloud: return std::make_unique<R2iCloudProvider>();
     }
 }
 
@@ -56,7 +66,7 @@ void R2CloudManager::setGoogleCredentials(const juce::String& clientId, const ju
     }
 }
 
-void R2CloudManager::setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret)  // â† è¿½åŠ 
+void R2CloudManager::setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret)
 {
     oneDriveClientId = clientId;
     oneDriveClientSecret = clientSecret;
@@ -82,7 +92,6 @@ void R2CloudManager::selectService(ServiceType serviceType)
     if (currentServiceType == serviceType)
         return;
     
-    // èªè¨¼UIã‚’éè¡¨ç¤º
     hideAuthenticationUI();
     
     currentServiceType = serviceType;
@@ -103,14 +112,11 @@ R2CloudStorageProvider* R2CloudManager::getCurrentProvider()
     {
         case ServiceType::GoogleDrive:
             return googleDriveProvider.get();
-        case ServiceType::OneDrive:  // â† è¿½åŠ 
+        case ServiceType::OneDrive:
             return oneDriveProvider.get();
         case ServiceType::Local:
         default:
             return localProvider.get();
-            // ä»Šå¾Œè¿½åŠ äºˆå®š:
-            // case ServiceType::iCloud: return iCloudProvider.get();
-            // case ServiceType::Dropbox: return dropboxProvider.get();
     }
 }
 
@@ -120,7 +126,7 @@ const R2CloudStorageProvider* R2CloudManager::getCurrentProvider() const
     {
         case ServiceType::GoogleDrive:
             return googleDriveProvider.get();
-        case ServiceType::OneDrive:  // â† è¿½åŠ 
+        case ServiceType::OneDrive:
             return oneDriveProvider.get();
         case ServiceType::Local:
         default:
@@ -177,50 +183,180 @@ bool R2CloudManager::needsAuthentication() const
     return provider->getAuthStatus() != R2CloudStorageProvider::Status::Authenticated;
 }
 
-void R2CloudManager::showAuthenticationUI(juce::Component* parentComponent)
+void R2CloudManager::showAuthenticationUI(juce::Component* parent)
 {
-    if (currentServiceType == ServiceType::Local)
-        return; // ãƒ­ãƒ¼ã‚«ãƒ«ã‚¹ãƒˆãƒ¬ãƒ¼ã‚¸ã¯èªè¨¼ä¸è¦
-    
-    if (!parentComponent)
+    DBG("R2CloudManager::showAuthenticationUI() called");
+
+    auto provider = getCurrentProvider();
+    if (provider == nullptr)
+    {
+        DBG("No provider selected");
         return;
-    
-    hideAuthenticationUI(); // æ—¢å­˜ã®UIã‚’éè¡¨ç¤º
-    
-    parentForAuth = parentComponent;
-    authComponent.reset(new R2CloudAuthComponent);
-    
-    // èªè¨¼ã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã®è¨­å®š
+    }
+
+    // Šù‘¶‚Ì”FØUI‚ª‚ ‚éê‡‚Íæ‚ÉƒLƒƒƒ“ƒZƒ‹
+    if (authComponent != nullptr)
+    {
+        cancelAuthentication();
+    }
+
+    // ƒ[ƒJƒ‹ƒXƒgƒŒ[ƒW‚Ìê‡‚Í”FØ•s—v
+    if (currentServiceType == ServiceType::Local)
+    {
+        setAuthStatus(AuthStatus::Authenticated);
+        return;
+    }
+
+    try
+    {
+        // Google Drive ‚Æ OneDrive ‚Ìê‡‚ÍADevice Flow”FØ‚Æ’Êí‚ÌOAuth2‚ğ‘g‚İ‡‚í‚¹‚é
+        if (currentServiceType == ServiceType::GoogleDrive || currentServiceType == ServiceType::OneDrive)
+        {
+            // ‚Ü‚¸ƒvƒƒoƒCƒ_[‚É”FØ‚ğ‚İ‚³‚¹‚éiŠù‘¶ƒg[ƒNƒ“‚âƒŠƒtƒŒƒbƒVƒ…ƒg[ƒNƒ“‚Ìƒ`ƒFƒbƒNj
+            currentAuthStatus = AuthStatus::Authenticating;
+
+            if (onAuthStatusChanged)
+            {
+                onAuthStatusChanged(currentAuthStatus);
+            }
+
+            // ƒR[ƒ‹ƒoƒbƒN‚ğƒ[ƒJƒ‹•Ï”‚ÉƒRƒs[
+            auto statusCallback = onAuthStatusChanged;
+
+            provider->authenticate([this, parent, statusCallback](bool success, juce::String errorMessage)
+                {
+                    if (success)
+                    {
+                        // Šù‘¶ƒg[ƒNƒ“‚Å”FØ¬Œ÷
+                        juce::MessageManager::callAsync([this, statusCallback]()
+                            {
+                                this->currentAuthStatus = AuthStatus::Authenticated;
+                                if (statusCallback)
+                                {
+                                    statusCallback(this->currentAuthStatus);
+                                }
+                            });
+                    }
+                    else
+                    {
+                        // ”FØ‚ª•K—v‚Èê‡ - Device Flow”FØUI‚ğ•\¦
+                        if (errorMessage.contains("device flow") || errorMessage.contains("authentication required"))
+                        {
+                            juce::MessageManager::callAsync([this, parent]()
+                                {
+                                    this->startDeviceFlowAuthentication(parent);
+                                });
+                        }
+                        else
+                        {
+                            // ‚»‚Ì‘¼‚ÌƒGƒ‰[
+                            juce::MessageManager::callAsync([this, statusCallback, errorMessage]()
+                                {
+                                    this->currentAuthStatus = AuthStatus::Error;
+                                    if (statusCallback)
+                                    {
+                                        statusCallback(this->currentAuthStatus);
+                                    }
+                                });
+                        }
+                    }
+                });
+        }
+        else
+        {
+            // ‚»‚Ì‘¼‚ÌƒvƒƒoƒCƒ_[‚Ìê‡‚Í’¼Ú”FØ
+            currentAuthStatus = AuthStatus::Authenticating;
+
+            if (onAuthStatusChanged)
+            {
+                onAuthStatusChanged(currentAuthStatus);
+            }
+
+            // ƒR[ƒ‹ƒoƒbƒN‚ğƒ[ƒJƒ‹•Ï”‚ÉƒRƒs[
+            auto statusCallback = onAuthStatusChanged;
+
+            provider->authenticate([this, statusCallback](bool success, juce::String errorMessage)
+                {
+                    juce::MessageManager::callAsync([this, statusCallback, success, errorMessage]()
+                        {
+                            if (success)
+                            {
+                                this->currentAuthStatus = AuthStatus::Authenticated;
+                            }
+                            else
+                            {
+                                this->currentAuthStatus = AuthStatus::Error;
+                            }
+
+                            if (statusCallback)
+                            {
+                                statusCallback(this->currentAuthStatus);
+                            }
+                        });
+                });
+        }
+    }
+    catch (const std::exception& e)
+    {
+        DBG("Exception in showAuthenticationUI: " + juce::String(e.what()));
+        currentAuthStatus = AuthStatus::Error;
+        if (onAuthStatusChanged)
+        {
+            onAuthStatusChanged(currentAuthStatus);
+        }
+    }
+    catch (...)
+    {
+        DBG("Unknown exception in showAuthenticationUI");
+        currentAuthStatus = AuthStatus::Error;
+        if (onAuthStatusChanged)
+        {
+            onAuthStatusChanged(currentAuthStatus);
+        }
+    }
+}
+
+void R2CloudManager::startDeviceFlowAuthentication(juce::Component* parent)
+{
+    DBG("Starting Device Flow authentication");
+
+    // Device Flow”FØUI‚ğì¬
+    authComponent = std::make_unique<R2CloudAuthComponent>();
+    parentForAuth = parent;
+
+    // ”FØƒT[ƒrƒXƒ^ƒCƒv‚ğİ’è
     if (currentServiceType == ServiceType::GoogleDrive)
     {
-        authComponent->setGoogleCredentials(googleClientId, googleClientSecret);
         authComponent->setServiceType(R2CloudAuthComponent::ServiceType::GoogleDrive);
+        authComponent->setGoogleCredentials(googleClientId, googleClientSecret);
     }
-    else if (currentServiceType == ServiceType::OneDrive)  // â† è¿½åŠ 
+    else if (currentServiceType == ServiceType::OneDrive)
     {
-        authComponent->setOneDriveCredentials(oneDriveClientId, oneDriveClientSecret);
         authComponent->setServiceType(R2CloudAuthComponent::ServiceType::OneDrive);
+        authComponent->setOneDriveCredentials(oneDriveClientId, oneDriveClientSecret);
     }
-    
-    // ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯è¨­å®š
-    authComponent->onAuthenticationComplete = [this](bool success, juce::String errorMessage, juce::String accessToken, juce::String refreshToken)
-    {
-        handleAuthenticationComplete(success, errorMessage, accessToken, refreshToken);
-    };
-    
+
+    // ƒR[ƒ‹ƒoƒbƒNİ’è
+    authComponent->onAuthenticationComplete = [this](bool success, juce::String errorMessage,
+        juce::String accessToken, juce::String refreshToken)
+        {
+            handleAuthenticationComplete(success, errorMessage, accessToken, refreshToken);
+        };
+
     authComponent->onAuthenticationCancelled = [this]()
+        {
+            hideAuthenticationUI();
+            setAuthStatus(AuthStatus::NotAuthenticated);
+        };
+
+    // eƒRƒ“ƒ|[ƒlƒ“ƒg‚É’Ç‰Á
+    if (parent != nullptr)
     {
-        hideAuthenticationUI();
-        setAuthStatus(AuthStatus::NotAuthenticated);
-    };
-    
-    // è¦ªã‚³ãƒ³ãƒãƒ¼ãƒãƒ³ãƒˆã«è¿½åŠ ï¼ˆã‚ªãƒ¼ãƒãƒ¼ãƒ¬ã‚¤è¡¨ç¤ºï¼‰
-    parentForAuth->addAndMakeVisible(*authComponent);
-    authComponent->setBounds(parentForAuth->getLocalBounds());
-    authComponent->toFront(true);
-    
-    // èªè¨¼é–‹å§‹
-    setAuthStatus(AuthStatus::Authenticating);
+        parent->addAndMakeVisible(*authComponent);
+        authComponent->setBounds(parent->getLocalBounds());
+    }
+
+    // ”FØ‚ğŠJn
     authComponent->startAuthentication();
 }
 
@@ -246,7 +382,6 @@ void R2CloudManager::handleAuthenticationComplete(bool success, const juce::Stri
     
     if (success)
     {
-        // âœ… ãƒˆãƒ¼ã‚¯ãƒ³ã‚’ãƒ—ãƒ­ãƒã‚¤ãƒ€ãƒ¼ã«è¨­å®š
         if (currentServiceType == ServiceType::GoogleDrive)
         {
             if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(googleDriveProvider.get()))
@@ -281,6 +416,44 @@ void R2CloudManager::signOut()
     }
     
     hideAuthenticationUI();
+}
+
+void R2CloudManager::cancelAuthentication()
+{
+    DBG("R2CloudManager::cancelAuthentication() called");
+    
+    // First, prevent any new callbacks from being triggered
+    auto tempAuthCallback = onAuthStatusChanged;
+    auto tempServiceCallback = onServiceChanged;
+    
+    // Clear callbacks immediately to prevent crashes
+    onAuthStatusChanged = nullptr;
+    onServiceChanged = nullptr;
+    
+    // Hide authentication UI
+    hideAuthenticationUI();
+    
+    // Cancel authentication in providers
+    auto provider = getCurrentProvider();
+    if (provider != nullptr)
+    {
+        if (auto* googleProvider = dynamic_cast<R2GoogleDriveProvider*>(provider))
+        {
+            googleProvider->cancelAuthentication();
+        }
+        else if (auto* oneDriveProvider = dynamic_cast<R2OneDriveProvider*>(provider))
+        {
+            oneDriveProvider->cancelAuthentication();
+        }
+    }
+    
+    // Set status without triggering callbacks
+    currentAuthStatus = AuthStatus::NotAuthenticated;
+    
+    // Give time for any pending async operations to complete
+    juce::Thread::sleep(50);
+    
+    DBG("R2CloudManager::cancelAuthentication() completed");
 }
 
 void R2CloudManager::saveFile(const juce::String& filename, const juce::String& content, FileOperationCallback callback)
@@ -327,7 +500,6 @@ void R2CloudManager::saveFileWithPath(const juce::String& folderPath, const juce
     
     juce::MemoryBlock data(content.toUTF8(), content.getNumBytesAsUTF8());
     
-    // OneDriveã®å ´åˆã¯ãƒ‘ã‚¹å½¢å¼ã§ç›´æ¥ã‚¢ãƒƒãƒ—ãƒ­ãƒ¼ãƒ‰å¯èƒ½
     juce::String fullPath = folderPath + "/" + filename;
     provider->uploadFile(fullPath, data, "path", [callback](bool success, juce::String errorMessage)
                          {
@@ -352,7 +524,6 @@ void R2CloudManager::loadFile(const juce::String& filename, FileContentCallback 
         return;
     }
     
-    // ãƒ­ãƒ¼ã‚«ãƒ«ã‚¹ãƒˆãƒ¬ãƒ¼ã‚¸ã®å ´åˆã®ç‰¹åˆ¥å‡¦ç†
     if (auto* localProv = dynamic_cast<R2LocalStorageProvider*>(provider))
     {
         auto file = localStorageDir.getChildFile(filename);
@@ -370,15 +541,12 @@ void R2CloudManager::loadFile(const juce::String& filename, FileContentCallback 
         return;
     }
     
-    // OneDrive/Google Drive: ãƒ‘ã‚¹å½¢å¼ã«å¯¾å¿œ
     if (filename.contains("/"))
     {
-        // ãƒ‘ã‚¹å½¢å¼ã§ã®ç›´æ¥èª­ã¿è¾¼ã¿
         loadFileWithPath(filename, callback);
     }
     else
     {
-        // å¾“æ¥ã®ãƒ«ãƒ¼ãƒˆã‹ã‚‰ã®æ¤œç´¢
         provider->listFiles("root", [this, filename, callback, provider](bool success, juce::Array<R2CloudStorageProvider::FileInfo> files, juce::String errorMessage)
                             {
             if (!success)
@@ -428,7 +596,6 @@ void R2CloudManager::loadFileWithPath(const juce::String& filePath, FileContentC
     auto provider = getCurrentProvider();
     if (!provider) return;
     
-    // OneDriveç”¨ã®ç›´æ¥ãƒ‘ã‚¹èª­ã¿è¾¼ã¿
     if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(provider))
     {
         oneDriveProv->downloadFileWithPath(filePath, [callback](bool success, juce::MemoryBlock data, juce::String error)
@@ -444,7 +611,6 @@ void R2CloudManager::loadFileWithPath(const juce::String& filePath, FileContentC
             }
         });
     }
-    // Google Driveç”¨ã®ãƒ‘ã‚¹èª­ã¿è¾¼ã¿
     else if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(provider))
     {
         googleProv->downloadFileWithPath(filePath, [callback](bool success, juce::MemoryBlock data, juce::String error)

@@ -2,19 +2,12 @@
 
 namespace r2juce {
 
-//==============================================================================
-// R2GoogleDriveProvider::OAuth2Handler - 完全実装
-//==============================================================================
-
 R2GoogleDriveProvider::OAuth2Handler::OAuth2Handler(R2GoogleDriveProvider& parent) : provider(parent)
 {
-    // JUCE 8の正しいAPIを使用してWebBrowserComponentを設定
     juce::WebBrowserComponent::Options options;
     
-    // ネイティブ統合を有効化（必須）
     options = options.withNativeIntegrationEnabled(true);
     
-    // JavaScript関数を登録して認証コードを受信
     options = options.withNativeFunction("authComplete",
         [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
         {
@@ -52,7 +45,6 @@ R2GoogleDriveProvider::OAuth2Handler::OAuth2Handler(R2GoogleDriveProvider& paren
             completion(juce::var());
         });
     
-    // URLナビゲーションイベントを監視
     options = options.withEventListener("urlChanged",
         [this](const juce::var& eventData)
         {
@@ -68,7 +60,6 @@ R2GoogleDriveProvider::OAuth2Handler::OAuth2Handler(R2GoogleDriveProvider& paren
             }
         });
     
-    // 初期化時にURL監視スクリプトを注入
     juce::String monitoringScript = R"(
         // Script to monitor URL changes
         let lastUrl = window.location.href;
@@ -116,7 +107,6 @@ R2GoogleDriveProvider::OAuth2Handler::OAuth2Handler(R2GoogleDriveProvider& paren
     
     options = options.withUserScript(monitoringScript);
     
-    // UserAgentを設定
     options = options.withUserAgent("CloudDoc/1.0 (JUCE WebBrowser)");
     
     webBrowser = std::make_unique<juce::WebBrowserComponent>(options);
@@ -128,10 +118,8 @@ void R2GoogleDriveProvider::OAuth2Handler::startAuthentication(const juce::Strin
     authCallback = callback;
     currentClientId = clientId;
     
-    // リダイレクトURIを設定
     redirectUri = "http://localhost:8080/callback";
     
-    // Google OAuth2認証URLを構築
     juce::String authUrl = "https://accounts.google.com/o/oauth2/v2/auth?";
     authUrl += "client_id=" + juce::URL::addEscapeChars(clientId, false);
     authUrl += "&redirect_uri=" + juce::URL::addEscapeChars(redirectUri, false);
@@ -143,7 +131,6 @@ void R2GoogleDriveProvider::OAuth2Handler::startAuthentication(const juce::Strin
     
     DBG("Starting authentication with URL: " + authUrl);
     
-    // 認証URLに移動
     webBrowser->goToURL(authUrl);
 }
 
@@ -155,7 +142,6 @@ void R2GoogleDriveProvider::OAuth2Handler::resized()
     
 juce::String R2GoogleDriveProvider::OAuth2Handler::generateStateParameter()
 {
-    // CSRF攻撃防止のための状態パラメータ生成
     auto randomValue = juce::Random::getSystemRandom().nextInt64();
     stateParameter = juce::String::toHexString(static_cast<juce::int64>(randomValue));
     return stateParameter;
@@ -173,7 +159,6 @@ void R2GoogleDriveProvider::OAuth2Handler::checkAuthCallback(const juce::String&
         auto state = extractState(url);
         auto error = extractError(url);
         
-        // 状態パラメータの検証
         if (state != stateParameter && stateParameter.isNotEmpty())
         {
             handleAuthError("Invalid state parameter - possible CSRF attack");
@@ -195,7 +180,6 @@ void R2GoogleDriveProvider::OAuth2Handler::checkAuthCallback(const juce::String&
     }
     else if (url.contains("error"))
     {
-        // URLにエラーが含まれている場合
         auto error = extractError(url);
         if (error.isNotEmpty())
         {
@@ -208,31 +192,36 @@ void R2GoogleDriveProvider::OAuth2Handler::handleAuthSuccess(const juce::String&
 {
     DBG("Authentication successful");
     showSuccessPage();
-    
-    // プロバイダーに認証コードを伝達してトークン交換を開始
-    provider.exchangeAuthCodeForTokens(authCode, [this](bool success, const juce::String& errorMessage)
-    {
-        if (authCallback)
+
+    auto currentCallback = authCallback;
+
+    provider.exchangeAuthCodeForTokens(authCode, [this, currentCallback](bool success, const juce::String& errorMessage)
         {
-            juce::MessageManager::callAsync([authCallback = this->authCallback, success, errorMessage]()
+            if (currentCallback)
             {
-                authCallback(success, errorMessage);
-            });
-        }
-    });
+                juce::MessageManager::callAsync([currentCallback, success, errorMessage]()
+                    {
+                        currentCallback(success, errorMessage);
+                    });
+            }
+        });
 }
 
 void R2GoogleDriveProvider::OAuth2Handler::handleAuthError(const juce::String& error)
 {
     DBG("Authentication error: " + error);
     showErrorPage(error);
-    
-    if (authCallback)
+
+    auto currentCallback = authCallback;
+
+    if (currentCallback)
     {
-        juce::MessageManager::callAsync([authCallback = this->authCallback, error]()
-        {
-            authCallback(false, error);
-        });
+        juce::MessageManager::callAsync([currentCallback, error]()
+            {
+                currentCallback(false, error);
+            });
+
+        authCallback = nullptr;
     }
 }
 
@@ -240,10 +229,10 @@ juce::String R2GoogleDriveProvider::OAuth2Handler::extractURLParameter(const juc
 {
     auto queryStart = url.indexOf("?");
     if (queryStart == -1) return {};
-    
+
     auto query = url.substring(queryStart + 1);
     auto params = juce::StringArray::fromTokens(query, "&", "");
-    
+
     juce::String searchParam = paramName + "=";
     for (const auto& param : params)
     {
@@ -414,14 +403,10 @@ void R2GoogleDriveProvider::OAuth2Handler::showErrorPage(const juce::String& err
                        juce::URL::addEscapeChars(errorHTML, false));
 }
 
-//==============================================================================
-// R2GoogleDriveProvider - メイン実装
-//==============================================================================
-
 R2GoogleDriveProvider::R2GoogleDriveProvider()
 {
     currentStatus = Status::NotAuthenticated;
-    loadTokens(); // 保存されたトークンをロード
+    loadTokens();
 }
 
 void R2GoogleDriveProvider::setClientCredentials(const juce::String& clientId, const juce::String& clientSecret)
@@ -444,7 +429,6 @@ void R2GoogleDriveProvider::authenticate(AuthCallback callback)
     
     DBG("Client credentials are set");
     
-    // 既存の有効なトークンがある場合
     if (isTokenValid())
     {
         DBG("Token is valid, already authenticated");
@@ -456,7 +440,6 @@ void R2GoogleDriveProvider::authenticate(AuthCallback callback)
     
     DBG("Token not valid, checking refresh token");
     
-    // リフレッシュトークンがある場合は先にそれを試す
     if (refreshToken.isNotEmpty())
     {
         DBG("Refresh token available, trying to refresh");
@@ -471,17 +454,19 @@ void R2GoogleDriveProvider::authenticate(AuthCallback callback)
             }
             else
             {
-                // リフレッシュに失敗した場合、新しい認証フローを開始
-                startNewAuthFlow(callback);
+                currentStatus = Status::NotAuthenticated;
+                if (callback)
+                    callback(false, "device flow authentication required");
             }
         });
         return;
     }
     
-    DBG("No refresh token, starting new auth flow");
+    DBG("No refresh token, device flow authentication required");
     
-    // 新しい認証フローを開始
-    startNewAuthFlow(callback);
+    currentStatus = Status::NotAuthenticated;
+    if (callback)
+        callback(false, "device flow authentication required");
 }
 
 void R2GoogleDriveProvider::startNewAuthFlow(AuthCallback callback)
@@ -498,23 +483,19 @@ void R2GoogleDriveProvider::startNewAuthFlow(AuthCallback callback)
 
 void R2GoogleDriveProvider::exchangeAuthCodeForTokens(const juce::String& authCode, std::function<void(bool, juce::String)> callback)
 {
-    // トークン交換のためのPOSTデータを構築
     juce::String postData = "grant_type=authorization_code";
     postData += "&code=" + juce::URL::addEscapeChars(authCode, false);
     postData += "&redirect_uri=" + juce::URL::addEscapeChars("http://localhost:8080/callback", false);
     postData += "&client_id=" + juce::URL::addEscapeChars(clientId, false);
     postData += "&client_secret=" + juce::URL::addEscapeChars(clientSecret, false);
     
-    // HTTPリクエストを作成
     juce::URL tokenUrl("https://oauth2.googleapis.com/token");
     tokenUrl = tokenUrl.withPOSTData(postData);
     
-    // HTTPヘッダーを設定
     juce::StringPairArray headers;
     headers.set("Content-Type", "application/x-www-form-urlencoded");
     headers.set("Accept", "application/json");
     
-    // バックグラウンドスレッドでリクエストを実行
     juce::Thread::launch([this, tokenUrl, headers, callback]()
     {
         juce::String headerString;
@@ -557,7 +538,6 @@ void R2GoogleDriveProvider::setTokens(const juce::String& accessToken, const juc
     this->accessToken = accessToken;
     this->refreshToken = refreshToken;
     
-    // 1時間後に期限切れとして設定（安全のため）
     this->tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::hours(1);
     
     this->currentStatus = Status::Authenticated;
@@ -568,7 +548,6 @@ void R2GoogleDriveProvider::setTokens(const juce::String& accessToken, const juc
 
 void R2GoogleDriveProvider::downloadFileWithPath(const juce::String& filePath, DownloadCallback callback)
 {
-    // Google Driveはパス検索のAPIが無いため、フォルダを辿る必要がある
     auto pathParts = juce::StringArray::fromTokens(filePath, "/", "");
     
     if (pathParts.isEmpty())
@@ -578,8 +557,19 @@ void R2GoogleDriveProvider::downloadFileWithPath(const juce::String& filePath, D
         return;
     }
     
-    // パスを辿ってファイルを探す
     findFileByPath(pathParts, "root", 0, callback);
+}
+
+void R2GoogleDriveProvider::cancelAuthentication()
+{
+    DBG("R2GoogleDriveProvider::cancelAuthentication() called");
+    
+    if (oauth2Handler)
+    {
+        oauth2Handler.reset();
+    }
+    
+    currentStatus = Status::NotAuthenticated;
 }
 
 void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std::function<void(bool, juce::String)> callback)
@@ -604,7 +594,7 @@ void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std
                 if (obj->hasProperty("expires_in"))
                 {
                     auto expiresIn = static_cast<int>(obj->getProperty("expires_in"));
-                    tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(expiresIn - 300); // 5分の余裕
+                    tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(expiresIn - 300);
                 }
                 
                 currentStatus = Status::Authenticated;
@@ -670,20 +660,17 @@ void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, c
             {
                 if (isLastPart && !file.isFolder)
                 {
-                    // ファイルが見つかった - ダウンロード
                     downloadFile(file.id, callback);
                     return;
                 }
                 else if (!isLastPart && file.isFolder)
                 {
-                    // フォルダが見つかった - 次の階層へ
                     findFileByPath(pathParts, file.id, pathIndex + 1, callback);
                     return;
                 }
             }
         }
         
-        // 見つからなかった
         if (callback)
             callback(false, {}, "Path not found: " + targetName);
     });
@@ -694,10 +681,8 @@ void R2GoogleDriveProvider::uploadToFolder(const juce::String& fileName, const j
 {
     DBG("uploadToFolder - fileName: " + fileName + ", folderId: " + folderId + ", data size: " + juce::String(data.getSize()));
     
-    // フォルダIDが空の場合はrootを使用
     juce::String targetFolderId = folderId.isEmpty() ? "root" : folderId;
     
-    // まず、同名ファイルが既に存在するかチェック（ゴミ箱のファイルは除外）
     juce::String query = "'" + targetFolderId + "' in parents and name = '" + fileName + "' and mimeType != 'application/vnd.google-apps.folder' and trashed = false";
     juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false);
     endpoint += "&fields=files(id,name,trashed)";
@@ -732,14 +717,13 @@ void R2GoogleDriveProvider::uploadToFolder(const juce::String& fileName, const j
                             if (fileObj.isObject())
                             {
                                 auto* file = fileObj.getDynamicObject();
-                                // trashedフィールドを確認（念のため）
                                 bool isTrashed = false;
                                 if (file->hasProperty("trashed"))
                                 {
                                     isTrashed = file->getProperty("trashed");
                                 }
                                 
-                                if (!isTrashed)  // ゴミ箱にない場合のみ
+                                if (!isTrashed)
                                 {
                                     existingFileId = file->getProperty("id").toString();
                                     DBG("Found existing file with ID: " + existingFileId);
@@ -761,12 +745,10 @@ void R2GoogleDriveProvider::uploadToFolder(const juce::String& fileName, const j
         
         if (existingFileId.isNotEmpty())
         {
-            // 既存ファイルを更新
             updateExistingFile(existingFileId, data, callback);
         }
         else
         {
-            // 新規ファイルとしてアップロード
             uploadNewFile(fileName, data, targetFolderId, callback);
         }
     });
@@ -782,7 +764,6 @@ void R2GoogleDriveProvider::uploadWithData(const juce::String& endpoint, const j
     headers.set("Content-Type", "multipart/related; boundary=" + boundary);
     headers.set("Content-Length", juce::String(fullData.getSize()));
     
-    // ヘッダーを文字列に変換
     juce::String headerString;
     for (int i = 0; i < headers.size(); ++i)
     {
@@ -791,7 +772,6 @@ void R2GoogleDriveProvider::uploadWithData(const juce::String& endpoint, const j
             headerString += "\r\n";
     }
     
-    // POSTデータを設定
     url = url.withPOSTData(fullData);
     
     auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
@@ -805,7 +785,6 @@ void R2GoogleDriveProvider::uploadWithData(const juce::String& endpoint, const j
         auto response = stream->readEntireStreamAsString();
         DBG("Upload response: " + response);
         
-        // レスポンスを解析
         try
         {
             auto json = juce::JSON::parse(response);
@@ -846,7 +825,6 @@ void R2GoogleDriveProvider::uploadWithData(const juce::String& endpoint, const j
     }
 }
 
-// 新しいメソッド: 既存ファイルの更新
 void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const juce::MemoryBlock& data,
                                                FileOperationCallback callback)
 {
@@ -872,7 +850,6 @@ void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const
                     return;
                 }
                 
-                // リトライ
                 updateExistingFile(endpoint, data, callback);
             });
             return;
@@ -885,7 +862,6 @@ void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const
         headers.set("Content-Type", "application/octet-stream");
         headers.set("Content-Length", juce::String(data.getSize()));
         
-        // ヘッダーを文字列に変換
         juce::String headerString;
         for (int i = 0; i < headers.size(); ++i)
         {
@@ -894,7 +870,6 @@ void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const
                 headerString += "\r\n";
         }
         
-        // PATCHメソッドで更新
         url = url.withPOSTData(data);
         
         auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
@@ -909,7 +884,6 @@ void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const
             auto response = stream->readEntireStreamAsString();
             DBG("Update response: " + response);
             
-            // レスポンスを解析
             try
             {
                 auto json = juce::JSON::parse(response);
@@ -951,16 +925,13 @@ void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const
     });
 }
 
-// 新しいメソッド: 新規ファイルのアップロード（既存のuploadToFolderの処理を移動）
 void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const juce::MemoryBlock& data,
                                          const juce::String& folderId, FileOperationCallback callback)
 {
     DBG("Uploading new file: " + fileName);
     
-    // マルチパートアップロードの実装
     juce::String boundary = "----formdata-juce-" + juce::String::toHexString(juce::Random::getSystemRandom().nextInt64());
     
-    // メタデータ部分
     juce::String metadata = "{\n";
     metadata += "  \"name\": \"" + fileName + "\"";
     if (folderId.isNotEmpty() && folderId != "root")
@@ -969,7 +940,6 @@ void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const ju
     }
     metadata += "\n}";
     
-    // マルチパートボディの構築
     juce::String multipartBody;
     multipartBody += "--" + boundary + "\r\n";
     multipartBody += "Content-Type: application/json; charset=UTF-8\r\n\r\n";
@@ -977,7 +947,6 @@ void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const ju
     multipartBody += "--" + boundary + "\r\n";
     multipartBody += "Content-Type: application/octet-stream\r\n\r\n";
     
-    // バイナリデータの準備
     juce::MemoryBlock fullData;
     fullData.append(multipartBody.toRawUTF8(), multipartBody.getNumBytesAsUTF8());
     fullData.append(data.getData(), data.getSize());
@@ -985,7 +954,6 @@ void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const ju
     juce::String endBoundary = "\r\n--" + boundary + "--\r\n";
     fullData.append(endBoundary.toRawUTF8(), endBoundary.getNumBytesAsUTF8());
     
-    // APIリクエスト
     juce::String endpoint = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
     
     juce::Thread::launch([this, endpoint, boundary, fullData, callback]()
@@ -1006,7 +974,6 @@ void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const ju
                     return;
                 }
                 
-                // リトライ
                 juce::Thread::launch([this, endpoint, boundary, fullData, callback]()
                 {
                     uploadWithData(endpoint, boundary, fullData, callback);
@@ -1024,7 +991,6 @@ void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath
 {
     if (pathIndex >= folderPath.size())
     {
-        // パス作成完了
         DBG("Folder path creation complete. Final folder ID: " + parentFolderId);
         if (callback)
             callback(true, parentFolderId, "");
@@ -1034,15 +1000,12 @@ void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath
     auto folderName = folderPath[pathIndex];
     DBG("Creating/checking folder: " + folderName + " in parent: " + parentFolderId);
     
-    // まず、rootフォルダの場合は"root"を使用
     juce::String queryParentId = parentFolderId;
     if (parentFolderId == "root")
     {
-        // rootの場合、特別な処理は不要
+
     }
     
-    // フォルダが既に存在するかチェック
-    // クエリを修正：trashed=falseを追加して、ゴミ箱のファイルを除外
     juce::String query = "'" + queryParentId + "' in parents and name = '" + folderName + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
     juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false);
     endpoint += "&fields=files(id,name,mimeType)";
@@ -1072,7 +1035,6 @@ void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath
                         auto* array = filesArray.getArray();
                         if (array->size() > 0)
                         {
-                            // フォルダが存在する
                             auto fileObj = array->getUnchecked(0);
                             if (fileObj.isObject())
                             {
@@ -1080,7 +1042,6 @@ void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath
                                 juce::String existingFolderId = file->getProperty("id").toString();
                                 DBG("Folder already exists with ID: " + existingFolderId);
                                 
-                                // 次の階層へ
                                 createFolderPath(folderPath, existingFolderId, pathIndex + 1, callback);
                                 return;
                             }
@@ -1094,7 +1055,6 @@ void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath
             DBG("Failed to parse folder check response");
         }
         
-        // フォルダが存在しない - 作成
         DBG("Folder does not exist, creating: " + folderName);
         
         juce::String metadata = "{\n";
@@ -1135,7 +1095,6 @@ void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath
                         juce::String newFolderId = obj->getProperty("id").toString();
                         DBG("Folder created successfully with ID: " + newFolderId);
                         
-                        // 次の階層へ
                         createFolderPath(folderPath, newFolderId, pathIndex + 1, callback);
                         return;
                     }
@@ -1159,7 +1118,6 @@ void R2GoogleDriveProvider::signOut()
     tokenExpiry = juce::Time();
     currentStatus = Status::NotAuthenticated;
     
-    // 保存されたトークンファイルを削除
     auto tokenFile = getTokenFile();
     if (tokenFile.exists())
     {
@@ -1206,7 +1164,6 @@ void R2GoogleDriveProvider::refreshAccessToken(std::function<void(bool)> callbac
     
     juce::Thread::launch([this, tokenUrl, headers, callback]()
     {
-        // StringPairArrayをHTTPヘッダー文字列に変換
         juce::String headerString;
         for (int i = 0; i < headers.size(); ++i)
         {
@@ -1251,7 +1208,6 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
 {
     if (!isTokenValid())
     {
-        // トークンが無効な場合はリフレッシュを試行
         refreshAccessToken([this, endpoint, method, headers, postData, callback](bool refreshSuccess)
         {
             if (refreshSuccess)
@@ -1285,7 +1241,6 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
             }
         }
         
-        // StringPairArrayをHTTPヘッダー文字列に変換
         juce::String headerString;
         for (int i = 0; i < requestHeaders.size(); ++i)
         {
@@ -1320,14 +1275,10 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
     });
 }
 
-// R2GoogleDriveProvider.cpp の listFiles メソッドを修正
-// 元のコード（1068行目あたり）:
-
 void R2GoogleDriveProvider::listFiles(const juce::String& folderId, FileListCallback callback)
 {
     juce::String endpoint = "https://www.googleapis.com/drive/v3/files?fields=files(id,name,mimeType,modifiedTime,size)";
     
-    // ゴミ箱のファイルを除外するクエリを追加
     juce::String query;
     if (folderId.isNotEmpty() && folderId != "root")
     {
@@ -1435,18 +1386,15 @@ void R2GoogleDriveProvider::uploadFile(const juce::String& fileName, const juce:
     
     if (folderId == "path")
     {
-        // パス形式での保存 - フォルダを作成してからファイルを保存
         auto pathParts = juce::StringArray::fromTokens(fileName, "/", "");
         if (pathParts.size() <= 1)
         {
-            // パスが無い場合は通常の保存
             uploadToFolder(fileName, data, "root", callback);
         }
         else
         {
-            // フォルダパスを作成
             auto folderPath = pathParts;
-            folderPath.remove(folderPath.size() - 1);  // ファイル名を除去
+            folderPath.remove(folderPath.size() - 1);
             auto actualFileName = pathParts[pathParts.size() - 1];
             
             DBG("Creating folder path: " + folderPath.joinIntoString("/"));
@@ -1471,7 +1419,6 @@ void R2GoogleDriveProvider::uploadFile(const juce::String& fileName, const juce:
     }
     else
     {
-        // 既存の実装（通常のアップロード）
         uploadToFolder(fileName, data, folderId, callback);
     }
 }
@@ -1496,7 +1443,6 @@ void R2GoogleDriveProvider::downloadFile(const juce::String& fileId, DownloadCal
         juce::StringPairArray headers;
         headers.set("Authorization", "Bearer " + accessToken);
         
-        // StringPairArrayをHTTPヘッダー文字列に変換
         juce::String headerString;
         for (int i = 0; i < headers.size(); ++i)
         {
@@ -1589,7 +1535,6 @@ void R2GoogleDriveProvider::createFolder(const juce::String& folderName, const j
                 }
                 else
                 {
-                    // エラーレスポンスの場合
                     juce::String error = "Unknown error";
                     if (obj->hasProperty("error"))
                     {
@@ -1668,7 +1613,6 @@ bool R2GoogleDriveProvider::loadTokens()
             tokenExpiry = juce::Time(expiryMs);
         }
         
-        // トークンが有効な場合は認証済み状態に設定
         if (isTokenValid())
         {
             currentStatus = Status::Authenticated;

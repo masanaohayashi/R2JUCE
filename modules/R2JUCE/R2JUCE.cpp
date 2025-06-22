@@ -10,3 +10,4 @@
 #include "src/R2OneDriveProvider.cpp"
 #include "src/R2CloudManager.cpp"
 #include "src/R2CloudAuthComponent.cpp"
+#include "src/R2AlertComponent.cpp"

@@ -4,7 +4,6 @@ namespace r2juce {
 
 R2LocalStorageProvider::R2LocalStorageProvider()
 {
-    // デフォルトのルートディレクトリを設定
     auto documentsDir = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
     rootDirectory = documentsDir.getChildFile("CloudDoc");
     rootDirectory.createDirectory();
@@ -14,7 +13,6 @@ R2LocalStorageProvider::R2LocalStorageProvider()
 
 void R2LocalStorageProvider::authenticate(AuthCallback callback)
 {
-    // ローカルストレージは認証不要
     currentStatus = Status::Authenticated;
     if (callback)
         callback(true, "");
@@ -22,7 +20,7 @@ void R2LocalStorageProvider::authenticate(AuthCallback callback)
 
 void R2LocalStorageProvider::signOut()
 {
-    // ローカルストレージはサインアウト不要
+
 }
 
 R2CloudStorageProvider::Status R2LocalStorageProvider::getAuthStatus() const
@@ -51,7 +49,6 @@ juce::File R2LocalStorageProvider::getFileFromId(const juce::String& fileId) con
     if (fileId.isEmpty() || fileId == "root")
         return rootDirectory;
     
-    // Base64デコードしてパスを復元
     juce::MemoryOutputStream decoded;
     if (juce::Base64::convertFromBase64(decoded, fileId))
     {
@@ -70,7 +67,6 @@ juce::String R2LocalStorageProvider::getIdFromFile(const juce::File& file) const
     if (file == rootDirectory)
         return "root";
     
-    // rootDirectoryからの相対パスをBase64エンコード
     juce::String relativePath = file.getRelativePathFrom(rootDirectory);
     return juce::Base64::toBase64(relativePath);
 }
@@ -105,7 +101,6 @@ void R2LocalStorageProvider::listFiles(const juce::String& folderId, FileListCal
             if (!info.isFolder)
             {
                 info.mimeType = "application/octet-stream";
-                // 簡単なMIMEタイプ判定
                 auto extension = child.getFileExtension().toLowerCase();
                 if (extension == ".txt") info.mimeType = "text/plain";
                 else if (extension == ".json") info.mimeType = "application/json";

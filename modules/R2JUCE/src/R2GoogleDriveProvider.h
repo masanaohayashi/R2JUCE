@@ -26,9 +26,9 @@ public:
     // Google Drive specific
     void setClientCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void exchangeAuthCodeForTokens(const juce::String& authCode, std::function<void(bool, juce::String)> callback);
-    // 修正: Device Flow用のトークン設定メソッド
     void setTokens(const juce::String& accessToken, const juce::String& refreshToken);
     void downloadFileWithPath(const juce::String& filePath, DownloadCallback callback);
+    void cancelAuthentication();
 
 private:
     using FolderCreationCallback = std::function<void(bool success, juce::String folderId, juce::String errorMessage)>;
@@ -97,4 +97,3 @@ private:
     juce::File getTokenFile() const;
 };
 }   //  namespace r2juce
-

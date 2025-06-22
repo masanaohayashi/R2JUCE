@@ -91,7 +91,7 @@ R2WiFiSelector::R2WiFiSelector (std::function<void()> closeCallback)
      connectingOverlay->setBounds (getLocalBounds());
      */
 
-    startTimer (3000); // 3秒ごとにスキャン更新
+    startTimer (3000);
     scanNetworks();
     //[/Constructor]
 }
@@ -156,12 +156,10 @@ void R2WiFiSelector::buttonClicked (juce::Button* buttonThatWasClicked)
 
             if (selectedNet->isSecured)
             {
-                // 暗号化ネットワーク：パスワード入力画面を表示
                 showPasswordInputOverlay(selectedNet->ssid);
             }
             else
             {
-                // オープンネットワーク：直接接続
                 connectToNetwork(selectedNet->ssid, "");
             }
         }
@@ -172,12 +170,10 @@ void R2WiFiSelector::buttonClicked (juce::Button* buttonThatWasClicked)
         //[UserButtonCode_buttonClose] -- add your button handler code here..
         if (onCloseCallback)
         {
-            // カスタムコールバックが設定されている場合はそれを実行
             onCloseCallback();
         }
         else
         {
-            // デフォルトの動作（従来と同じ）
             getParentComponent()->removeChildComponent(this);
             delete this;
         }
@@ -238,7 +234,6 @@ void R2WiFiSelector::listBoxItemClicked (int row, const juce::MouseEvent&)
 
     selectedNetworkIndex = row;
 
-    // 選択されたSSIDを記録（更新後も選択を維持するため）
     if (auto* net = networks[selectedNetworkIndex])
         previouslySelectedSSID = net->ssid;
 
@@ -248,14 +243,12 @@ void R2WiFiSelector::listBoxItemClicked (int row, const juce::MouseEvent&)
 
 void R2WiFiSelector::onConnectingCancelled()
 {
-    // 接続中のプロセスを強制終了
     if (currentConnectionProcess != nullptr)
     {
         currentConnectionProcess->kill();
         currentConnectionProcess = nullptr;
     }
 
-    // キャンセル時の処理
     isConnecting = false;
     hideConnectingOverlay();
     updateConnectButton();
@@ -264,13 +257,11 @@ void R2WiFiSelector::onConnectingCancelled()
 
 void R2WiFiSelector::onConnectingCompleted()
 {
-    // OK押下時の処理（失敗後）
     hideConnectingOverlay();
 }
 
 void R2WiFiSelector::onPasswordEntered(const juce::String& password)
 {
-    // パスワード入力完了：オーバーレイを隠して接続開始
     if (selectedNetworkIndex >= 0 && selectedNetworkIndex < networks.size())
     {
         auto* selectedNet = networks[selectedNetworkIndex];
@@ -281,7 +272,6 @@ void R2WiFiSelector::onPasswordEntered(const juce::String& password)
 
 void R2WiFiSelector::onPasswordCancelled()
 {
-    // パスワード入力キャンセル：オーバーレイを隠す
     hidePasswordInputOverlay();
 }
 
@@ -297,7 +287,6 @@ void R2WiFiSelector::scanNetworks()
 
     juce::ChildProcess proc;
 
-    // WiFiスキャンを実行
     if (!proc.start ("sudo nmcli device wifi rescan"))
     {
         labelStatus->setText ("Failed to rescan WiFi", juce::dontSendNotification);
@@ -306,7 +295,6 @@ void R2WiFiSelector::scanNetworks()
 
     proc.waitForProcessToFinish (3000);
 
-    // ネットワーク一覧を取得
     if (!proc.start ("sudo nmcli -t -f SSID,SIGNAL,SECURITY,ACTIVE device wifi list"))
     {
         labelStatus->setText ("Failed to list WiFi networks", juce::dontSendNotification);
@@ -322,14 +310,12 @@ void R2WiFiSelector::scanNetworks()
         return;
     }
 
-    // 現在選択されているSSIDを保存
     if (selectedNetworkIndex >= 0 && selectedNetworkIndex < networks.size())
         previouslySelectedSSID = networks[selectedNetworkIndex]->ssid;
 
     networks.clear();
     selectedNetworkIndex = -1;
 
-    // スキャン結果を解析
     auto lines = juce::StringArray::fromLines (output);
 
     for (auto& line : lines)
@@ -342,7 +328,6 @@ void R2WiFiSelector::scanNetworks()
             juce::String security = parts[2];
             juce::String active = parts[3];
 
-            // 空のSSIDは除外
             if (ssid.isEmpty())
                 continue;
 
@@ -366,21 +351,19 @@ void R2WiFiSelector::scanNetworks()
     }
 #endif
 
-    // アルファベット順でソート（接続中のものを最上位に）
     struct NetworkComparator
     {
         int compareElements (WifiNetwork* a, WifiNetwork* b) const
         {
             if (a->isConnected != b->isConnected)
-                return a->isConnected ? -1 : 1;  // 接続中を最上位に
-            return a->ssid.compareIgnoreCase (b->ssid);  // SSID名でアルファベット順
+                return a->isConnected ? -1 : 1;
+            return a->ssid.compareIgnoreCase (b->ssid);
         }
     };
 
     NetworkComparator comparator;
     networks.sort (comparator);
 
-    // 以前選択されていたSSIDを再選択
     if (previouslySelectedSSID.isNotEmpty())
     {
         for (int i = 0; i < networks.size(); ++i)
@@ -406,7 +389,6 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
     updateConnectButton();
     showConnectingOverlay();
 
-    // バックグラウンドで接続処理を実行
     juce::Thread::launch ([this, ssid, password]()
                           {
         DBG("=== WiFi Connection Debug ===");
@@ -418,7 +400,6 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
         bool success = false;
         juce::String message;
 
-        // Step 1: preconfigured接続を切断
         DBG("Step 1: Disconnecting preconfigured connection...");
         juce::ChildProcess disconnectProc;
         if (disconnectProc.start("sudo nmcli connection down preconfigured"))
@@ -428,10 +409,8 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
             DBG("Disconnect output: " + disconnectOutput);
         }
 
-        // 少し待つ
         juce::Thread::sleep(2000);
 
-        // Step 2: 新しいネットワークに接続
         DBG("Step 2: Connecting to new network...");
         currentConnectionProcess.reset(new juce::ChildProcess());
 
@@ -451,7 +430,6 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
         {
             DBG("Connection process started");
 
-            // 接続完了を待つ（最大15秒）
             bool finished = currentConnectionProcess->waitForProcessToFinish(15000);
             auto output = currentConnectionProcess->readAllProcessOutput().trim();
             int exitCode = currentConnectionProcess->getExitCode();
@@ -469,13 +447,11 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
             }
             else if (exitCode == 0)
             {
-                // 成功
                 success = true;
                 message = "Successfully connected to: " + ssid;
             }
             else
             {
-                // 失敗
                 success = false;
                 if (output.contains("802.1X supplicant failed") || output.contains("supplicant failed"))
                 {
@@ -502,7 +478,6 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
             message = "Failed to start connection process";
         }
 
-        // Step 3: 結果確認
         if (success)
         {
             DBG("Step 3: Verifying connection...");
@@ -516,7 +491,6 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
             DBG(activeConnections);
         }
 
-        // プロセス参照をクリア
         currentConnectionProcess = nullptr;
 
         DBG("");
@@ -524,8 +498,7 @@ void R2WiFiSelector::connectToNetwork (const juce::String& ssid, const juce::Str
         DBG("Message: " + message);
         DBG("=== End WiFi Connection Debug ===");
 
-        // メインスレッドに結果を通知
-        if (isConnecting)  // キャンセルされていないかチェック
+        if (isConnecting)
         {
             juce::MessageManager::callAsync ([this, success, message]()
                                              {
@@ -585,14 +558,12 @@ void R2WiFiSelector::onConnectionResult(bool success, const juce::String& messag
 
     if (success)
     {
-        // 成功時：オーバーレイを隠して、再スキャン
         hideConnectingOverlay();
         labelStatus->setText (message, juce::dontSendNotification);
-        scanNetworks();  // 接続状態を更新
+        scanNetworks();
     }
     else
     {
-        // 失敗時：オーバーレイを失敗状態に変更
         if (connectingOverlay != nullptr)
             connectingOverlay->setFailed (message);
     }
@@ -602,37 +573,32 @@ void R2WiFiSelector::onConnectionResult(bool success, const juce::String& messag
 
 void R2WiFiSelector::drawWiFiStrengthArcs(juce::Graphics& g, int centerX, int centerY, int signalStrength)
 {
-    // WiFiアイコン風の表示（3段階の縦バー、下端揃え）
     const int barCount = 3;
     const int barWidth = 2;
     const int barSpacing = 3;
-    const int maxBarHeight = 10;  // 最大バー高さ
+    const int maxBarHeight = 10;
 
-    // 信号強度に応じて白いバーの数を決定（強いほど白が多い）
     int whiteBars = 0;
     if (signalStrength >= 33)
-        whiteBars = 1;  // 33%以上で1本目（左端）が白
+        whiteBars = 1;
     if (signalStrength >= 66)
-        whiteBars = 2;  // 66%以上で2本目も白
+        whiteBars = 2;
     if (signalStrength >= 90)
-        whiteBars = 3;  // 90%以上で全部白
+        whiteBars = 3;
 
     for (int i = 0; i < barCount; ++i)
     {
-        int barHeight = 4 + (i * 3);  // 4, 7, 10の高さ
+        int barHeight = 4 + (i * 3);
         int x = centerX - ((barCount - 1) * (barWidth + barSpacing) / 2) + i * (barWidth + barSpacing);
-        int y = centerY + (maxBarHeight / 2) - barHeight;  // 下端を揃える
+        int y = centerY + (maxBarHeight / 2) - barHeight;
 
-        // 左から白くしていく（信号が強いほど白いバーが増える）
         juce::Colour barColour;
         if (i < whiteBars)
         {
-            // 白いバー（信号強度が高い部分）
             barColour = juce::Colours::white;
         }
         else
         {
-            // 黒いバー（信号強度が低い部分）
             barColour = juce::Colours::black;
         }
 
@@ -645,14 +611,14 @@ void R2WiFiSelector::drawWiFiStrengthArcs(juce::Graphics& g, int centerX, int ce
 // ConnectingOverlay Implementation
 //==============================================================================
 ConnectingOverlay::ConnectingOverlay(R2WiFiSelector* parent)
-: parentSelector(parent), isFailedState(false), spinnerIndex(0)  // spinnerIndex(0)を追加
+: parentSelector(parent), isFailedState(false), spinnerIndex(0)
 {
     // Status label
     statusLabel.reset (new juce::Label (juce::String(), "Connecting..."));
     addAndMakeVisible (statusLabel.get());
     statusLabel->setFont (juce::Font (juce::FontOptions (24.00f, juce::Font::plain)));
     statusLabel->setJustificationType (juce::Justification::centred);
-    statusLabel->setColour (juce::Label::textColourId, juce::Colours::white);  // 白に変更
+    statusLabel->setColour (juce::Label::textColourId, juce::Colours::white);
     statusLabel->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
 
     // Action button (Cancel/OK)
@@ -660,7 +626,6 @@ ConnectingOverlay::ConnectingOverlay(R2WiFiSelector* parent)
     addAndMakeVisible (actionButton.get());
     actionButton->addListener (this);
 
-    // タイマー開始（この行を追加）
     startTimer(500);
 }
 
@@ -672,7 +637,6 @@ ConnectingOverlay::~ConnectingOverlay()
 
 void ConnectingOverlay::paint(juce::Graphics& g)
 {
-    // PasswordInputOverlayと同じ背景のみ
     g.fillAll(juce::Colour(0xc0000000));
 }
 
@@ -680,10 +644,8 @@ void ConnectingOverlay::resized()
 {
     auto bounds = getLocalBounds();
 
-    // タイトル位置（中央配置、上から16px）
     statusLabel->setBounds(16, 16, bounds.getWidth() - 32, 32);
 
-    // ボタン位置（中央）
     actionButton->setBounds((bounds.getWidth() / 2) - (128 / 2), 160, 128, 24);
 }
 
@@ -693,12 +655,10 @@ void ConnectingOverlay::buttonClicked(juce::Button* button)
     {
         if (isFailedState)
         {
-            // OK押下：完了通知
             parentSelector->onConnectingCompleted();
         }
         else
         {
-            // Cancel押下：キャンセル通知
             parentSelector->onConnectingCancelled();
         }
     }
@@ -706,7 +666,6 @@ void ConnectingOverlay::buttonClicked(juce::Button* button)
 
 void ConnectingOverlay::timerCallback()
 {
-    // 接続中のみ文字スピナーを回転
     if (!isFailedState)
     {
         juce::StringArray spinChars = {"|", "/", "-", "\\"};
@@ -722,7 +681,7 @@ void ConnectingOverlay::timerCallback()
 void ConnectingOverlay::setConnecting(const juce::String& ssid)
 {
     isFailedState = false;
-    statusLabel->setText ("Connecting to: " + ssid, juce::dontSendNotification);  // 1行で表示
+    statusLabel->setText ("Connecting to: " + ssid, juce::dontSendNotification);
     actionButton->setButtonText ("Cancel");
 
     startTimer(500);
@@ -731,7 +690,7 @@ void ConnectingOverlay::setConnecting(const juce::String& ssid)
 void ConnectingOverlay::setFailed(const juce::String& message)
 {
     isFailedState = true;
-    statusLabel->setText ("Connection Failed", juce::dontSendNotification);  // シンプルに
+    statusLabel->setText ("Connection Failed", juce::dontSendNotification);
     actionButton->setButtonText ("OK");
     stopTimer();
 }
@@ -804,7 +763,6 @@ PasswordInputOverlay::~PasswordInputOverlay()
 
 void PasswordInputOverlay::paint(juce::Graphics& g)
 {
-    // Connectコンポーネントと同じ背景色
     g.fillAll(juce::Colour(0xc0000000));
 }
 
@@ -812,22 +770,16 @@ void PasswordInputOverlay::resized()
 {
     auto bounds = getLocalBounds();
 
-    // タイトルラベル（中央、上から16px）
     titleLabel->setBounds(16, 16, bounds.getWidth() - 32, 32);
 
-    // SSIDラベル（左寄せ、上から56px）
     ssidLabel->setBounds(16, 56, bounds.getWidth() - 32, 24);
 
-    // パスワードラベル（左寄せ、上から88px）
     passwordLabel->setBounds(16, 88, bounds.getWidth() - 32, 24);
 
-    // パスワード入力欄（左右16pxマージン、上から120px）
     passwordEditor->setBounds(16, 120, bounds.getWidth() - 32, 24);
 
-    // Connectボタン（右側、上から160px）
     connectButton->setBounds((bounds.getWidth() / 2) + 8, 160, 128, 24);
 
-    // Cancelボタン（左側、上から160px）
     cancelButton->setBounds((bounds.getWidth() / 2) - 136, 160, 128, 24);
 }
 
@@ -848,7 +800,6 @@ void PasswordInputOverlay::textEditorReturnKeyPressed(juce::TextEditor& editor)
 {
     if (&editor == passwordEditor.get())
     {
-        // Enterキーでも接続
         buttonClicked(connectButton.get());
     }
 }

@@ -1,6 +1,4 @@
 #include "MyStandAloneApp.h"
-//#include "TwiAudioProcessorNew.h"
-//#include "TwiAlertComponent.h"
 #include <juce_audio_devices/juce_audio_devices.h>
 #include <juce_gui_extra/juce_gui_extra.h>
 #include <juce_audio_utils/juce_audio_utils.h>

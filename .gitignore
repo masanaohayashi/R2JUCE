@@ -61,6 +61,7 @@ unsuccessfulbuild
 *.dll
 *.exe
 *.app
+examples/**/Builds/VisualStudio2022/packages/
 
 # JUCE Build Files
 JuceLibraryCode/

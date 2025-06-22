@@ -111,12 +111,11 @@ MainComponent::MainComponent ()
     //[UserPreSize]
     DBG("OneDrive ClientID: " + juce::String(ONEDRIVE_CLIENT_ID));
     DBG("OneDrive Secret: " + juce::String(ONEDRIVE_CLIENT_SECRET));
-    // R2CloudManagerの初期化
+
     cloudManager = std::make_unique<r2juce::R2CloudManager>();
     cloudManager->setGoogleCredentials(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
     cloudManager->setOneDriveCredentials(ONEDRIVE_CLIENT_ID, ONEDRIVE_CLIENT_SECRET);
 
-    // コールバック設定
     cloudManager->onAuthStatusChanged = [this](r2juce::R2CloudManager::AuthStatus status) {
         handleAuthStatusChanged(status);
     };
@@ -125,7 +124,6 @@ MainComponent::MainComponent ()
         handleServiceChanged(service);
     };
 
-    // デフォルトでローカルを選択
     cloudManager->selectService(r2juce::R2CloudManager::ServiceType::Local);
     comboService->setSelectedId(1);
     //[/UserPreSize]
@@ -200,7 +198,6 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
             case 2: // Google Drive
                 cloudManager->selectService(r2juce::R2CloudManager::ServiceType::GoogleDrive);
 
-                // 認証が必要な場合は自動で認証UIを表示
                 if (cloudManager->needsAuthentication())
                 {
                     cloudManager->showAuthenticationUI(this);
@@ -208,7 +205,6 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
                 break;
             case 3: // OneDrive
                 cloudManager->selectService(r2juce::R2CloudManager::ServiceType::OneDrive);
-                // 認証が必要な場合は自動で認証UIを表示
                 if (cloudManager->needsAuthentication())
                 {
                     cloudManager->showAuthenticationUI(this);
@@ -263,7 +259,6 @@ void MainComponent::loadFromFile()
         return;
     }
 
-    // R2CloudManagerを使ったシンプルなファイル読み込み
     cloudManager->loadFile(filename, [this](bool success, juce::String content, juce::String errorMessage)
     {
         if (success)
@@ -281,13 +276,13 @@ void MainComponent::loadFromFile()
 void MainComponent::saveToFile()
 {
     DBG("=== saveToFile() called ===");
-    
+
     auto filename = textEditorFilename->getText().trim();
     auto content = textEditorData->getText();
 
     DBG("Filename: " + filename);
     DBG("Content length: " + juce::String(content.length()));
-    
+
     if (filename.isEmpty())
     {
         DBG("Error: filename is empty");
@@ -298,21 +293,18 @@ void MainComponent::saveToFile()
     DBG("Current service type: " + juce::String((int)cloudManager->getCurrentService()));
     DBG("Auth status: " + juce::String((int)cloudManager->getAuthStatus()));
 
-    // パス解析
     juce::String folderPath;
     juce::String actualFilename;
-    
+
     if (filename.contains("/"))
     {
-        // フォルダパス込みの場合
         auto lastSlash = filename.lastIndexOf("/");
-        folderPath = filename.substring(0, lastSlash);  // "STUDIO-R/CloudDoc"
-        actualFilename = filename.substring(lastSlash + 1);  // "test.txt"
-        
+        folderPath = filename.substring(0, lastSlash);
+        actualFilename = filename.substring(lastSlash + 1);
+
         DBG("Folder path: " + folderPath);
         DBG("Actual filename: " + actualFilename);
-        
-        // フォルダパスでの保存
+
         cloudManager->saveFileWithPath(folderPath, actualFilename, content, [this](bool success, juce::String errorMessage)
         {
             if (success)
@@ -327,7 +319,6 @@ void MainComponent::saveToFile()
     }
     else
     {
-        // 通常のルート保存
         cloudManager->saveFile(filename, content, [this](bool success, juce::String errorMessage)
         {
             if (success)
@@ -341,64 +332,83 @@ void MainComponent::saveToFile()
         });
     }
 }
+
 void MainComponent::handleAuthStatusChanged(r2juce::R2CloudManager::AuthStatus status)
 {
-    switch (status)
+    // Use SafePointer to prevent crashes if component is deleted during async execution
+    auto safeThis = juce::Component::SafePointer<MainComponent>(this);
+    
+    juce::MessageManager::callAsync([safeThis, status]()
     {
-        case r2juce::R2CloudManager::AuthStatus::Authenticated:
-            showMessage("Success", "Successfully authenticated with cloud service");
-            textButtonSignOut->setEnabled(true);
-            break;
+        // CRITICAL CHECK: Ensure component still exists before accessing
+        if (safeThis == nullptr)
+        {
+            DBG("MainComponent was deleted, skipping auth status update");
+            return;
+        }
 
-        case r2juce::R2CloudManager::AuthStatus::NotAuthenticated:
-            textButtonSignOut->setEnabled(false);
-            break;
+        switch (status)
+        {
+            case r2juce::R2CloudManager::AuthStatus::Authenticated:
+                safeThis->showMessage("Success", "Successfully authenticated with cloud service");
+                if (safeThis->textButtonSignOut != nullptr)
+                    safeThis->textButtonSignOut->setEnabled(true);
+                break;
 
-        case r2juce::R2CloudManager::AuthStatus::Error:
-            showMessage("Error", "Authentication failed");
-            textButtonSignOut->setEnabled(false);
-            break;
+            case r2juce::R2CloudManager::AuthStatus::NotAuthenticated:
+                if (safeThis->textButtonSignOut != nullptr)
+                    safeThis->textButtonSignOut->setEnabled(false);
+                break;
 
-        case r2juce::R2CloudManager::AuthStatus::Authenticating:
-            // 認証中は特に何もしない（R2CloudAuthComponentが表示される）
-            break;
-    }
+            case r2juce::R2CloudManager::AuthStatus::Error:
+                safeThis->showMessage("Error", "Authentication failed");
+                if (safeThis->textButtonSignOut != nullptr)
+                    safeThis->textButtonSignOut->setEnabled(false);
+                break;
+
+            case r2juce::R2CloudManager::AuthStatus::Authenticating:
+                break;
+        }
+    });
 }
 
 void MainComponent::handleServiceChanged(r2juce::R2CloudManager::ServiceType service)
 {
-    // サービス変更時の処理
-    switch (service)
+    // Use SafePointer to prevent crashes if component is deleted during async execution
+    auto safeThis = juce::Component::SafePointer<MainComponent>(this);
+    
+    juce::MessageManager::callAsync([safeThis, service]()
     {
-        case r2juce::R2CloudManager::ServiceType::Local:
-            textButtonSignOut->setEnabled(false);
-            break;
+        // CRITICAL CHECK: Ensure component still exists before accessing
+        if (safeThis == nullptr)
+        {
+            DBG("MainComponent was deleted, skipping service change update");
+            return;
+        }
 
-        case r2juce::R2CloudManager::ServiceType::GoogleDrive:
-            // 認証状態に応じてサインアウトボタンを有効/無効
-            textButtonSignOut->setEnabled(
-                cloudManager->getAuthStatus() == r2juce::R2CloudManager::AuthStatus::Authenticated
-            );
-            break;
-        case r2juce::R2CloudManager::ServiceType::OneDrive:
-            // 認証状態に応じてサインアウトボタンを有効/無効
-            textButtonSignOut->setEnabled(
-                cloudManager->getAuthStatus() == r2juce::R2CloudManager::AuthStatus::Authenticated
-            );
-            break;
-    }
+        switch (service)
+        {
+            case r2juce::R2CloudManager::ServiceType::Local:
+                if (safeThis->textButtonSignOut != nullptr)
+                    safeThis->textButtonSignOut->setEnabled(false);
+                break;
+
+            case r2juce::R2CloudManager::ServiceType::GoogleDrive:
+            case r2juce::R2CloudManager::ServiceType::OneDrive:
+                if (safeThis->textButtonSignOut != nullptr && safeThis->cloudManager != nullptr)
+                {
+                    safeThis->textButtonSignOut->setEnabled(
+                        safeThis->cloudManager->getAuthStatus() == r2juce::R2CloudManager::AuthStatus::Authenticated
+                    );
+                }
+                break;
+        }
+    });
 }
 
 void MainComponent::showMessage(const juce::String& title, const juce::String& message)
 {
-    juce::AlertWindow::showAsync(
-        juce::MessageBoxOptions()
-            .withIconType(juce::MessageBoxIconType::InfoIcon)
-            .withTitle(title)
-            .withMessage(message)
-            .withButton("OK"),
-        nullptr
-    );
+    r2juce::R2AlertComponent::forOK(this, title, message);
 }
 //[/MiscUserCode]
 

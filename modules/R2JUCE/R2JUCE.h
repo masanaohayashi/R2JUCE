@@ -29,3 +29,4 @@ END_JUCE_MODULE_DECLARATION
 #include "src/R2OneDriveProvider.h"
 #include "src/R2CloudManager.h"
 #include "src/R2CloudAuthComponent.h"
+#include "src/R2AlertComponent.h"
