@@ -52,6 +52,7 @@ MainComponent::MainComponent ()
     comboService->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     comboService->addItem (TRANS ("Not use"), 1);
     comboService->addItem (TRANS ("Google Drive"), 2);
+    comboService->addItem (TRANS ("OneDrive"), 3);
     comboService->addListener (this);
 
     comboService->setBounds (112, 16, 184, 24);
@@ -108,9 +109,12 @@ MainComponent::MainComponent ()
 
 
     //[UserPreSize]
+    DBG("OneDrive ClientID: " + juce::String(ONEDRIVE_CLIENT_ID));
+    DBG("OneDrive Secret: " + juce::String(ONEDRIVE_CLIENT_SECRET));
     // R2CloudManagerの初期化
     cloudManager = std::make_unique<r2juce::R2CloudManager>();
     cloudManager->setGoogleCredentials(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+    cloudManager->setOneDriveCredentials(ONEDRIVE_CLIENT_ID, ONEDRIVE_CLIENT_SECRET);
 
     // コールバック設定
     cloudManager->onAuthStatusChanged = [this](r2juce::R2CloudManager::AuthStatus status) {
@@ -202,6 +206,14 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
                     cloudManager->showAuthenticationUI(this);
                 }
                 break;
+            case 3: // OneDrive
+                cloudManager->selectService(r2juce::R2CloudManager::ServiceType::OneDrive);
+                // 認証が必要な場合は自動で認証UIを表示
+                if (cloudManager->needsAuthentication())
+                {
+                    cloudManager->showAuthenticationUI(this);
+                }
+                break;
         }
         //[/UserComboBoxCode_comboService]
     }
@@ -268,29 +280,67 @@ void MainComponent::loadFromFile()
 
 void MainComponent::saveToFile()
 {
+    DBG("=== saveToFile() called ===");
+    
     auto filename = textEditorFilename->getText().trim();
     auto content = textEditorData->getText();
 
+    DBG("Filename: " + filename);
+    DBG("Content length: " + juce::String(content.length()));
+    
     if (filename.isEmpty())
     {
+        DBG("Error: filename is empty");
         showMessage("Error", "Please enter a filename");
         return;
     }
 
-    // R2CloudManagerを使ったシンプルなファイル保存
-    cloudManager->saveFile(filename, content, [this](bool success, juce::String errorMessage)
-    {
-        if (success)
-        {
-            showMessage("Success", "File saved successfully");
-        }
-        else
-        {
-            showMessage("Error", "Failed to save file: " + errorMessage);
-        }
-    });
-}
+    DBG("Current service type: " + juce::String((int)cloudManager->getCurrentService()));
+    DBG("Auth status: " + juce::String((int)cloudManager->getAuthStatus()));
 
+    // パス解析
+    juce::String folderPath;
+    juce::String actualFilename;
+    
+    if (filename.contains("/"))
+    {
+        // フォルダパス込みの場合
+        auto lastSlash = filename.lastIndexOf("/");
+        folderPath = filename.substring(0, lastSlash);  // "STUDIO-R/CloudDoc"
+        actualFilename = filename.substring(lastSlash + 1);  // "test.txt"
+        
+        DBG("Folder path: " + folderPath);
+        DBG("Actual filename: " + actualFilename);
+        
+        // フォルダパスでの保存
+        cloudManager->saveFileWithPath(folderPath, actualFilename, content, [this](bool success, juce::String errorMessage)
+        {
+            if (success)
+            {
+                showMessage("Success", "File saved successfully");
+            }
+            else
+            {
+                showMessage("Error", "Failed to save file: " + errorMessage);
+            }
+        });
+    }
+    else
+    {
+        // 通常のルート保存
+        cloudManager->saveFile(filename, content, [this](bool success, juce::String errorMessage)
+        {
+            if (success)
+            {
+                showMessage("Success", "File saved successfully");
+            }
+            else
+            {
+                showMessage("Error", "Failed to save file: " + errorMessage);
+            }
+        });
+    }
+}
 void MainComponent::handleAuthStatusChanged(r2juce::R2CloudManager::AuthStatus status)
 {
     switch (status)
@@ -325,6 +375,12 @@ void MainComponent::handleServiceChanged(r2juce::R2CloudManager::ServiceType ser
             break;
 
         case r2juce::R2CloudManager::ServiceType::GoogleDrive:
+            // 認証状態に応じてサインアウトボタンを有効/無効
+            textButtonSignOut->setEnabled(
+                cloudManager->getAuthStatus() == r2juce::R2CloudManager::AuthStatus::Authenticated
+            );
+            break;
+        case r2juce::R2CloudManager::ServiceType::OneDrive:
             // 認証状態に応じてサインアウトボタンを有効/無効
             textButtonSignOut->setEnabled(
                 cloudManager->getAuthStatus() == r2juce::R2CloudManager::AuthStatus::Authenticated
@@ -368,7 +424,8 @@ BEGIN_JUCER_METADATA
          fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
   <COMBOBOX name="" id="1901ecb05f23698f" memberName="comboService" virtualName=""
             explicitFocusOrder="0" pos="112 16 184 24" editable="0" layout="33"
-            items="Not use&#10;Google Drive" textWhenNonSelected="" textWhenNoItems="(no choices)"/>
+            items="Not use&#10;Google Drive&#10;OneDrive" textWhenNonSelected=""
+            textWhenNoItems="(no choices)"/>
   <TEXTEDITOR name="" id="70766b9c8981f401" memberName="textEditorData" virtualName="r2juce::R2TextEditor"
               explicitFocusOrder="0" pos="0Cc 80 32M 88" bkgcol="ff000000"
               initialText="" multiline="1" retKeyStartsLine="1" readonly="0"

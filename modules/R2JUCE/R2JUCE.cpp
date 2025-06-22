@@ -7,5 +7,6 @@
 #include "src/R2ScreenKeyboard.cpp"
 #include "src/R2LocalStorageProvider.cpp"
 #include "src/R2GoogleDriveProvider.cpp"
+#include "src/R2OneDriveProvider.cpp"
 #include "src/R2CloudManager.cpp"
 #include "src/R2CloudAuthComponent.cpp"

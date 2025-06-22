@@ -1,7 +1,7 @@
-
 #include "R2CloudManager.h"
 #include "R2LocalStorageProvider.h"
 #include "R2GoogleDriveProvider.h"
+#include "R2OneDriveProvider.h"  // ← 追加
 #include "R2CloudAuthComponent.h"
 
 namespace r2juce {
@@ -20,6 +20,7 @@ void R2CloudManager::initializeProviders()
 {
     localProvider = createProvider(ServiceType::Local);
     googleDriveProvider = createProvider(ServiceType::GoogleDrive);
+    oneDriveProvider = createProvider(ServiceType::OneDrive);  // ← 追加
     
     // デフォルトのローカルストレージディレクトリを設定
     auto documentsDir = juce::File::getSpecialLocation(juce::File::userDocumentsDirectory);
@@ -33,13 +34,14 @@ std::unique_ptr<R2CloudStorageProvider> R2CloudManager::createProvider(ServiceTy
     {
         case ServiceType::GoogleDrive:
             return std::make_unique<R2GoogleDriveProvider>();
+        case ServiceType::OneDrive:  // ← 追加
+            return std::make_unique<R2OneDriveProvider>();
         case ServiceType::Local:
         default:
             return std::make_unique<R2LocalStorageProvider>();
-        // 今後追加予定:
-        // case ServiceType::Dropbox: return std::make_unique<R2DropboxProvider>();
-        // case ServiceType::OneDrive: return std::make_unique<R2OneDriveProvider>();
-        // case ServiceType::iCloud: return std::make_unique<R2iCloudProvider>();
+            // 今後追加予定:
+            // case ServiceType::Dropbox: return std::make_unique<R2DropboxProvider>();
+            // case ServiceType::iCloud: return std::make_unique<R2iCloudProvider>();
     }
 }
 
@@ -51,6 +53,17 @@ void R2CloudManager::setGoogleCredentials(const juce::String& clientId, const ju
     if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(googleDriveProvider.get()))
     {
         googleProv->setClientCredentials(clientId, clientSecret);
+    }
+}
+
+void R2CloudManager::setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret)  // ← 追加
+{
+    oneDriveClientId = clientId;
+    oneDriveClientSecret = clientSecret;
+    
+    if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get()))
+    {
+        oneDriveProv->setClientCredentials(clientId, clientSecret);
     }
 }
 
@@ -90,13 +103,14 @@ R2CloudStorageProvider* R2CloudManager::getCurrentProvider()
     {
         case ServiceType::GoogleDrive:
             return googleDriveProvider.get();
+        case ServiceType::OneDrive:  // ← 追加
+            return oneDriveProvider.get();
         case ServiceType::Local:
         default:
             return localProvider.get();
-        // 今後追加予定:
-        // case ServiceType::iCloud: return iCloudProvider.get();
-        // case ServiceType::Dropbox: return dropboxProvider.get();
-        // case ServiceType::OneDrive: return oneDriveProvider.get();
+            // 今後追加予定:
+            // case ServiceType::iCloud: return iCloudProvider.get();
+            // case ServiceType::Dropbox: return dropboxProvider.get();
     }
 }
 
@@ -106,6 +120,8 @@ const R2CloudStorageProvider* R2CloudManager::getCurrentProvider() const
     {
         case ServiceType::GoogleDrive:
             return googleDriveProvider.get();
+        case ServiceType::OneDrive:  // ← 追加
+            return oneDriveProvider.get();
         case ServiceType::Local:
         default:
             return localProvider.get();
@@ -180,13 +196,18 @@ void R2CloudManager::showAuthenticationUI(juce::Component* parentComponent)
         authComponent->setGoogleCredentials(googleClientId, googleClientSecret);
         authComponent->setServiceType(R2CloudAuthComponent::ServiceType::GoogleDrive);
     }
+    else if (currentServiceType == ServiceType::OneDrive)  // ← 追加
+    {
+        authComponent->setOneDriveCredentials(oneDriveClientId, oneDriveClientSecret);
+        authComponent->setServiceType(R2CloudAuthComponent::ServiceType::OneDrive);
+    }
     
     // コールバック設定
     authComponent->onAuthenticationComplete = [this](bool success, juce::String errorMessage, juce::String accessToken, juce::String refreshToken)
     {
         handleAuthenticationComplete(success, errorMessage, accessToken, refreshToken);
     };
-
+    
     authComponent->onAuthenticationCancelled = [this]()
     {
         hideAuthenticationUI();
@@ -226,9 +247,19 @@ void R2CloudManager::handleAuthenticationComplete(bool success, const juce::Stri
     if (success)
     {
         // ✅ トークンをプロバイダーに設定
-        if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(googleDriveProvider.get()))
+        if (currentServiceType == ServiceType::GoogleDrive)
         {
-            googleProv->setTokens(accessToken, refreshToken);
+            if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(googleDriveProvider.get()))
+            {
+                googleProv->setTokens(accessToken, refreshToken);
+            }
+        }
+        else if (currentServiceType == ServiceType::OneDrive)
+        {
+            if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get()))
+            {
+                oneDriveProv->setTokens(accessToken, refreshToken);
+            }
         }
         setAuthStatus(AuthStatus::Authenticated);
     }
@@ -272,9 +303,35 @@ void R2CloudManager::saveFile(const juce::String& filename, const juce::String& 
     juce::MemoryBlock data(content.toUTF8(), content.getNumBytesAsUTF8());
     
     provider->uploadFile(filename, data, "root", [callback](bool success, juce::String errorMessage)
-    {
+                         {
         if (callback)
             callback(success, errorMessage);
+    });
+}
+
+void R2CloudManager::saveFileWithPath(const juce::String& folderPath, const juce::String& filename,
+                                      const juce::String& content, FileOperationCallback callback)
+{
+    auto provider = getCurrentProvider();
+    if (!provider)
+    {
+        if (callback) callback(false, "No storage provider available");
+        return;
+    }
+    
+    if (needsAuthentication())
+    {
+        if (callback) callback(false, "Authentication required");
+        return;
+    }
+    
+    juce::MemoryBlock data(content.toUTF8(), content.getNumBytesAsUTF8());
+    
+    // OneDriveの場合はパス形式で直接アップロード可能
+    juce::String fullPath = folderPath + "/" + filename;
+    provider->uploadFile(fullPath, data, "path", [callback](bool success, juce::String errorMessage)
+                         {
+        if (callback) callback(success, errorMessage);
     });
 }
 
@@ -313,48 +370,96 @@ void R2CloudManager::loadFile(const juce::String& filename, FileContentCallback 
         return;
     }
     
-    // クラウドストレージの場合
-    provider->listFiles("root", [this, filename, callback, provider](bool success, juce::Array<R2CloudStorageProvider::FileInfo> files, juce::String errorMessage)
+    // OneDrive/Google Drive: パス形式に対応
+    if (filename.contains("/"))
     {
-        if (!success)
-        {
-            if (callback)
-                callback(false, "", "Failed to list files: " + errorMessage);
-            return;
-        }
-        
-        juce::String fileId;
-        for (const auto& file : files)
-        {
-            if (file.name == filename && !file.isFolder)
+        // パス形式での直接読み込み
+        loadFileWithPath(filename, callback);
+    }
+    else
+    {
+        // 従来のルートからの検索
+        provider->listFiles("root", [this, filename, callback, provider](bool success, juce::Array<R2CloudStorageProvider::FileInfo> files, juce::String errorMessage)
+                            {
+            if (!success)
             {
-                fileId = file.id;
-                break;
+                if (callback)
+                    callback(false, "", "Failed to list files: " + errorMessage);
+                return;
             }
-        }
-        
-        if (fileId.isEmpty())
+            
+            juce::String fileId;
+            for (const auto& file : files)
+            {
+                if (file.name == filename && !file.isFolder)
+                {
+                    fileId = file.id;
+                    break;
+                }
+            }
+            
+            if (fileId.isEmpty())
+            {
+                if (callback)
+                    callback(false, "", "File not found: " + filename);
+                return;
+            }
+            
+            provider->downloadFile(fileId, [callback, filename](bool downloadSuccess, juce::MemoryBlock data, juce::String downloadError)
+                                   {
+                if (downloadSuccess)
+                {
+                    auto content = juce::String::createStringFromData(data.getData(), static_cast<int>(data.getSize()));
+                    if (callback)
+                        callback(true, content, "");
+                }
+                else
+                {
+                    if (callback)
+                        callback(false, "", "Failed to download file: " + downloadError);
+                }
+            });
+        });
+    }
+}
+
+void R2CloudManager::loadFileWithPath(const juce::String& filePath, FileContentCallback callback)
+{
+    auto provider = getCurrentProvider();
+    if (!provider) return;
+    
+    // OneDrive用の直接パス読み込み
+    if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(provider))
+    {
+        oneDriveProv->downloadFileWithPath(filePath, [callback](bool success, juce::MemoryBlock data, juce::String error)
         {
-            if (callback)
-                callback(false, "", "File not found: " + filename);
-            return;
-        }
-        
-        provider->downloadFile(fileId, [callback, filename](bool downloadSuccess, juce::MemoryBlock data, juce::String downloadError)
-        {
-            if (downloadSuccess)
+            if (success)
             {
                 auto content = juce::String::createStringFromData(data.getData(), static_cast<int>(data.getSize()));
-                if (callback)
-                    callback(true, content, "");
+                if (callback) callback(true, content, "");
             }
             else
             {
-                if (callback)
-                    callback(false, "", "Failed to download file: " + downloadError);
+                if (callback) callback(false, "", error);
             }
         });
-    });
+    }
+    // Google Drive用のパス読み込み
+    else if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(provider))
+    {
+        googleProv->downloadFileWithPath(filePath, [callback](bool success, juce::MemoryBlock data, juce::String error)
+        {
+            if (success)
+            {
+                auto content = juce::String::createStringFromData(data.getData(), static_cast<int>(data.getSize()));
+                if (callback) callback(true, content, "");
+            }
+            else
+            {
+                if (callback) callback(false, "", error);
+            }
+        });
+    }
 }
 
 } // namespace r2juce

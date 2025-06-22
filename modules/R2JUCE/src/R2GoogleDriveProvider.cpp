@@ -566,6 +566,22 @@ void R2GoogleDriveProvider::setTokens(const juce::String& accessToken, const juc
     DBG("Tokens set successfully");
 }
 
+void R2GoogleDriveProvider::downloadFileWithPath(const juce::String& filePath, DownloadCallback callback)
+{
+    // Google Driveはパス検索のAPIが無いため、フォルダを辿る必要がある
+    auto pathParts = juce::StringArray::fromTokens(filePath, "/", "");
+    
+    if (pathParts.isEmpty())
+    {
+        if (callback)
+            callback(false, {}, "Invalid file path");
+        return;
+    }
+    
+    // パスを辿ってファイルを探す
+    findFileByPath(pathParts, "root", 0, callback);
+}
+
 void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std::function<void(bool, juce::String)> callback)
 {
     try
@@ -623,6 +639,517 @@ void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std
         if (callback)
             callback(false, "Failed to parse token response");
     }
+}
+
+void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, const juce::String& currentFolderId,
+                                          int pathIndex, DownloadCallback callback)
+{
+    if (pathIndex >= pathParts.size())
+    {
+        if (callback)
+            callback(false, {}, "Path not found");
+        return;
+    }
+    
+    auto targetName = pathParts[pathIndex];
+    bool isLastPart = (pathIndex == pathParts.size() - 1);
+    
+    listFiles(currentFolderId, [this, pathParts, pathIndex, targetName, isLastPart, callback]
+             (bool success, juce::Array<FileInfo> files, juce::String errorMessage)
+    {
+        if (!success)
+        {
+            if (callback)
+                callback(false, {}, "Failed to list files: " + errorMessage);
+            return;
+        }
+        
+        for (const auto& file : files)
+        {
+            if (file.name == targetName)
+            {
+                if (isLastPart && !file.isFolder)
+                {
+                    // ファイルが見つかった - ダウンロード
+                    downloadFile(file.id, callback);
+                    return;
+                }
+                else if (!isLastPart && file.isFolder)
+                {
+                    // フォルダが見つかった - 次の階層へ
+                    findFileByPath(pathParts, file.id, pathIndex + 1, callback);
+                    return;
+                }
+            }
+        }
+        
+        // 見つからなかった
+        if (callback)
+            callback(false, {}, "Path not found: " + targetName);
+    });
+}
+
+void R2GoogleDriveProvider::uploadToFolder(const juce::String& fileName, const juce::MemoryBlock& data,
+                                          const juce::String& folderId, FileOperationCallback callback)
+{
+    DBG("uploadToFolder - fileName: " + fileName + ", folderId: " + folderId + ", data size: " + juce::String(data.getSize()));
+    
+    // フォルダIDが空の場合はrootを使用
+    juce::String targetFolderId = folderId.isEmpty() ? "root" : folderId;
+    
+    // まず、同名ファイルが既に存在するかチェック（ゴミ箱のファイルは除外）
+    juce::String query = "'" + targetFolderId + "' in parents and name = '" + fileName + "' and mimeType != 'application/vnd.google-apps.folder' and trashed = false";
+    juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false);
+    endpoint += "&fields=files(id,name,trashed)";
+    
+    makeAPIRequest(endpoint, "GET", {}, "", [this, fileName, data, targetFolderId, callback]
+                  (bool success, const juce::String& response)
+    {
+        if (!success)
+        {
+            DBG("Failed to list files: " + response);
+            if (callback)
+                callback(false, "Failed to check existing files: " + response);
+            return;
+        }
+        
+        juce::String existingFileId;
+        try
+        {
+            auto json = juce::JSON::parse(response);
+            if (json.isObject())
+            {
+                auto* obj = json.getDynamicObject();
+                if (obj->hasProperty("files"))
+                {
+                    auto filesArray = obj->getProperty("files");
+                    if (filesArray.isArray())
+                    {
+                        auto* array = filesArray.getArray();
+                        if (array->size() > 0)
+                        {
+                            auto fileObj = array->getUnchecked(0);
+                            if (fileObj.isObject())
+                            {
+                                auto* file = fileObj.getDynamicObject();
+                                // trashedフィールドを確認（念のため）
+                                bool isTrashed = false;
+                                if (file->hasProperty("trashed"))
+                                {
+                                    isTrashed = file->getProperty("trashed");
+                                }
+                                
+                                if (!isTrashed)  // ゴミ箱にない場合のみ
+                                {
+                                    existingFileId = file->getProperty("id").toString();
+                                    DBG("Found existing file with ID: " + existingFileId);
+                                }
+                                else
+                                {
+                                    DBG("Found file but it's in trash, ignoring");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            DBG("Failed to parse file list response");
+        }
+        
+        if (existingFileId.isNotEmpty())
+        {
+            // 既存ファイルを更新
+            updateExistingFile(existingFileId, data, callback);
+        }
+        else
+        {
+            // 新規ファイルとしてアップロード
+            uploadNewFile(fileName, data, targetFolderId, callback);
+        }
+    });
+}
+
+void R2GoogleDriveProvider::uploadWithData(const juce::String& endpoint, const juce::String& boundary,
+                                          const juce::MemoryBlock& fullData, FileOperationCallback callback)
+{
+    juce::URL url(endpoint);
+    
+    juce::StringPairArray headers;
+    headers.set("Authorization", "Bearer " + accessToken);
+    headers.set("Content-Type", "multipart/related; boundary=" + boundary);
+    headers.set("Content-Length", juce::String(fullData.getSize()));
+    
+    // ヘッダーを文字列に変換
+    juce::String headerString;
+    for (int i = 0; i < headers.size(); ++i)
+    {
+        headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
+        if (i < headers.size() - 1)
+            headerString += "\r\n";
+    }
+    
+    // POSTデータを設定
+    url = url.withPOSTData(fullData);
+    
+    auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                    .withExtraHeaders(headerString)
+                    .withConnectionTimeoutMs(30000);
+    
+    auto stream = url.createInputStream(options);
+    
+    if (stream != nullptr)
+    {
+        auto response = stream->readEntireStreamAsString();
+        DBG("Upload response: " + response);
+        
+        // レスポンスを解析
+        try
+        {
+            auto json = juce::JSON::parse(response);
+            if (json.isObject())
+            {
+                auto* obj = json.getDynamicObject();
+                if (obj->hasProperty("id"))
+                {
+                    DBG("Upload successful, file ID: " + obj->getProperty("id").toString());
+                    juce::MessageManager::callAsync([callback]()
+                    {
+                        if (callback)
+                            callback(true, "File uploaded successfully");
+                    });
+                    return;
+                }
+            }
+        }
+        catch (...)
+        {
+            DBG("Failed to parse upload response");
+        }
+        
+        juce::MessageManager::callAsync([callback, response]()
+        {
+            if (callback)
+                callback(false, "Upload failed: " + response);
+        });
+    }
+    else
+    {
+        DBG("Failed to create upload stream");
+        juce::MessageManager::callAsync([callback]()
+        {
+            if (callback)
+                callback(false, "Failed to create upload request");
+        });
+    }
+}
+
+// 新しいメソッド: 既存ファイルの更新
+void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const juce::MemoryBlock& data,
+                                               FileOperationCallback callback)
+{
+    DBG("Updating existing file with ID: " + fileId);
+    
+    juce::String endpoint = "https://www.googleapis.com/upload/drive/v3/files/" + fileId + "?uploadType=media";
+    
+    juce::Thread::launch([this, endpoint, data, callback]()
+    {
+        if (!isTokenValid())
+        {
+            DBG("Token is not valid, refreshing...");
+            refreshAccessToken([this, endpoint, data, callback](bool refreshSuccess)
+            {
+                if (!refreshSuccess)
+                {
+                    DBG("Failed to refresh token");
+                    juce::MessageManager::callAsync([callback]()
+                    {
+                        if (callback)
+                            callback(false, "Authentication required");
+                    });
+                    return;
+                }
+                
+                // リトライ
+                updateExistingFile(endpoint, data, callback);
+            });
+            return;
+        }
+        
+        juce::URL url(endpoint);
+        
+        juce::StringPairArray headers;
+        headers.set("Authorization", "Bearer " + accessToken);
+        headers.set("Content-Type", "application/octet-stream");
+        headers.set("Content-Length", juce::String(data.getSize()));
+        
+        // ヘッダーを文字列に変換
+        juce::String headerString;
+        for (int i = 0; i < headers.size(); ++i)
+        {
+            headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
+            if (i < headers.size() - 1)
+                headerString += "\r\n";
+        }
+        
+        // PATCHメソッドで更新
+        url = url.withPOSTData(data);
+        
+        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                        .withExtraHeaders(headerString)
+                        .withConnectionTimeoutMs(30000)
+                        .withHttpRequestCmd("PATCH");
+        
+        auto stream = url.createInputStream(options);
+        
+        if (stream != nullptr)
+        {
+            auto response = stream->readEntireStreamAsString();
+            DBG("Update response: " + response);
+            
+            // レスポンスを解析
+            try
+            {
+                auto json = juce::JSON::parse(response);
+                if (json.isObject())
+                {
+                    auto* obj = json.getDynamicObject();
+                    if (obj->hasProperty("id"))
+                    {
+                        DBG("Update successful, file ID: " + obj->getProperty("id").toString());
+                        juce::MessageManager::callAsync([callback]()
+                        {
+                            if (callback)
+                                callback(true, "File updated successfully");
+                        });
+                        return;
+                    }
+                }
+            }
+            catch (...)
+            {
+                DBG("Failed to parse update response");
+            }
+            
+            juce::MessageManager::callAsync([callback, response]()
+            {
+                if (callback)
+                    callback(false, "Update failed: " + response);
+            });
+        }
+        else
+        {
+            DBG("Failed to create update stream");
+            juce::MessageManager::callAsync([callback]()
+            {
+                if (callback)
+                    callback(false, "Failed to create update request");
+            });
+        }
+    });
+}
+
+// 新しいメソッド: 新規ファイルのアップロード（既存のuploadToFolderの処理を移動）
+void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const juce::MemoryBlock& data,
+                                         const juce::String& folderId, FileOperationCallback callback)
+{
+    DBG("Uploading new file: " + fileName);
+    
+    // マルチパートアップロードの実装
+    juce::String boundary = "----formdata-juce-" + juce::String::toHexString(juce::Random::getSystemRandom().nextInt64());
+    
+    // メタデータ部分
+    juce::String metadata = "{\n";
+    metadata += "  \"name\": \"" + fileName + "\"";
+    if (folderId.isNotEmpty() && folderId != "root")
+    {
+        metadata += ",\n  \"parents\": [\"" + folderId + "\"]";
+    }
+    metadata += "\n}";
+    
+    // マルチパートボディの構築
+    juce::String multipartBody;
+    multipartBody += "--" + boundary + "\r\n";
+    multipartBody += "Content-Type: application/json; charset=UTF-8\r\n\r\n";
+    multipartBody += metadata + "\r\n";
+    multipartBody += "--" + boundary + "\r\n";
+    multipartBody += "Content-Type: application/octet-stream\r\n\r\n";
+    
+    // バイナリデータの準備
+    juce::MemoryBlock fullData;
+    fullData.append(multipartBody.toRawUTF8(), multipartBody.getNumBytesAsUTF8());
+    fullData.append(data.getData(), data.getSize());
+    
+    juce::String endBoundary = "\r\n--" + boundary + "--\r\n";
+    fullData.append(endBoundary.toRawUTF8(), endBoundary.getNumBytesAsUTF8());
+    
+    // APIリクエスト
+    juce::String endpoint = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+    
+    juce::Thread::launch([this, endpoint, boundary, fullData, callback]()
+    {
+        if (!isTokenValid())
+        {
+            DBG("Token is not valid, refreshing...");
+            refreshAccessToken([this, endpoint, boundary, fullData, callback](bool refreshSuccess)
+            {
+                if (!refreshSuccess)
+                {
+                    DBG("Failed to refresh token");
+                    juce::MessageManager::callAsync([callback]()
+                    {
+                        if (callback)
+                            callback(false, "Authentication required");
+                    });
+                    return;
+                }
+                
+                // リトライ
+                juce::Thread::launch([this, endpoint, boundary, fullData, callback]()
+                {
+                    uploadWithData(endpoint, boundary, fullData, callback);
+                });
+            });
+            return;
+        }
+        
+        uploadWithData(endpoint, boundary, fullData, callback);
+    });
+}
+
+void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath, const juce::String& parentFolderId,
+                                            int pathIndex, std::function<void(bool, juce::String, juce::String)> callback)
+{
+    if (pathIndex >= folderPath.size())
+    {
+        // パス作成完了
+        DBG("Folder path creation complete. Final folder ID: " + parentFolderId);
+        if (callback)
+            callback(true, parentFolderId, "");
+        return;
+    }
+    
+    auto folderName = folderPath[pathIndex];
+    DBG("Creating/checking folder: " + folderName + " in parent: " + parentFolderId);
+    
+    // まず、rootフォルダの場合は"root"を使用
+    juce::String queryParentId = parentFolderId;
+    if (parentFolderId == "root")
+    {
+        // rootの場合、特別な処理は不要
+    }
+    
+    // フォルダが既に存在するかチェック
+    // クエリを修正：trashed=falseを追加して、ゴミ箱のファイルを除外
+    juce::String query = "'" + queryParentId + "' in parents and name = '" + folderName + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+    juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false);
+    endpoint += "&fields=files(id,name,mimeType)";
+    
+    makeAPIRequest(endpoint, "GET", {}, "", [this, folderPath, folderName, parentFolderId, pathIndex, callback]
+                  (bool success, const juce::String& response)
+    {
+        if (!success)
+        {
+            DBG("Failed to check existing folder: " + response);
+            if (callback)
+                callback(false, "", "Failed to check existing folder");
+            return;
+        }
+        
+        try
+        {
+            auto json = juce::JSON::parse(response);
+            if (json.isObject())
+            {
+                auto* obj = json.getDynamicObject();
+                if (obj->hasProperty("files"))
+                {
+                    auto filesArray = obj->getProperty("files");
+                    if (filesArray.isArray())
+                    {
+                        auto* array = filesArray.getArray();
+                        if (array->size() > 0)
+                        {
+                            // フォルダが存在する
+                            auto fileObj = array->getUnchecked(0);
+                            if (fileObj.isObject())
+                            {
+                                auto* file = fileObj.getDynamicObject();
+                                juce::String existingFolderId = file->getProperty("id").toString();
+                                DBG("Folder already exists with ID: " + existingFolderId);
+                                
+                                // 次の階層へ
+                                createFolderPath(folderPath, existingFolderId, pathIndex + 1, callback);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            DBG("Failed to parse folder check response");
+        }
+        
+        // フォルダが存在しない - 作成
+        DBG("Folder does not exist, creating: " + folderName);
+        
+        juce::String metadata = "{\n";
+        metadata += "  \"name\": \"" + folderName + "\",\n";
+        metadata += "  \"mimeType\": \"application/vnd.google-apps.folder\"";
+        if (parentFolderId.isNotEmpty())
+        {
+            metadata += ",\n  \"parents\": [\"" + parentFolderId + "\"]";
+        }
+        metadata += "\n}";
+        
+        DBG("Creating folder with metadata: " + metadata);
+        
+        juce::String createEndpoint = "https://www.googleapis.com/drive/v3/files?fields=id,name";
+        
+        juce::StringPairArray headers;
+        headers.set("Content-Type", "application/json");
+        
+        makeAPIRequest(createEndpoint, "POST", headers, metadata, [this, folderPath, pathIndex, callback]
+                      (bool createSuccess, const juce::String& createResponse)
+        {
+            if (!createSuccess)
+            {
+                DBG("Failed to create folder: " + createResponse);
+                if (callback)
+                    callback(false, "", "Failed to create folder: " + createResponse);
+                return;
+            }
+            
+            try
+            {
+                auto json = juce::JSON::parse(createResponse);
+                if (json.isObject())
+                {
+                    auto* obj = json.getDynamicObject();
+                    if (obj->hasProperty("id"))
+                    {
+                        juce::String newFolderId = obj->getProperty("id").toString();
+                        DBG("Folder created successfully with ID: " + newFolderId);
+                        
+                        // 次の階層へ
+                        createFolderPath(folderPath, newFolderId, pathIndex + 1, callback);
+                        return;
+                    }
+                }
+            }
+            catch (...)
+            {
+                DBG("Failed to parse folder creation response");
+            }
+            
+            if (callback)
+                callback(false, "", "Failed to create folder - invalid response");
+        });
+    });
 }
 
 void R2GoogleDriveProvider::signOut()
@@ -793,14 +1320,24 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
     });
 }
 
+// R2GoogleDriveProvider.cpp の listFiles メソッドを修正
+// 元のコード（1068行目あたり）:
+
 void R2GoogleDriveProvider::listFiles(const juce::String& folderId, FileListCallback callback)
 {
     juce::String endpoint = "https://www.googleapis.com/drive/v3/files?fields=files(id,name,mimeType,modifiedTime,size)";
     
+    // ゴミ箱のファイルを除外するクエリを追加
+    juce::String query;
     if (folderId.isNotEmpty() && folderId != "root")
     {
-        endpoint += "&q=" + juce::URL::addEscapeChars("'" + folderId + "' in parents", false);
+        query = "'" + folderId + "' in parents and trashed=false";
     }
+    else
+    {
+        query = "'root' in parents and trashed=false";
+    }
+    endpoint += "&q=" + juce::URL::addEscapeChars(query, false);
     
     makeAPIRequest(endpoint, "GET", {}, "", [callback](bool success, const juce::String& response)
     {
@@ -840,7 +1377,6 @@ void R2GoogleDriveProvider::listFiles(const juce::String& folderId, FileListCall
                                 
                                 if (fileObj->hasProperty("size"))
                                 {
-                                    //fileInfo.size = static_cast<int64_t>(fileObj->getProperty("size"));
                                     auto sizeVar = fileObj->getProperty("size");
                                     if (sizeVar.isString())
                                     {
@@ -895,48 +1431,49 @@ void R2GoogleDriveProvider::listFiles(const juce::String& folderId, FileListCall
 void R2GoogleDriveProvider::uploadFile(const juce::String& fileName, const juce::MemoryBlock& data,
                                       const juce::String& folderId, FileOperationCallback callback)
 {
-    // マルチパートアップロードの実装
-    juce::String boundary = "----formdata-juce-" + juce::String::toHexString(juce::Random::getSystemRandom().nextInt64());
+    DBG("uploadFile called - fileName: " + fileName + ", folderId: " + folderId);
     
-    juce::String metadata = "{\n";
-    metadata += "  \"name\": \"" + fileName + "\"";
-    if (folderId.isNotEmpty() && folderId != "root")
+    if (folderId == "path")
     {
-        metadata += ",\n  \"parents\": [\"" + folderId + "\"]";
-    }
-    metadata += "\n}";
-    
-    // マルチパートボディを構築
-    juce::MemoryOutputStream bodyStream;
-    
-    // メタデータパート
-    bodyStream << "--" << boundary << "\r\n";
-    bodyStream << "Content-Type: application/json; charset=UTF-8\r\n\r\n";
-    bodyStream << metadata << "\r\n";
-    
-    // ファイルデータパート
-    bodyStream << "--" << boundary << "\r\n";
-    bodyStream << "Content-Type: application/octet-stream\r\n\r\n";
-    bodyStream.write(data.getData(), data.getSize());
-    bodyStream << "\r\n--" << boundary << "--\r\n";
-    
-    juce::String endpoint = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
-    
-    juce::StringPairArray headers;
-    headers.set("Content-Type", "multipart/related; boundary=" + boundary);
-    
-    juce::String postData = bodyStream.toString();
-    
-    makeAPIRequest(endpoint, "POST", headers, postData, [callback](bool success, const juce::String& response)
-    {
-        if (callback)
+        // パス形式での保存 - フォルダを作成してからファイルを保存
+        auto pathParts = juce::StringArray::fromTokens(fileName, "/", "");
+        if (pathParts.size() <= 1)
         {
-            if (success)
-                callback(true, "File uploaded successfully");
-            else
-                callback(false, "Failed to upload file");
+            // パスが無い場合は通常の保存
+            uploadToFolder(fileName, data, "root", callback);
         }
-    });
+        else
+        {
+            // フォルダパスを作成
+            auto folderPath = pathParts;
+            folderPath.remove(folderPath.size() - 1);  // ファイル名を除去
+            auto actualFileName = pathParts[pathParts.size() - 1];
+            
+            DBG("Creating folder path: " + folderPath.joinIntoString("/"));
+            DBG("File name: " + actualFileName);
+            
+            createFolderPath(folderPath, "root", 0, [this, actualFileName, data, callback]
+                           (bool success, juce::String folderId, juce::String errorMessage)
+            {
+                if (success)
+                {
+                    DBG("Folder path created, uploading to folderId: " + folderId);
+                    uploadToFolder(actualFileName, data, folderId, callback);
+                }
+                else
+                {
+                    DBG("Failed to create folder path: " + errorMessage);
+                    if (callback)
+                        callback(false, "Failed to create folder path: " + errorMessage);
+                }
+            });
+        }
+    }
+    else
+    {
+        // 既存の実装（通常のアップロード）
+        uploadToFolder(fileName, data, folderId, callback);
+    }
 }
 
 void R2GoogleDriveProvider::downloadFile(const juce::String& fileId, DownloadCallback callback)
@@ -1030,13 +1567,57 @@ void R2GoogleDriveProvider::createFolder(const juce::String& folderName, const j
     
     makeAPIRequest(endpoint, "POST", headers, metadata, [callback](bool success, const juce::String& response)
     {
-        if (callback)
+        if (!success)
         {
-            if (success)
-                callback(true, "Folder created successfully");
-            else
-                callback(false, "Failed to create folder");
+            if (callback)
+                callback(false, "Failed to create folder - API request failed");
+            return;
         }
+        
+        try
+        {
+            auto json = juce::JSON::parse(response);
+            if (json.isObject())
+            {
+                auto* obj = json.getDynamicObject();
+                if (obj->hasProperty("id"))
+                {
+                    // Folder created successfully
+                    if (callback)
+                        callback(true, "Folder created successfully");
+                    return;
+                }
+                else
+                {
+                    // エラーレスポンスの場合
+                    juce::String error = "Unknown error";
+                    if (obj->hasProperty("error"))
+                    {
+                        auto errorObj = obj->getProperty("error");
+                        if (errorObj.isObject())
+                        {
+                            auto* errObj = errorObj.getDynamicObject();
+                            if (errObj->hasProperty("message"))
+                            {
+                                error = errObj->getProperty("message").toString();
+                            }
+                        }
+                    }
+                    if (callback)
+                        callback(false, "Failed to create folder: " + error);
+                    return;
+                }
+            }
+        }
+        catch (...)
+        {
+            if (callback)
+                callback(false, "Failed to parse folder creation response");
+            return;
+        }
+        
+        if (callback)
+            callback(false, "Invalid response format");
     });
 }
 

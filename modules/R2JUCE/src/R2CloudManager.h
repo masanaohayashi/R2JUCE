@@ -22,8 +22,9 @@ public:
     enum class ServiceType
     {
         Local,
-        GoogleDrive
-        // 今後追加予定: iCloud, Dropbox, OneDrive
+        GoogleDrive,
+        OneDrive  // ← 追加
+        // 今後追加予定: iCloud, Dropbox
     };
     
     enum class AuthStatus
@@ -36,8 +37,9 @@ public:
     
     // === 設定API ===
     void setGoogleCredentials(const juce::String& clientId, const juce::String& clientSecret);
+    void setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret);  // ← 追加
     void setLocalStorageDirectory(const juce::File& directory);
-    // 今後追加予定: setDropboxCredentials, setOneDriveCredentials, setiCloudCredentials
+    // 今後追加予定: setDropboxCredentials, setiCloudCredentials
     
     // === サービス選択・認証 ===
     void selectService(ServiceType serviceType);
@@ -49,8 +51,10 @@ public:
     using FileContentCallback = std::function<void(bool success, juce::String content, juce::String errorMessage)>;
     
     void saveFile(const juce::String& filename, const juce::String& content, FileOperationCallback callback = nullptr);
+    void saveFileWithPath(const juce::String& folderPath, const juce::String& filename, const juce::String& content, FileOperationCallback callback = nullptr);
     void loadFile(const juce::String& filename, FileContentCallback callback);
-    
+    void loadFileWithPath(const juce::String& filePath, FileContentCallback callback);
+
     // === 認証関連 ===
     bool needsAuthentication() const;
     void showAuthenticationUI(juce::Component* parentComponent);
@@ -68,7 +72,8 @@ private:
     // Providers
     std::unique_ptr<R2CloudStorageProvider> localProvider;
     std::unique_ptr<R2CloudStorageProvider> googleDriveProvider;
-    // 今後追加予定: iCloudProvider, dropboxProvider, oneDriveProvider
+    std::unique_ptr<R2CloudStorageProvider> oneDriveProvider;  // ← 追加
+    // 今後追加予定: iCloudProvider, dropboxProvider
     
     // 認証UI
     std::unique_ptr<R2CloudAuthComponent> authComponent;
@@ -76,8 +81,9 @@ private:
     
     // Settings
     juce::String googleClientId, googleClientSecret;
+    juce::String oneDriveClientId, oneDriveClientSecret;  // ← 追加
     juce::File localStorageDir;
-    // 今後追加予定: dropbox, oneDrive, iCloud用の設定
+    // 今後追加予定: dropbox, iCloud用の設定
     
     // Internal methods
     R2CloudStorageProvider* getCurrentProvider();

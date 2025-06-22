@@ -49,12 +49,13 @@ public:
     //[UserMethods]     -- You can add your own custom methods in this section.
     enum class ServiceType
     {
-        GoogleDrive
-        // 今後追加予定: Dropbox, OneDrive, iCloud
+        GoogleDrive,
+        OneDrive
     };
 
     // === 設定 ===
     void setGoogleCredentials(const juce::String& clientId, const juce::String& clientSecret);
+    void setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void setServiceType(ServiceType type);
 
     // === 認証開始/停止 ===
@@ -101,6 +102,10 @@ private:
     // Google OAuth設定
     juce::String googleClientId;
     juce::String googleClientSecret;
+
+    // OneDrive OAuth設定
+    juce::String oneDriveClientId;
+    juce::String oneDriveClientSecret;
 
     // Device Flow状態
     bool deviceFlowActive = false;

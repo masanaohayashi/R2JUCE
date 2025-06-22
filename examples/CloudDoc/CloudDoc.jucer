@@ -12,6 +12,7 @@
             resource="0" file="Source/CloudDocAudioProcessorEditor.cpp"/>
       <FILE id="eeWSwK" name="CloudDocAudioProcessorEditor.h" compile="0"
             resource="0" file="Source/CloudDocAudioProcessorEditor.h"/>
+      <FILE id="KpEP3u" name="Credentials.h" compile="0" resource="0" file="Source/Credentials.h"/>
       <FILE id="Bd5cus" name="MainComponent.cpp" compile="1" resource="0"
             file="Source/MainComponent.cpp"/>
       <FILE id="LwcX1N" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>

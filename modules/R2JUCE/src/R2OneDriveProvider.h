@@ -3,11 +3,11 @@
 #include "R2CloudStorageProvider.h"
 
 namespace r2juce {
-class R2GoogleDriveProvider : public R2CloudStorageProvider
+class R2OneDriveProvider : public R2CloudStorageProvider
 {
 public:
-    R2GoogleDriveProvider();
-    ~R2GoogleDriveProvider() override = default;
+    R2OneDriveProvider();
+    ~R2OneDriveProvider() override = default;
     
     // R2CloudStorageProvider interface
     void authenticate(AuthCallback callback) override;
@@ -23,36 +23,20 @@ public:
     void createFolder(const juce::String& folderName, const juce::String& parentId,
                       FileOperationCallback callback) override;
     
-    // Google Drive specific
+    // OneDrive specific
     void setClientCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void exchangeAuthCodeForTokens(const juce::String& authCode, std::function<void(bool, juce::String)> callback);
-    // 修正: Device Flow用のトークン設定メソッド
     void setTokens(const juce::String& accessToken, const juce::String& refreshToken);
     void downloadFileWithPath(const juce::String& filePath, DownloadCallback callback);
 
 private:
-    using FolderCreationCallback = std::function<void(bool success, juce::String folderId, juce::String errorMessage)>;
-
     void startNewAuthFlow(AuthCallback callback);
     void parseTokenResponse(const juce::String& response, std::function<void(bool, juce::String)> callback);
-    void findFileByPath(const juce::StringArray& pathParts, const juce::String& currentFolderId,
-                           int pathIndex, DownloadCallback callback);
-    void uploadToFolder(const juce::String& fileName, const juce::MemoryBlock& data,
-                       const juce::String& folderId, FileOperationCallback callback);
-    void uploadWithData(const juce::String& endpoint, const juce::String& boundary,
-                        const juce::MemoryBlock& fullData, FileOperationCallback callback);
-    void updateExistingFile(const juce::String& fileId, const juce::MemoryBlock& data,
-                           FileOperationCallback callback);
-    void uploadNewFile(const juce::String& fileName, const juce::MemoryBlock& data,
-                      const juce::String& folderId, FileOperationCallback callback);
-    void createFolderPath(const juce::StringArray& folderPath, const juce::String& parentFolderId,
-                         int pathIndex, std::function<void(bool, juce::String, juce::String)> callback);
 
-    
     class OAuth2Handler : public juce::Component
     {
     public:
-        OAuth2Handler(R2GoogleDriveProvider& parent);
+        OAuth2Handler(R2OneDriveProvider& parent);
         ~OAuth2Handler() override = default;
         
         void startAuthentication(const juce::String& clientId, R2CloudStorageProvider::AuthCallback callback);
@@ -70,7 +54,7 @@ private:
         void showSuccessPage();
         void showErrorPage(const juce::String& error);
 
-        R2GoogleDriveProvider& provider;
+        R2OneDriveProvider& provider;
         std::unique_ptr<juce::WebBrowserComponent> webBrowser;
         R2CloudStorageProvider::AuthCallback authCallback;
         juce::String redirectUri;
@@ -97,4 +81,3 @@ private:
     juce::File getTokenFile() const;
 };
 }   //  namespace r2juce
-

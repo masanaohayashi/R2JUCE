@@ -208,6 +208,12 @@ void R2CloudAuthComponent::setGoogleCredentials(const juce::String& clientId, co
     googleClientSecret = clientSecret;
 }
 
+void R2CloudAuthComponent::setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret)
+{
+    oneDriveClientId = clientId;
+    oneDriveClientSecret = clientSecret;
+}
+
 void R2CloudAuthComponent::setServiceType(ServiceType type)
 {
     serviceType = type;
@@ -217,9 +223,12 @@ void R2CloudAuthComponent::setServiceType(ServiceType type)
         case ServiceType::GoogleDrive:
             labelTitle->setText (TRANS("Google Drive Authentication"), juce::dontSendNotification);
             break;
+        case ServiceType::OneDrive:
+            labelTitle->setText (TRANS("OneDrive Authentication"), juce::dontSendNotification);
+            break;
         // 今後追加予定
         // case ServiceType::Dropbox:
-        //     titleLabel->setText(TRANS("Dropbox Authentication"), juce::dontSendNotification);
+        //     labelTitle->setText(TRANS("Dropbox Authentication"), juce::dontSendNotification);
         //     break;
     }
 }
@@ -259,16 +268,35 @@ void R2CloudAuthComponent::stopAuthentication()
 
 void R2CloudAuthComponent::requestDeviceCode()
 {
-    if (serviceType != ServiceType::GoogleDrive)
+    juce::String postData;
+    juce::String endpoint;
+    
+    if (serviceType == ServiceType::GoogleDrive)
     {
-        showError(TRANS("Unsupported service type"));
-        return;
+        if (googleClientId.isEmpty())
+        {
+            showError(TRANS("Google credentials not set"));
+            return;
+        }
+        
+        endpoint = "https://oauth2.googleapis.com/device/code";
+        postData = "client_id=" + juce::URL::addEscapeChars(googleClientId, false);
+        postData += "&scope=" + juce::URL::addEscapeChars("https://www.googleapis.com/auth/drive.file", false);
+    }
+    else if (serviceType == ServiceType::OneDrive)
+    {
+        if (oneDriveClientId.isEmpty())
+        {
+            showError(TRANS("OneDrive credentials not set"));
+            return;
+        }
+        
+        endpoint = "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode";
+        postData = "client_id=" + juce::URL::addEscapeChars(oneDriveClientId, false);
+        postData += "&scope=" + juce::URL::addEscapeChars("Files.ReadWrite offline_access", false);
     }
     
-    juce::String postData = "client_id=" + juce::URL::addEscapeChars(googleClientId, false);
-    postData += "&scope=" + juce::URL::addEscapeChars("https://www.googleapis.com/auth/drive.file", false);
-    
-    makeHttpRequest("https://oauth2.googleapis.com/device/code", postData,
+    makeHttpRequest(endpoint, postData,
         [this](bool success, juce::String response, int statusCode)
         {
             juce::MessageManager::callAsync([this, success, response, statusCode]()
@@ -308,7 +336,16 @@ void R2CloudAuthComponent::parseDeviceCodeResponse(const juce::String& response)
         
         deviceCode = obj->getProperty("device_code").toString();
         userCode = obj->getProperty("user_code").toString();
-        verificationUrl = obj->getProperty("verification_url").toString();
+        
+        // Google DriveとOneDriveでverification_urlのプロパティ名が異なる
+        if (serviceType == ServiceType::GoogleDrive)
+        {
+            verificationUrl = obj->getProperty("verification_url").toString();
+        }
+        else if (serviceType == ServiceType::OneDrive)
+        {
+            verificationUrl = obj->getProperty("verification_uri").toString();  // Microsoftは"verification_uri"
+        }
         
         if (obj->hasProperty("interval"))
             interval = static_cast<int>(obj->getProperty("interval"));
@@ -334,9 +371,6 @@ void R2CloudAuthComponent::parseDeviceCodeResponse(const juce::String& response)
 
 void R2CloudAuthComponent::updateUI()
 {
-//    instructionLabel->setText(TRANS("1. Click 'Open URL' or go to the URL below\n2. Enter the code\n3. Complete authentication"),
-//                             juce::dontSendNotification);
-    
     labelCodeDisplay->setText (userCode, juce::dontSendNotification);
     buttonURL->setButtonText(verificationUrl);
     buttonURL->setTooltip (verificationUrl);
@@ -345,6 +379,19 @@ void R2CloudAuthComponent::updateUI()
     buttonURL->setEnabled(true);
     buttonCopyUrl->setEnabled (true);
     buttonCopyCode->setEnabled (true);
+    
+    // サービス別のメッセージ表示
+    juce::String instructionText;
+    if (serviceType == ServiceType::GoogleDrive)
+    {
+        instructionText = TRANS("1. Click URL or go to google.com/device\n2. Enter the code\n3. Complete authentication");
+    }
+    else if (serviceType == ServiceType::OneDrive)
+    {
+        instructionText = TRANS("1. Click URL or go to aka.ms/devicelogin\n2. Enter the code\n3. Complete authentication");
+    }
+    
+    labelInstruction->setText(instructionText, juce::dontSendNotification);
     
     repaint();
 }
@@ -371,12 +418,27 @@ void R2CloudAuthComponent::pollForAccessToken()
     
     updateStatus(TRANS("Checking authentication... (") + juce::String(pollCount) + "/" + juce::String(maxPolls) + ")");
     
-    juce::String postData = "client_id=" + juce::URL::addEscapeChars(googleClientId, false);
-    postData += "&client_secret=" + juce::URL::addEscapeChars(googleClientSecret, false);
-    postData += "&device_code=" + juce::URL::addEscapeChars(deviceCode, false);
-    postData += "&grant_type=urn:ietf:params:oauth:grant-type:device_code";
+    juce::String postData;
+    juce::String endpoint;
     
-    makeHttpRequest("https://oauth2.googleapis.com/token", postData,
+    if (serviceType == ServiceType::GoogleDrive)
+    {
+        endpoint = "https://oauth2.googleapis.com/token";
+        postData = "client_id=" + juce::URL::addEscapeChars(googleClientId, false);
+        postData += "&client_secret=" + juce::URL::addEscapeChars(googleClientSecret, false);
+        postData += "&device_code=" + juce::URL::addEscapeChars(deviceCode, false);
+        postData += "&grant_type=urn:ietf:params:oauth:grant-type:device_code";
+    }
+    else if (serviceType == ServiceType::OneDrive)
+    {
+        endpoint = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token";
+        postData = "client_id=" + juce::URL::addEscapeChars(oneDriveClientId, false);
+        postData += "&client_secret=" + juce::URL::addEscapeChars(oneDriveClientSecret, false);
+        postData += "&device_code=" + juce::URL::addEscapeChars(deviceCode, false);
+        postData += "&grant_type=urn:ietf:params:oauth:grant-type:device_code";
+    }
+    
+    makeHttpRequest(endpoint, postData,
         [this](bool success, juce::String response, int statusCode)
         {
             juce::MessageManager::callAsync([this, success, response]()
@@ -405,7 +467,7 @@ void R2CloudAuthComponent::parseTokenResponse(const juce::String& response)
             showSuccess();
             
             if (onAuthenticationComplete)
-                onAuthenticationComplete(true, "", accessToken, refreshToken);  // ← トークンを渡す
+                onAuthenticationComplete(true, "", accessToken, refreshToken);
                 
             return;
         }
@@ -458,7 +520,7 @@ void R2CloudAuthComponent::showError(const juce::String& error)
     labelStatus->setColour(juce::Label::textColourId, juce::Colours::red);
     
     if (onAuthenticationComplete)
-        onAuthenticationComplete(false, error, "", "");  // ← 空のトークンを渡す
+        onAuthenticationComplete(false, error, "", "");
 }
 
 void R2CloudAuthComponent::showSuccess()
@@ -554,6 +616,10 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
                 int statusCode = webStream->getStatusCode();
                 bool success = (statusCode >= 200 && statusCode < 300);
                 
+                DBG("=== OneDrive HTTP Response ===");
+                DBG("Status Code: " + juce::String(statusCode));
+                DBG("Response: " + response);
+
                 juce::MessageManager::callAsync([callback, response, statusCode, success]()
                 {
                     if (callback)
@@ -562,6 +628,7 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
             }
             else
             {
+                DBG("=== OneDrive HTTP Connection Failed ===");
                 juce::MessageManager::callAsync([callback]()
                 {
                     if (callback)
@@ -652,4 +719,3 @@ END_JUCER_METADATA
 
 //[EndFile] You can add extra defines here...
 //[/EndFile]
-

@@ -82,6 +82,7 @@
 		0EC72362FA2534D386465F41 /* AU.entitlements */ /* AU.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = AU.entitlements; path = AU.entitlements; sourceTree = SOURCE_ROOT; };
 		15429034BB3267FB328DC35F /* juce_audio_basics */ /* juce_audio_basics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_basics; path = /Users/ring2/JUCE/modules/juce_audio_basics; sourceTree = "<absolute>"; };
 		208E67E3D2842B8BF0041995 /* juce_VST3ManifestHelper.mm */ /* juce_VST3ManifestHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = juce_VST3ManifestHelper.mm; path = /Users/ring2/JUCE/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.mm; sourceTree = "<absolute>"; };
+		230FA98C6777F4260B66F57D /* Credentials.h */ /* Credentials.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Credentials.h; path = ../../Source/Credentials.h; sourceTree = SOURCE_ROOT; };
 		2597F4CC3F61454FA10D487A /* CoreAudioKit.framework */ /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
 		25AE1043299B604C79913BAC /* include_juce_core_CompilationTime.cpp */ /* include_juce_core_CompilationTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_core_CompilationTime.cpp; path = ../../JuceLibraryCode/include_juce_core_CompilationTime.cpp; sourceTree = SOURCE_ROOT; };
 		2860EB5824654D671E7B9F7F /* include_juce_core.mm */ /* include_juce_core.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_core.mm; path = ../../JuceLibraryCode/include_juce_core.mm; sourceTree = SOURCE_ROOT; };
@@ -332,6 +333,7 @@
 				671CE46E4013D04E8184ADE7,
 				31C629FF824D1897A22D0317,
 				7B3AF2C70B3FE1EB69C690A1,
+				230FA98C6777F4260B66F57D,
 				DD91E461B606083217FA4073,
 				FDC0931D0DD95F8E1D515467,
 			);
