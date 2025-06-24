@@ -4,23 +4,15 @@
 #include <functional>
 #include <memory>
 
-//==============================================================================
-/**
- * Abstract base class for cloud storage providers
- */
 namespace r2juce {
-class R2CloudStorageProvider
+
+// FIX: Inherit from std::enable_shared_from_this to safely manage lifetime in async callbacks
+class R2CloudStorageProvider : public std::enable_shared_from_this<R2CloudStorageProvider>
 {
 public:
     virtual ~R2CloudStorageProvider() = default;
     
-    enum class Status
-    {
-        NotAuthenticated,
-        Authenticating,
-        Authenticated,
-        Error
-    };
+    enum class Status { NotAuthenticated, Authenticating, Authenticated, Error };
     
     struct FileInfo
     {
@@ -37,30 +29,14 @@ public:
     using FileOperationCallback = std::function<void(bool success, juce::String errorMessage)>;
     using DownloadCallback = std::function<void(bool success, juce::MemoryBlock data, juce::String errorMessage)>;
     
-    // Authentication
     virtual void authenticate(AuthCallback callback) = 0;
     virtual void signOut() = 0;
     virtual Status getAuthStatus() const = 0;
     virtual juce::String getDisplayName() const = 0;
     
-    // ==================== NEW/REVISED INTERFACE ====================
-    /**
-     * @brief Uploads a file using a full path. The provider is responsible for parsing the path.
-     * @param filePath The full path for the destination file (e.g., "presets/bass/my_preset.txt").
-     * @param data The file content to upload.
-     * @param callback Completion callback.
-     */
     virtual void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) = 0;
-
-    /**
-     * @brief Downloads a file using a full path. The provider is responsible for finding the file.
-     * @param filePath The full path of the file to download.
-     * @param callback Completion callback with the downloaded data.
-     */
     virtual void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) = 0;
-    // =============================================================
 
-    // File operations (can be kept for internal use or ID-based operations)
     virtual void listFiles(const juce::String& folderId, FileListCallback callback) = 0;
     virtual void uploadFile(const juce::String& fileName, const juce::MemoryBlock& data,
                             const juce::String& folderId, FileOperationCallback callback) = 0;
@@ -68,8 +44,8 @@ public:
     virtual void deleteFile(const juce::String& fileId, FileOperationCallback callback) = 0;
     virtual void createFolder(const juce::String& folderName, const juce::String& parentId,
                               FileOperationCallback callback) = 0;
-    
+                              
 protected:
     Status currentStatus = Status::NotAuthenticated;
 };
-} //namespace r2juce
+}

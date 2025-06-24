@@ -19,42 +19,32 @@ public:
     void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) override;
     void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) override;
 
-    // These methods are part of the interface but might not be used directly
-    // if all operations are path-based. We'll provide basic implementations.
     void listFiles(const juce::String& folderId, FileListCallback callback) override;
-    void uploadFile(const juce::String& fileName, const juce::MemoryBlock& data,
-                    const juce::String& folderId, FileOperationCallback callback) override;
+    void uploadFile(const juce::String& fileName, const juce::MemoryBlock& data, const juce::String& folderId, FileOperationCallback callback) override;
     void downloadFile(const juce::String& fileId, DownloadCallback callback) override;
     void deleteFile(const juce::String& fileId, FileOperationCallback callback) override;
-    void createFolder(const juce::String& folderName, const juce::String& parentId,
-                      FileOperationCallback callback) override;
-
+    void createFolder(const juce::String& folderName, const juce::String& parentId, FileOperationCallback callback) override;
+    
     // OneDrive specific
     void setClientCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void setTokens(const juce::String& accessToken, const juce::String& refreshToken);
-    void cancelAuthentication() { /* TODO: Implement if needed */ }
-
 
 private:
-    void findItemByPath(const juce::String& path, std::function<void(const juce::var&)> callback);
+    juce::String clientId, clientSecret, accessToken, refreshToken;
+    juce::Time tokenExpiry;
+    
     void createFolderPath(const juce::StringArray& folderPath, const juce::String& parentId, int pathIndex, std::function<void(bool, juce::String)> callback);
     void uploadToFolder(const juce::String& fileName, const juce::String& parentId, const juce::MemoryBlock& data, FileOperationCallback callback);
 
     bool isTokenValid() const;
     void refreshAccessToken(std::function<void(bool)> callback);
+    
     void makeAPIRequest(const juce::String& endpoint, const juce::String& method,
                         const juce::StringPairArray& headers, const juce::String& body,
-                        std::function<void(bool, int, juce::String)> callback);
+                        std::function<void(bool, int, const juce::var&)> callback);
     
     void saveTokens();
     bool loadTokens();
     juce::File getTokenFile() const;
-
-    juce::String clientId;
-    juce::String clientSecret;
-    juce::String accessToken;
-    juce::String refreshToken;
-    juce::Time tokenExpiry;
 };
-
-} // namespace r2juce
+}
