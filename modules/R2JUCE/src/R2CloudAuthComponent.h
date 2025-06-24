@@ -31,9 +31,12 @@ namespace r2juce {
 //==============================================================================
 /**
                                                                     //[Comments]
- An auto-generated component, created by the Projucer.
+  @brief A GUI component for handling cloud service authentication using the OAuth 2.0 Device Authorization Flow.
 
- Describe your class and how it works here!
+  @details This component provides a user interface for services like Google Drive and
+           OneDrive. It guides the user to visit a URL, enter a code, and authorize
+           the application on their device. The process is handled asynchronously,
+           with results delivered via public callbacks.
                                                                     //[/Comments]
 */
 class R2CloudAuthComponent  : public juce::Component,
@@ -47,24 +50,64 @@ public:
 
     //==============================================================================
     //[UserMethods]     -- You can add your own custom methods in this section.
+
+    /** @brief Specifies the cloud service to be authenticated. */
     enum class ServiceType
     {
         GoogleDrive,
         OneDrive
     };
 
+    /** @brief Sets the Client ID and Client Secret for the Google Drive API.
+        @param clientId     The OAuth 2.0 Client ID obtained from the Google API Console.
+        @param clientSecret The OAuth 2.0 Client Secret.
+    */
     void setGoogleCredentials(const juce::String& clientId, const juce::String& clientSecret);
+
+    /** @brief Sets the Client ID and Client Secret for the Microsoft OneDrive API.
+        @param clientId     The Application (client) ID from the Azure portal.
+        @param clientSecret The client secret value.
+    */
     void setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret);
+
+    /** @brief Sets the target cloud service for authentication. This should be called before startAuthentication().
+        @param type The service to use (GoogleDrive or OneDrive).
+    */
     void setServiceType(ServiceType type);
 
+    /** @brief Begins the device authentication flow.
+        @details Makes the component visible and starts the process of requesting a device
+                 and user code from the selected cloud service.
+    */
     void startAuthentication();
+
+    /** @brief Stops the authentication process immediately.
+        @details Halts the polling timer, clears internal state, and hides the component.
+                 Triggers the onAuthenticationCancelled callback if it is set.
+    */
     void stopAuthentication();
 
+    /** @brief A callback function that is triggered when the authentication process concludes.
+        @details The callback provides a success flag, an error message on failure,
+                 and the access and refresh tokens on success.
+                 - `success`: True if authentication succeeded, false otherwise.
+                 - `errorMessage`: A description of the error if authentication failed.
+                 - `accessToken`: The token used to make authorized API calls.
+                 - `refreshToken`: The token used to obtain a new access token.
+    */
     std::function<void(bool success, juce::String errorMessage, juce::String accessToken, juce::String refreshToken)> onAuthenticationComplete;
+
+    /** @brief A callback function that is triggered when the user cancels the authentication
+               by clicking the cancel button or pressing the Escape key.
+    */
     std::function<void()> onAuthenticationCancelled;
 
+    /** @brief The timer callback, used to periodically poll for the access token. (Inherited from juce::Timer). */
     void timerCallback() override;
 
+    /** @brief Handles key presses. (Inherited from juce::Component).
+        @details Listens for the Escape key to cancel the authentication process.
+    */
     bool keyPressed(const juce::KeyPress& key) override;
     //[/UserMethods]
 
@@ -129,4 +172,3 @@ private:
 //[EndFile] You can add extra defines here...
 }   //  namespace r2juce
 //[/EndFile]
-

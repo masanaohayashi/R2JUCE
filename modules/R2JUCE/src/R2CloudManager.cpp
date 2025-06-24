@@ -205,12 +205,13 @@ void R2CloudManager::signOut()
     hideAuthenticationUI();
 }
 
-void R2CloudManager::saveFile(const juce::String& filePath, const juce::String& content, FileOperationCallback callback)
+// Modified: contentをjuce::MemoryBlockで受け取る
+void R2CloudManager::saveFile(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
 {
     auto provider = getCurrentProvider();
     if (!provider) { if (callback) callback(false, "No provider"); return; }
     if (needsAuthentication()) { if (callback) callback(false, "Authentication required"); return; }
-    provider->uploadFileByPath(filePath, juce::MemoryBlock(content.toUTF8(), content.getNumBytesAsUTF8()), callback);
+    provider->uploadFileByPath(filePath, data, callback); // MemoryBlockを直接渡す
 }
 
 void R2CloudManager::loadFile(const juce::String& filePath, FileContentCallback callback)

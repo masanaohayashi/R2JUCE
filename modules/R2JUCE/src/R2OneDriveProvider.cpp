@@ -118,6 +118,7 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
     juce::Thread::launch([this, self, endpoint, method, headers, body, callback]()
     {
         juce::URL url(endpoint);
+        // Changed: For string body, use withPOSTData. For MemoryBlock, use a different overload.
         if (method != "GET" && body.isNotEmpty()) url = url.withPOSTData(body);
         
         juce::StringPairArray requestHeaders = headers;
@@ -126,8 +127,61 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
         juce::String headerString;
         for (int i = 0; i < requestHeaders.size(); ++i) headerString << requestHeaders.getAllKeys()[i] << ": " << requestHeaders.getAllValues()[i] << "\r\n";
 
+        // JUCE8対応: InputStreamOptionsからwithParameterHandlingを削除
         auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withExtraHeaders(headerString).withConnectionTimeoutMs(30000).withHttpRequestCmd(method);
         
+        if (auto stream = url.createInputStream(options)) {
+            int statusCode = 0;
+            if (auto* webStream = dynamic_cast<juce::WebInputStream*>(stream.get())) statusCode = webStream->getStatusCode();
+            auto responseJson = juce::JSON::parse(*stream);
+            juce::MessageManager::callAsync([callback, statusCode, responseJson]() {
+                if (statusCode >= 200 && statusCode < 300) { if (callback) callback(true, statusCode, responseJson); }
+                else { if (callback) callback(false, statusCode, responseJson); }
+            });
+        } else {
+            juce::MessageManager::callAsync([callback]() { if (callback) callback(false, 0, juce::var()); });
+        }
+    });
+}
+
+// New overload for makeAPIRequest that accepts juce::MemoryBlock for the body
+// New overload for makeAPIRequest that accepts juce::MemoryBlock for the body
+void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce::String& method, const juce::StringPairArray& headers, const juce::MemoryBlock& body, std::function<void(bool, int, const juce::var&)> callback)
+{
+    if (!isTokenValid())
+    {
+        auto self = shared_from_this();
+        refreshAccessToken([this, self, endpoint, method, headers, body, callback](bool success) {
+            if (success) this->makeAPIRequest(endpoint, method, headers, body, callback);
+            else juce::MessageManager::callAsync([callback]() { if (callback) callback(false, 401, juce::var()); });
+        });
+        return;
+    }
+
+    auto self = shared_from_this();
+    juce::Thread::launch([this, self, endpoint, method, headers, body, callback]()
+    {
+        juce::URL url(endpoint);
+        
+        // FIX: If the method is PUT/POST/PATCH and body is not empty, use withPOSTData
+        // JUCEのwithPOSTDataは、MemoryBlockを受け取るとRAW POSTデータとして送信します。
+        if ((method == "PUT" || method == "POST" || method == "PATCH") && body.getSize() > 0)
+        {
+            url = url.withPOSTData(body);
+        }
+        
+        juce::StringPairArray requestHeaders = headers;
+        requestHeaders.set("Authorization", "Bearer " + this->accessToken);
+
+        juce::String headerString;
+        for (int i = 0; i < requestHeaders.size(); ++i) headerString << requestHeaders.getAllKeys()[i] << ": " << requestHeaders.getAllValues()[i] << "\r\n";
+
+        // JUCE8対応: InputStreamOptionsからwithParameterHandlingを削除
+        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                       .withExtraHeaders(headerString)
+                       .withConnectionTimeoutMs(30000)
+                       .withHttpRequestCmd(method);
+                       
         if (auto stream = url.createInputStream(options)) {
             int statusCode = 0;
             if (auto* webStream = dynamic_cast<juce::WebInputStream*>(stream.get())) statusCode = webStream->getStatusCode();
@@ -147,7 +201,7 @@ void R2OneDriveProvider::downloadFileByPath(const juce::String& filePath, Downlo
     juce::String endpoint = "https://graph.microsoft.com/v1.0/me/drive/root:/" + juce::URL::addEscapeChars(filePath, true);
     
     auto self = shared_from_this();
-    makeAPIRequest(endpoint, "GET", {}, {}, [this, self, callback](bool success, int statusCode, const juce::var& responseVar)
+    makeAPIRequest(endpoint, "GET", {}, juce::String(), [this, self, callback](bool success, int statusCode, const juce::var& responseVar) // Empty string for body
     {
         if (!success || statusCode != 200) { if (callback) callback(false, {}, "File not found"); return; }
         if (auto* obj = responseVar.getDynamicObject()) {
@@ -200,7 +254,7 @@ void R2OneDriveProvider::createFolderPath(const juce::StringArray& folderPath, c
     endpoint += "?$filter=name eq '" + juce::URL::addEscapeChars(folderName, true) + "'";
 
     auto self = shared_from_this();
-    makeAPIRequest(endpoint, "GET", {}, {}, [this, self, folderPath, pathIndex, folderName, parentId, callback](bool success, int, const juce::var& responseVar)
+    makeAPIRequest(endpoint, "GET", {}, juce::String(), [this, self, folderPath, pathIndex, folderName, parentId, callback](bool success, int, const juce::var& responseVar) // Empty string for body
     {
         if (!success) { if (callback) callback(false, "Failed to check folder"); return; }
         
@@ -239,8 +293,9 @@ void R2OneDriveProvider::uploadToFolder(const juce::String& fileName, const juce
 {
     juce::String endpoint = "https://graph.microsoft.com/v1.0/me/drive/items/" + parentId + ":/" + juce::URL::addEscapeChars(fileName, true) + ":/content";
     juce::StringPairArray headers; headers.set("Content-Type", "application/octet-stream");
-    juce::String body = juce::String::createStringFromData(data.getData(), (int)data.getSize());
-    makeAPIRequest(endpoint, "PUT", headers, body, [callback](bool success, int, const juce::var& response) {
+    
+    // FIX: Pass MemoryBlock directly to the correct makeAPIRequest overload
+    makeAPIRequest(endpoint, "PUT", headers, data, [callback](bool success, int, const juce::var& response) {
         if (callback) callback(success, success ? "Upload successful" : "Upload failed: " + juce::JSON::toString(response));
     });
 }

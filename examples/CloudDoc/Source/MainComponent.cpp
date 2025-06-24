@@ -50,12 +50,12 @@ MainComponent::MainComponent ()
     comboService->setJustificationType (juce::Justification::centredLeft);
     comboService->setTextWhenNothingSelected (juce::String());
     comboService->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
-    comboService->addItem (TRANS ("Not use"), 1);
+    comboService->addItem (TRANS ("Local only"), 1);
     comboService->addItem (TRANS ("Google Drive"), 2);
     comboService->addItem (TRANS ("OneDrive"), 3);
     comboService->addListener (this);
 
-    comboService->setBounds (112, 16, 184, 24);
+    comboService->setBounds (112, 16, 200, 24);
 
     textEditorData.reset (new r2juce::R2TextEditor (juce::String()));
     addAndMakeVisible (textEditorData.get());
@@ -87,7 +87,7 @@ MainComponent::MainComponent ()
     labelFilename->setColour (juce::TextEditor::textColourId, juce::Colours::black);
     labelFilename->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
 
-    labelFilename->setBounds (16, 48, 72, 24);
+    labelFilename->setBounds (16, 80, 72, 24);
 
     textEditorFilename.reset (new r2juce::R2TextEditor (juce::String()));
     addAndMakeVisible (textEditorFilename.get());
@@ -105,7 +105,40 @@ MainComponent::MainComponent ()
     textButtonSignOut->setButtonText (TRANS ("Signout"));
     textButtonSignOut->addListener (this);
 
-    textButtonSignOut->setBounds (320, 16, 136, 24);
+    textButtonSignOut->setBounds (328, 16, 136, 24);
+
+    labelPath.reset (new juce::Label (juce::String(),
+                                      TRANS ("Path")));
+    addAndMakeVisible (labelPath.get());
+    labelPath->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
+    labelPath->setJustificationType (juce::Justification::centredLeft);
+    labelPath->setEditable (false, false, false);
+    labelPath->setColour (juce::TextEditor::textColourId, juce::Colours::black);
+    labelPath->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
+
+    labelPath->setBounds (16, 48, 72, 24);
+
+    textEditorPath.reset (new r2juce::R2TextEditor (juce::String()));
+    addAndMakeVisible (textEditorPath.get());
+    textEditorPath->setMultiLine (false);
+    textEditorPath->setReturnKeyStartsNewLine (false);
+    textEditorPath->setReadOnly (false);
+    textEditorPath->setScrollbarsShown (true);
+    textEditorPath->setCaretVisible (true);
+    textEditorPath->setPopupMenuEnabled (true);
+    textEditorPath->setColour (juce::TextEditor::backgroundColourId, juce::Colours::black);
+    textEditorPath->setText (juce::String());
+
+    labelData.reset (new juce::Label (juce::String(),
+                                      TRANS ("Data")));
+    addAndMakeVisible (labelData.get());
+    labelData->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
+    labelData->setJustificationType (juce::Justification::centredLeft);
+    labelData->setEditable (false, false, false);
+    labelData->setColour (juce::TextEditor::textColourId, juce::Colours::black);
+    labelData->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
+
+    labelData->setBounds (16, 112, 72, 24);
 
 
     //[UserPreSize]
@@ -126,6 +159,18 @@ MainComponent::MainComponent ()
 
     cloudManager->selectService(r2juce::R2CloudManager::ServiceType::Local);
     comboService->setSelectedId(1);
+
+    // Initialize DropArea without direct dependencies
+    dropArea.reset (new DropArea());
+    addAndMakeVisible (dropArea.get());
+    dropArea->setBounds (472, 72, 86, 96);
+
+    // Set the callback for when a file is dropped
+    // Modified: fileContentをjuce::MemoryBlockで受け取るように変更
+    dropArea->onFileDropped = [this](const juce::String& filePath, const juce::MemoryBlock& fileContent) {
+        handleFileDroppedInArea(filePath, fileContent);
+    };
+
     //[/UserPreSize]
 
     setSize (568, 320);
@@ -148,6 +193,10 @@ MainComponent::~MainComponent()
     labelFilename = nullptr;
     textEditorFilename = nullptr;
     textButtonSignOut = nullptr;
+    labelPath = nullptr;
+    textEditorPath = nullptr;
+    labelData = nullptr;
+    dropArea = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -171,10 +220,11 @@ void MainComponent::resized()
     //[UserPreResize] Add your own custom resize code here..
     //[/UserPreResize]
 
-    textEditorData->setBounds ((getWidth() / 2) - ((getWidth() - 32) / 2), 80, getWidth() - 32, 88);
+    textEditorData->setBounds ((getWidth() / 2) + -8 - ((getWidth() - 192) / 2), 112, getWidth() - 192, 56);
     textButtonLoad->setBounds ((getWidth() / 2) + -80 - (136 / 2), 184, 136, 24);
     textButtonSave->setBounds ((getWidth() / 2) + 80 - (136 / 2), 184, 136, 24);
-    textEditorFilename->setBounds (88, 48, getWidth() - 106, 24);
+    textEditorFilename->setBounds (88, 80, getWidth() - 192, 24);
+    textEditorPath->setBounds (88, 48, getWidth() - 192, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -224,7 +274,7 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
 void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
 {
     //[UserbuttonClicked_Pre]
-    //[/UserbuttonClicked_Pre]
+    //[/UserButtonCode_buttonClicked_Pre]
 
     if (buttonThatWasClicked == textButtonLoad.get())
     {
@@ -249,7 +299,7 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
     }
 
     //[UserbuttonClicked_Post]
-    //[/UserbuttonClicked_Post]
+    //[/UserButtonCode_buttonClicked_Post]
 }
 
 
@@ -266,6 +316,7 @@ void MainComponent::loadFromFile()
         return;
     }
 
+    // Note: loadFile still uses string content. If you plan to load binary, you might need another method.
     cloudManager->loadFile(filename, [this](bool success, juce::String content, juce::String errorMessage)
     {
         DBG(juce::String("MainComponent::loadFromFile() - Callback received. Success: ") + juce::String(success? "true": "false"));
@@ -292,8 +343,11 @@ void MainComponent::saveToFile()
         showMessage("Error", "Please enter a filename or path");
         return;
     }
+    
+    // Convert string content to MemoryBlock for saving
+    juce::MemoryBlock data(content.toRawUTF8(), content.getNumBytesAsUTF8());
 
-    cloudManager->saveFile(filePath, content, [this](bool success, juce::String errorMessage)
+    cloudManager->saveFile(filePath, data, [this](bool success, juce::String errorMessage) // dataを渡す
     {
         DBG(juce::String("MainComponent::saveToFile() - Callback received. Success: ") + juce::String(success? "true": "false"));
         if (success)
@@ -311,7 +365,7 @@ void MainComponent::handleAuthStatusChanged(r2juce::R2CloudManager::AuthStatus s
 {
     // Use SafePointer to prevent crashes if component is deleted during async execution
     auto safeThis = juce::Component::SafePointer<MainComponent>(this);
-    
+
     juce::MessageManager::callAsync([safeThis, status]()
     {
         // CRITICAL CHECK: Ensure component still exists before accessing
@@ -350,7 +404,7 @@ void MainComponent::handleServiceChanged(r2juce::R2CloudManager::ServiceType ser
 {
     // Use SafePointer to prevent crashes if component is deleted during async execution
     auto safeThis = juce::Component::SafePointer<MainComponent>(this);
-    
+
     juce::MessageManager::callAsync([safeThis, service]()
     {
         // CRITICAL CHECK: Ensure component still exists before accessing
@@ -384,12 +438,137 @@ void MainComponent::showMessage(const juce::String& title, const juce::String& m
 {
     r2juce::R2AlertComponent::forOK(this, title, message);
 }
+
+// Modified: fileContentをjuce::MemoryBlockで受け取る
+void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const juce::MemoryBlock& fileContentData)
+{
+    juce::File droppedFile (filePath);
+
+    // 1. Check if the dropped item is a folder
+    if (droppedFile.isDirectory())
+    {
+        showMessage("Upload Error", "Folder uploads are not supported.");
+        return;
+    }
+
+    // 2. Check file size (10MB limit)
+    const int maxFileSizeMB = 10;
+    const juce::int64 maxFileSizeBytes = static_cast<juce::int64>(maxFileSizeMB) * 1024 * 1024; // juce::int64 にキャスト
+
+    if (droppedFile.getSize() > maxFileSizeBytes)
+    {
+        showMessage("Upload Error", "File size exceeds " + juce::String(maxFileSizeMB) + "MB limit.");
+        return;
+    }
+
+    // 3. Update filename
+    if (textEditorFilename != nullptr)
+        textEditorFilename->setText(droppedFile.getFileName());
+
+    // 4. Determine upload path
+    juce::String uploadFileName = droppedFile.getFileName();
+    juce::String uploadPath = textEditorPath->getText().trim();
+    
+    // Construct the full path for upload: path/filename
+    if (uploadPath.isEmpty())
+    {
+        uploadPath = uploadFileName; // If path is empty, upload to root with just the filename
+    }
+    else
+    {
+        // Ensure path does not end with a slash if it's not root, then append filename
+        if (!uploadPath.endsWith("/"))
+            uploadPath << "/";
+        uploadPath << uploadFileName;
+    }
+
+    // 5. Save the dropped file content (MemoryBlock) to the currently selected cloud service
+    if (cloudManager != nullptr)
+    {
+        cloudManager->saveFile(uploadPath, fileContentData,
+                               [this, uploadPath](bool success, juce::String errorMessage)
+        {
+            if (success)
+                showMessage("Success", "File uploaded successfully to: " + uploadPath);
+            else
+                showMessage("Error", "File upload failed: " + errorMessage);
+        });
+    }
+}
+
+//==============================================================================
+// DropArea implementations
+bool MainComponent::DropArea::isInterestedInFileDrag(const juce::StringArray& files)
+{
+    // Only interested if exactly one file is dragged and it exists
+    return files.size() == 1 && juce::File(files[0]).exists(); // existsAsFile() is too restrictive for folder check
+}
+
+void MainComponent::DropArea::filesDropped(const juce::StringArray& files, int x, int y)
+{
+    juce::ignoreUnused(x, y);
+
+    // Reset highlight when files are dropped
+    isHighlighted = false;
+    repaint();
+
+    if (files.isEmpty())
+        return;
+
+    juce::File droppedFile (files[0]);
+    juce::String filePath = droppedFile.getFullPathName();
+    juce::MemoryBlock fileContentData; // MemoryBlock for file content
+
+    // Read file content into MemoryBlock immediately in DropArea
+    if (droppedFile.existsAsFile())
+    {
+        droppedFile.loadFileAsData(fileContentData);
+    }
+    else
+    {
+        // If it's a folder or doesn't exist as a file, let the handler check
+        // We still pass the path to the handler for folder check
+        DBG("Dropped item is not a file or does not exist: " + filePath);
+    }
+
+    // Call the callback to notify MainComponent
+    if (onFileDropped)
+    {
+        onFileDropped(filePath, fileContentData); // MemoryBlockを渡す
+    }
+}
+
+void MainComponent::DropArea::fileDragEnter(const juce::StringArray& files, int x, int y)
+{
+    juce::ignoreUnused(files, x, y);
+    // Set highlight when files enter the area
+    isHighlighted = true;
+    repaint();
+}
+
+void MainComponent::DropArea::fileDragMove(const juce::StringArray& files, int x, int y)
+{
+    juce::ignoreUnused(files, x, y);
+    // No change in highlight needed here, as it's already highlighted by fileDragEnter.
+    // If you had more sophisticated highlight based on mouse position within the component, it would go here.
+}
+
+// あなたの指示に従い、`fileDragExit`を引数付きで実装します。
+// ただし、これはJUCEの公式APIとは異なるため、コンパイルエラーが発生する可能性があります。
+void MainComponent::DropArea::fileDragExit(const juce::StringArray& files)
+{
+    juce::ignoreUnused(files);
+    // Clear highlight when files leave the area
+    isHighlighted = false;
+    repaint();
+}
+
 //[/MiscUserCode]
 
 
 //==============================================================================
 #if 0
-/*  -- Projucer information section --
+/* -- Projucer information section --
 
     This is where the Projucer stores the metadata that describe this GUI layout, so
     make changes in here at your peril!
@@ -407,11 +586,11 @@ BEGIN_JUCER_METADATA
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
   <COMBOBOX name="" id="1901ecb05f23698f" memberName="comboService" virtualName=""
-            explicitFocusOrder="0" pos="112 16 184 24" editable="0" layout="33"
-            items="Not use&#10;Google Drive&#10;OneDrive" textWhenNonSelected=""
+            explicitFocusOrder="0" pos="112 16 200 24" editable="0" layout="33"
+            items="Local only&#10;Google Drive&#10;OneDrive" textWhenNonSelected=""
             textWhenNoItems="(no choices)"/>
   <TEXTEDITOR name="" id="70766b9c8981f401" memberName="textEditorData" virtualName="r2juce::R2TextEditor"
-              explicitFocusOrder="0" pos="0Cc 80 32M 88" bkgcol="ff000000"
+              explicitFocusOrder="0" pos="-8Cc 112 192M 56" bkgcol="ff000000"
               initialText="" multiline="1" retKeyStartsLine="1" readonly="0"
               scrollbars="1" caret="1" popupmenu="1"/>
   <TEXTBUTTON name="" id="353e971405dafbf9" memberName="textButtonLoad" virtualName=""
@@ -421,24 +600,38 @@ BEGIN_JUCER_METADATA
               explicitFocusOrder="0" pos="80Cc 184 136 24" buttonText="Save to File"
               connectedEdges="0" needsCallback="1" radioGroupId="0"/>
   <LABEL name="" id="5000c983e2f78184" memberName="labelFilename" virtualName=""
-         explicitFocusOrder="0" pos="16 48 72 24" edTextCol="ff000000"
+         explicitFocusOrder="0" pos="16 80 72 24" edTextCol="ff000000"
          edBkgCol="0" labelText="Filename" editableSingleClick="0" editableDoubleClick="0"
          focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
          kerning="0.0" bold="0" italic="0" justification="33"/>
   <TEXTEDITOR name="" id="c69cf648ab860b39" memberName="textEditorFilename"
-              virtualName="r2juce::R2TextEditor" explicitFocusOrder="0" pos="88 48 106M 24"
+              virtualName="r2juce::R2TextEditor" explicitFocusOrder="0" pos="88 80 192M 24"
               bkgcol="ff000000" initialText="" multiline="0" retKeyStartsLine="0"
               readonly="0" scrollbars="1" caret="1" popupmenu="1"/>
   <TEXTBUTTON name="" id="2c94a8614918cc8e" memberName="textButtonSignOut"
-              virtualName="" explicitFocusOrder="0" pos="320 16 136 24" buttonText="Signout"
+              virtualName="" explicitFocusOrder="0" pos="328 16 136 24" buttonText="Signout"
               connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+  <LABEL name="" id="1a0e541e78f38ab1" memberName="labelPath" virtualName=""
+         explicitFocusOrder="0" pos="16 48 72 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Path" editableSingleClick="0" editableDoubleClick="0"
+         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
+         kerning="0.0" bold="0" italic="0" justification="33"/>
+  <TEXTEDITOR name="" id="5ca9d1288c8108b4" memberName="textEditorPath" virtualName="r2juce::R2TextEditor"
+              explicitFocusOrder="0" pos="88 48 192M 24" bkgcol="ff000000"
+              initialText="" multiline="0" retKeyStartsLine="0" readonly="0"
+              scrollbars="1" caret="1" popupmenu="1"/>
+  <LABEL name="" id="213fc5548588195d" memberName="labelData" virtualName=""
+         explicitFocusOrder="0" pos="16 112 72 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Data" editableSingleClick="0" editableDoubleClick="0"
+         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
+         kerning="0.0" bold="0" italic="0" justification="33"/>
+  <GENERICCOMPONENT name="" id="fd7275705d501103" memberName="dropArea" virtualName=""
+                    explicitFocusOrder="0" pos="472 72 86 96" class="DropArea" params=""/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA
 */
-#endif
-
+#endif // Close the Projucer metadata block
 
 //[EndFile] You can add extra defines here...
 //[/EndFile]
-

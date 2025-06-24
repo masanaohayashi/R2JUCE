@@ -87,35 +87,46 @@ void R2GoogleDriveProvider::refreshAccessToken(std::function<void(bool)> callbac
         if (callback) juce::MessageManager::callAsync([callback] { callback(false); });
         return;
     }
-    
-    juce::String postData = "client_id=" + juce::URL::addEscapeChars(clientId, false)
-                          + "&client_secret=" + juce::URL::addEscapeChars(clientSecret, false)
-                          + "&refresh_token=" + juce::URL::addEscapeChars(refreshToken, false)
-                          + "&grant_type=refresh_token";
 
-    juce::StringPairArray headers;
-    headers.set("Content-Type", "application/x-www-form-urlencoded");
+    auto self = shared_from_this();
 
-    makeAPIRequest("https://oauth2.googleapis.com/token", "POST", headers, postData,
-        [this, callback](bool success, const juce::String& response)
+    juce::Thread::launch([this, self, callback]()
+    {
+        juce::String postData = "client_id=" + juce::URL::addEscapeChars(clientId, false)
+                              + "&client_secret=" + juce::URL::addEscapeChars(clientSecret, false)
+                              + "&refresh_token=" + juce::URL::addEscapeChars(refreshToken, false)
+                              + "&grant_type=refresh_token";
+
+        // 1. URLオブジェクトを作成
+        juce::URL url("https://oauth2.googleapis.com/token");
+        // 2. URLオブジェクトにPOSTデータを追加
+        url = url.withPOSTData(postData);
+
+        // 3. InputStreamOptions を設定 (HTTPメソッドはPOSTなので明示不要)
+        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inPostData)
+                       .withExtraHeaders("Content-Type: application/x-www-form-urlencoded")
+                       .withConnectionTimeoutMs(30000);
+
+        // 4. 変更されたURLとオプションからストリームを作成
+        if (auto stream = url.createInputStream(options))
         {
-            if (success)
+            auto response = stream->readEntireStreamAsString();
+            parseTokenResponse(response, [callback](bool parsedSuccess, const juce::String&)
             {
-                // parseTokenResponse will be called here to update the tokens
-                parseTokenResponse(response, [callback](bool parsedSuccess, const juce::String&){
-                     if (callback) callback(parsedSuccess);
-                });
-            }
-            else
-            {
+                 juce::MessageManager::callAsync([callback, parsedSuccess](){
+                    if (callback) callback(parsedSuccess);
+                 });
+            });
+        }
+        else
+        {
+            juce::MessageManager::callAsync([callback](){
                 if (callback) callback(false);
-            }
-        });
+            });
+        }
+    });
 }
 
-// ==============================================================================
-// ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ THIS IS THE MOST CRITICAL FIX ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-// ==============================================================================
 void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std::function<void(bool, juce::String)> onComplete)
 {
     auto json = juce::JSON::parse(response);
@@ -159,64 +170,61 @@ void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std
     currentStatus = Status::Error;
     if (onComplete) onComplete(false, "Failed to parse token response.");
 }
-// ==============================================================================
-// ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ END OF FIX SECTION ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-// ==============================================================================
 
 
 void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce::String& httpMethod, const juce::StringPairArray& headers, const juce::MemoryBlock& postData, std::function<void(bool, juce::String)> callback)
 {
-    auto requestLogic = [=]()
-    {
-        juce::Thread::launch([=]()
-        {
-            juce::URL url(endpoint);
-            
-            juce::StringPairArray finalHeaders = headers;
-            finalHeaders.set("Authorization", "Bearer " + accessToken);
+    auto self = shared_from_this();
 
-            juce::String headerString;
-            for (int i = 0; i < finalHeaders.size(); ++i)
-                headerString << finalHeaders.getAllKeys()[i] << ": " << finalHeaders.getAllValues()[i] << "\r\n";
-            
-            if ((httpMethod == "POST" || httpMethod == "PATCH") && postData.getSize() > 0)
-            {
-                url = url.withPOSTData(postData);
-            }
-            
-            auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-                           .withConnectionTimeoutMs(30000)
-                           .withExtraHeaders(headerString)
-                           .withHttpRequestCmd(httpMethod);
-            
-            if (auto stream = url.createInputStream(options))
-            {
-                juce::MessageManager::callAsync([callback, response = stream->readEntireStreamAsString()] {
-                    if (callback) callback(true, response);
-                });
-            }
-            else
-            {
-                juce::MessageManager::callAsync([callback] {
-                    if (callback) callback(false, "Failed to connect to server.");
-                });
-            }
-        });
-    };
-    
     if (!isTokenValid())
     {
-        refreshAccessToken([this, requestLogic, callback](bool success) {
+        refreshAccessToken([this, self, endpoint, httpMethod, headers, postData, callback](bool success)
+        {
             if (success)
-                requestLogic();
+                makeAPIRequest(endpoint, httpMethod, headers, postData, callback);
             else
                 juce::MessageManager::callAsync([callback] { if (callback) callback(false, "Authentication required."); });
         });
+        return;
     }
-    else
+
+    juce::Thread::launch([this, self, endpoint, httpMethod, headers, postData, callback]()
     {
-        requestLogic();
-    }
+        juce::URL url(endpoint);
+
+        juce::StringPairArray finalHeaders = headers;
+        finalHeaders.set("Authorization", "Bearer " + accessToken);
+
+        juce::String headerString;
+        for (int i = 0; i < finalHeaders.size(); ++i)
+            headerString << finalHeaders.getAllKeys()[i] << ": " << finalHeaders.getAllValues()[i] << "\r\n";
+
+        // POSTまたはPATCHの場合、URLにデータを追加
+        if ((httpMethod == "POST" || httpMethod == "PATCH") && postData.getSize() > 0)
+        {
+            url = url.withPOSTData(postData);
+        }
+
+        // JUCE8対応: InputStreamOptionsからwithParameterHandlingを削除
+        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                       .withConnectionTimeoutMs(30000)
+                       .withHttpRequestCmd(httpMethod)
+                       .withExtraHeaders(headerString);
+
+        if (auto stream = url.createInputStream(options))
+        {
+            auto response = stream->readEntireStreamAsString();
+            juce::MessageManager::callAsync([callback, response] {
+                if (callback) callback(true, response);
+            });
+        }
+        else
+        {
+            juce::MessageManager::callAsync([callback] {
+                if (callback) callback(false, "Failed to connect to server.");\
+            });
+        }
+    });
 }
 
 void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce::String& httpMethod, const juce::StringPairArray& headers, const juce::String& postData, std::function<void(bool, juce::String)> callback)
