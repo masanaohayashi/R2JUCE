@@ -15,16 +15,13 @@ R2CloudManager::~R2CloudManager()
 {
     DBG("R2CloudManager destructor called");
     
-    // Cancel authentication and clear callbacks first
     cancelAuthentication();
     
-    // Clear callbacks explicitly
     onAuthStatusChanged = nullptr;
     onServiceChanged = nullptr;
     
     juce::Thread::sleep(10);
     
-    // Reset providers (this will trigger their destructors)
     localProvider.reset();
     googleDriveProvider.reset();
     oneDriveProvider.reset();
@@ -48,7 +45,8 @@ std::unique_ptr<R2CloudStorageProvider> R2CloudManager::createProvider(ServiceTy
         case ServiceType::GoogleDrive:
             return std::make_unique<R2GoogleDriveProvider>();
         case ServiceType::OneDrive:
-            return std::make_unique<R2OneDriveProvider>();
+            // return std::make_unique<R2OneDriveProvider>(); // This would be the implementation
+            return nullptr; // Placeholder
         case ServiceType::Local:
         default:
             return std::make_unique<R2LocalStorageProvider>();
@@ -71,10 +69,12 @@ void R2CloudManager::setOneDriveCredentials(const juce::String& clientId, const 
     oneDriveClientId = clientId;
     oneDriveClientSecret = clientSecret;
     
+    /*
     if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get()))
     {
         oneDriveProv->setClientCredentials(clientId, clientSecret);
     }
+    */
 }
 
 void R2CloudManager::setLocalStorageDirectory(const juce::File& directory)
@@ -185,146 +185,58 @@ bool R2CloudManager::needsAuthentication() const
 
 void R2CloudManager::showAuthenticationUI(juce::Component* parent)
 {
-    DBG("R2CloudManager::showAuthenticationUI() called");
-
     auto provider = getCurrentProvider();
     if (provider == nullptr)
     {
-        DBG("No provider selected");
         return;
     }
 
-    // If there is an existing authentication UI, cancel it first.
     if (authComponent != nullptr)
     {
         cancelAuthentication();
     }
 
-    // No authentication is required for local storage.
     if (currentServiceType == ServiceType::Local)
     {
         setAuthStatus(AuthStatus::Authenticated);
         return;
     }
 
-    try
+    currentAuthStatus = AuthStatus::Authenticating;
+    if (onAuthStatusChanged)
+        onAuthStatusChanged(currentAuthStatus);
+    
+    provider->authenticate([this, parent](bool success, juce::String errorMessage)
     {
-        // For Google Drive and OneDrive, combine Device Flow authentication and regular OAuth2.
-        if (currentServiceType == ServiceType::GoogleDrive || currentServiceType == ServiceType::OneDrive)
+        if (success)
         {
-            // First, let the provider attempt authentication (check for existing or refresh tokens).
-            currentAuthStatus = AuthStatus::Authenticating;
-
-            if (onAuthStatusChanged)
-            {
-                onAuthStatusChanged(currentAuthStatus);
-            }
-
-            // Copy the callback to a local variable.
-            auto statusCallback = onAuthStatusChanged;
-
-            provider->authenticate([this, parent, statusCallback](bool success, juce::String errorMessage)
-                {
-                    if (success)
-                    {
-                        // Authentication successful with an existing token.
-                        juce::MessageManager::callAsync([this, statusCallback]()
-                            {
-                                this->currentAuthStatus = AuthStatus::Authenticated;
-                                if (statusCallback)
-                                {
-                                    statusCallback(this->currentAuthStatus);
-                                }
-                            });
-                    }
-                    else
-                    {
-                        // If authentication is required, show the Device Flow authentication UI.
-                        if (errorMessage.contains("device flow") || errorMessage.contains("authentication required"))
-                        {
-                            juce::MessageManager::callAsync([this, parent]()
-                                {
-                                    this->startDeviceFlowAuthentication(parent);
-                                });
-                        }
-                        else
-                        {
-                            // Other errors.
-                            juce::MessageManager::callAsync([this, statusCallback, errorMessage]()
-                                {
-                                    this->currentAuthStatus = AuthStatus::Error;
-                                    if (statusCallback)
-                                    {
-                                        statusCallback(this->currentAuthStatus);
-                                    }
-                                });
-                        }
-                    }
-                });
+            juce::MessageManager::callAsync([this]() {
+                setAuthStatus(AuthStatus::Authenticated);
+            });
         }
         else
         {
-            // For other providers, authenticate directly.
-            currentAuthStatus = AuthStatus::Authenticating;
-
-            if (onAuthStatusChanged)
+            if (errorMessage.contains("device flow") || errorMessage.contains("authentication required"))
             {
-                onAuthStatusChanged(currentAuthStatus);
-            }
-
-            // Copy the callback to a local variable.
-            auto statusCallback = onAuthStatusChanged;
-
-            provider->authenticate([this, statusCallback](bool success, juce::String errorMessage)
-                {
-                    juce::MessageManager::callAsync([this, statusCallback, success, errorMessage]()
-                        {
-                            if (success)
-                            {
-                                this->currentAuthStatus = AuthStatus::Authenticated;
-                            }
-                            else
-                            {
-                                this->currentAuthStatus = AuthStatus::Error;
-                            }
-
-                            if (statusCallback)
-                            {
-                                statusCallback(this->currentAuthStatus);
-                            }
-                        });
+                juce::MessageManager::callAsync([this, parent]() {
+                    this->startDeviceFlowAuthentication(parent);
                 });
+            }
+            else
+            {
+                juce::MessageManager::callAsync([this]() {
+                    setAuthStatus(AuthStatus::Error);
+                });
+            }
         }
-    }
-    catch (const std::exception& e)
-    {
-        DBG("Exception in showAuthenticationUI: " + juce::String(e.what()));
-        currentAuthStatus = AuthStatus::Error;
-        if (onAuthStatusChanged)
-        {
-            onAuthStatusChanged(currentAuthStatus);
-        }
-    }
-    catch (...)
-    {
-        DBG("Unknown exception in showAuthenticationUI");
-        currentAuthStatus = AuthStatus::Error;
-        if (onAuthStatusChanged)
-        {
-            onAuthStatusChanged(currentAuthStatus);
-        }
-    }
+    });
 }
 
 void R2CloudManager::startDeviceFlowAuthentication(juce::Component* parent)
 {
-    DBG("Starting Device Flow authentication");
-
-    // Create the Device Flow authentication UI.
     authComponent = std::make_unique<R2CloudAuthComponent>();
     parentForAuth = parent;
 
-    // Set the authentication service type.
     if (currentServiceType == ServiceType::GoogleDrive)
     {
         authComponent->setServiceType(R2CloudAuthComponent::ServiceType::GoogleDrive);
@@ -336,27 +248,24 @@ void R2CloudManager::startDeviceFlowAuthentication(juce::Component* parent)
         authComponent->setOneDriveCredentials(oneDriveClientId, oneDriveClientSecret);
     }
 
-    // Set up callbacks.
-    authComponent->onAuthenticationComplete = [this](bool success, juce::String errorMessage,
-        juce::String accessToken, juce::String refreshToken)
-        {
-            handleAuthenticationComplete(success, errorMessage, accessToken, refreshToken);
-        };
+    authComponent->onAuthenticationComplete = [this](bool success, const juce::String& errorMessage,
+        const juce::String& accessToken, const juce::String& refreshToken)
+    {
+        handleAuthenticationComplete(success, errorMessage, accessToken, refreshToken);
+    };
 
     authComponent->onAuthenticationCancelled = [this]()
-        {
-            hideAuthenticationUI();
-            setAuthStatus(AuthStatus::NotAuthenticated);
-        };
+    {
+        hideAuthenticationUI();
+        setAuthStatus(AuthStatus::NotAuthenticated);
+    };
 
-    // Add to the parent component.
     if (parent != nullptr)
     {
         parent->addAndMakeVisible(*authComponent);
         authComponent->setBounds(parent->getLocalBounds());
     }
 
-    // Start authentication.
     authComponent->startAuthentication();
 }
 
@@ -391,10 +300,10 @@ void R2CloudManager::handleAuthenticationComplete(bool success, const juce::Stri
         }
         else if (currentServiceType == ServiceType::OneDrive)
         {
-            if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get()))
-            {
-                // oneDriveProv->setTokens(accessToken, refreshToken);
-            }
+            // if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get()))
+            // {
+            //     oneDriveProv->setTokens(accessToken, refreshToken);
+            // }
         }
         setAuthStatus(AuthStatus::Authenticated);
     }
@@ -422,41 +331,24 @@ void R2CloudManager::cancelAuthentication()
 {
     DBG("R2CloudManager::cancelAuthentication() called");
     
-    // First, prevent any new callbacks from being triggered
-    auto tempAuthCallback = onAuthStatusChanged;
-    auto tempServiceCallback = onServiceChanged;
-    
-    // Clear callbacks immediately to prevent crashes
     onAuthStatusChanged = nullptr;
     onServiceChanged = nullptr;
     
-    // Hide authentication UI
     hideAuthenticationUI();
     
-    // Cancel authentication in providers
-    auto provider = getCurrentProvider();
-    if (provider != nullptr)
+    if (auto provider = getCurrentProvider())
     {
         if (auto* googleProvider = dynamic_cast<R2GoogleDriveProvider*>(provider))
         {
             googleProvider->cancelAuthentication();
         }
-        else if (auto* oneDriveProvider = dynamic_cast<R2OneDriveProvider*>(provider))
-        {
-            // oneDriveProvider->cancelAuthentication();
-        }
     }
     
-    // Set status without triggering callbacks
     currentAuthStatus = AuthStatus::NotAuthenticated;
     
-    // Give time for any pending async operations to complete
     juce::Thread::sleep(50);
-    
-    DBG("R2CloudManager::cancelAuthentication() completed");
 }
 
-//==================== REFACTORED METHOD ====================
 void R2CloudManager::saveFile(const juce::String& filePath, const juce::String& content, FileOperationCallback callback)
 {
     auto provider = getCurrentProvider();
@@ -476,22 +368,14 @@ void R2CloudManager::saveFile(const juce::String& filePath, const juce::String& 
     
     juce::MemoryBlock data(content.toUTF8(), content.getNumBytesAsUTF8());
     
-    // The R2GoogleDriveProvider's uploadFile method already has logic to interpret
-    // the first argument as a path when the folderId is "path". We leverage that here.
-    // This avoids the need for path parsing within this manager class.
-    juce::String folderIdForProvider = "path";
-    
-    // Although LocalStorageProvider handles paths directly, we call it in the same way
-    // to maintain a consistent interface (it handles it internally).
-    
-    provider->uploadFile(filePath, data, folderIdForProvider, [callback](bool success, juce::String errorMessage)
+    // Now we call the unified interface method directly. No more branching!
+    provider->uploadFileByPath(filePath, data, [callback](bool success, juce::String errorMessage)
     {
         if (callback)
             callback(success, errorMessage);
     });
 }
 
-//==================== REFACTORED METHOD ====================
 void R2CloudManager::loadFile(const juce::String& filePath, FileContentCallback callback)
 {
     auto provider = getCurrentProvider();
@@ -509,104 +393,22 @@ void R2CloudManager::loadFile(const juce::String& filePath, FileContentCallback 
         return;
     }
 
-    // Special handling for local storage, as it can fetch files directly by path.
-    if (auto* localProv = dynamic_cast<R2LocalStorageProvider*>(provider))
+    // Now we call the unified interface method directly.
+    // The complex if/else/dynamic_cast block is gone.
+    provider->downloadFileByPath(filePath, [callback](bool success, juce::MemoryBlock data, juce::String errorMessage)
     {
-        // Get the file directly with getChildFile and read its data.
-        auto file = localStorageDir.getChildFile(filePath);
-        if (file.existsAsFile())
+        if (success)
         {
-            juce::MemoryBlock data;
-            if (file.loadFileAsData(data))
-            {
-                 auto content = juce::String::createStringFromData(data.getData(), static_cast<int>(data.getSize()));
-                 if (callback) callback(true, content, "");
-            }
-            else
-            {
-                 if (callback) callback(false, "", "Failed to read file: " + filePath);
-            }
+            auto content = juce::String::createStringFromData(data.getData(), static_cast<int>(data.getSize()));
+            if (callback)
+                callback(true, content, "");
         }
         else
         {
             if (callback)
-                callback(false, "", "File not found: " + filePath);
+                callback(false, "", "Failed to download file: " + errorMessage);
         }
-        return;
-    }
-    
-    // For cloud providers, we branch the logic based on the path separator.
-    // (This will become unnecessary in Step 3 when the provider interface is improved).
-    if (filePath.contains("/"))
-    {
-        // --- Logic from the previous loadFileWithPath ---
-        if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(provider))
-        {
-            // (downloadFileWithPath needs to be implemented in OneDriveProvider)
-            if (callback) callback(false, "", "Loading from path not yet implemented for OneDrive");
-        }
-        else if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(provider))
-        {
-            googleProv->downloadFileWithPath(filePath, [callback](bool success, juce::MemoryBlock data, juce::String error)
-            {
-                if (success)
-                {
-                    auto content = juce::String::createStringFromData(data.getData(), static_cast<int>(data.getSize()));
-                    if (callback) callback(true, content, "");
-                }
-                else
-                {
-                    if (callback) callback(false, "", error);
-                }
-            });
-        }
-    }
-    else
-    {
-        // --- Logic from the previous loadFile (for filename only) ---
-        provider->listFiles("root", [this, filename = filePath, callback, provider](bool success, juce::Array<R2CloudStorageProvider::FileInfo> files, juce::String errorMessage)
-        {
-            if (!success)
-            {
-                if (callback)
-                    callback(false, "", "Failed to list files: " + errorMessage);
-                return;
-            }
-            
-            juce::String fileId;
-            for (const auto& file : files)
-            {
-                if (file.name == filename && !file.isFolder)
-                {
-                    fileId = file.id;
-                    break;
-                }
-            }
-            
-            if (fileId.isEmpty())
-            {
-                if (callback)
-                    callback(false, "", "File not found: " + filename);
-                return;
-            }
-            
-            provider->downloadFile(fileId, [callback](bool downloadSuccess, juce::MemoryBlock data, juce::String downloadError)
-            {
-                if (downloadSuccess)
-                {
-                    auto content = juce::String::createStringFromData(data.getData(), static_cast<int>(data.getSize()));
-                    if (callback)
-                        callback(true, content, "");
-                }
-                else
-                {
-                    if (callback)
-                        callback(false, "", "Failed to download file: " + downloadError);
-                }
-            });
-        });
-    }
+    });
 }
-
 
 } // namespace r2juce

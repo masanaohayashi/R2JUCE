@@ -20,7 +20,7 @@ void R2LocalStorageProvider::authenticate(AuthCallback callback)
 
 void R2LocalStorageProvider::signOut()
 {
-
+    // Nothing to do for local storage
 }
 
 R2CloudStorageProvider::Status R2LocalStorageProvider::getAuthStatus() const
@@ -71,6 +71,56 @@ juce::String R2LocalStorageProvider::getIdFromFile(const juce::File& file) const
     return juce::Base64::toBase64(relativePath);
 }
 
+// ==================== NEW METHOD IMPLEMENTATIONS ====================
+void R2LocalStorageProvider::uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
+{
+    juce::Thread::launch([this, filePath, data, callback]()
+    {
+        // Get the target file relative to the root directory.
+        auto targetFile = rootDirectory.getChildFile(filePath);
+        
+        // Ensure the parent directory exists.
+        targetFile.getParentDirectory().createDirectory();
+        
+        bool success = targetFile.replaceWithData(data.getData(), data.getSize());
+        
+        juce::MessageManager::callAsync([callback, success]()
+        {
+            if (callback)
+                callback(success, success ? "" : "Failed to write file");
+        });
+    });
+}
+
+void R2LocalStorageProvider::downloadFileByPath(const juce::String& filePath, DownloadCallback callback)
+{
+    juce::Thread::launch([this, filePath, callback]()
+    {
+        // Get the target file relative to the root directory.
+        auto file = rootDirectory.getChildFile(filePath);
+        
+        if (!file.existsAsFile())
+        {
+            juce::MessageManager::callAsync([callback, filePath]()
+            {
+                if (callback)
+                    callback(false, {}, "File not found: " + filePath);
+            });
+            return;
+        }
+        
+        juce::MemoryBlock data;
+        bool success = file.loadFileAsData(data);
+        
+        juce::MessageManager::callAsync([callback, success, data]()
+        {
+            if (callback)
+                callback(success, data, success ? "" : "Failed to read file");
+        });
+    });
+}
+// ==================================================================
+
 void R2LocalStorageProvider::listFiles(const juce::String& folderId, FileListCallback callback)
 {
     juce::Thread::launch([this, folderId, callback]()
@@ -82,7 +132,8 @@ void R2LocalStorageProvider::listFiles(const juce::String& folderId, FileListCal
         {
             juce::MessageManager::callAsync([callback]()
             {
-                callback(false, {}, "Folder not found");
+                if(callback)
+                    callback(false, {}, "Folder not found");
             });
             return;
         }
@@ -112,7 +163,8 @@ void R2LocalStorageProvider::listFiles(const juce::String& folderId, FileListCal
         
         juce::MessageManager::callAsync([callback, files]()
         {
-            callback(true, files, "");
+            if(callback)
+                callback(true, files, "");
         });
     });
 }
@@ -132,7 +184,8 @@ void R2LocalStorageProvider::uploadFile(const juce::String& fileName, const juce
         
         juce::MessageManager::callAsync([callback, success]()
         {
-            callback(success, success ? "" : "Failed to write file");
+            if(callback)
+                callback(success, success ? "" : "Failed to write file");
         });
     });
 }
@@ -147,7 +200,8 @@ void R2LocalStorageProvider::downloadFile(const juce::String& fileId, DownloadCa
         {
             juce::MessageManager::callAsync([callback]()
             {
-                callback(false, {}, "File not found");
+                if(callback)
+                    callback(false, {}, "File not found");
             });
             return;
         }
@@ -157,7 +211,8 @@ void R2LocalStorageProvider::downloadFile(const juce::String& fileId, DownloadCa
         
         juce::MessageManager::callAsync([callback, success, data]()
         {
-            callback(success, data, success ? "" : "Failed to read file");
+            if(callback)
+                callback(success, data, success ? "" : "Failed to read file");
         });
     });
 }
@@ -172,7 +227,8 @@ void R2LocalStorageProvider::deleteFile(const juce::String& fileId, FileOperatio
         
         juce::MessageManager::callAsync([callback, success]()
         {
-            callback(success, success ? "" : "Failed to delete file");
+            if(callback)
+                callback(success, success ? "" : "Failed to delete file");
         });
     });
 }
@@ -189,7 +245,8 @@ void R2LocalStorageProvider::createFolder(const juce::String& folderName, const 
         
         juce::MessageManager::callAsync([callback, success]()
         {
-            callback(success, success ? "" : "Failed to create folder");
+            if(callback)
+                callback(success, success ? "" : "Failed to create folder");
         });
     });
 }

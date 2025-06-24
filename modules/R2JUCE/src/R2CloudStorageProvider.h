@@ -43,7 +43,24 @@ public:
     virtual Status getAuthStatus() const = 0;
     virtual juce::String getDisplayName() const = 0;
     
-    // File operations
+    // ==================== NEW/REVISED INTERFACE ====================
+    /**
+     * @brief Uploads a file using a full path. The provider is responsible for parsing the path.
+     * @param filePath The full path for the destination file (e.g., "presets/bass/my_preset.txt").
+     * @param data The file content to upload.
+     * @param callback Completion callback.
+     */
+    virtual void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) = 0;
+
+    /**
+     * @brief Downloads a file using a full path. The provider is responsible for finding the file.
+     * @param filePath The full path of the file to download.
+     * @param callback Completion callback with the downloaded data.
+     */
+    virtual void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) = 0;
+    // =============================================================
+
+    // File operations (can be kept for internal use or ID-based operations)
     virtual void listFiles(const juce::String& folderId, FileListCallback callback) = 0;
     virtual void uploadFile(const juce::String& fileName, const juce::MemoryBlock& data,
                             const juce::String& folderId, FileOperationCallback callback) = 0;

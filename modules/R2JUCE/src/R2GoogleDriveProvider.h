@@ -15,6 +15,11 @@ public:
     Status getAuthStatus() const override;
     juce::String getDisplayName() const override;
     
+    // ==================== IMPLEMENTING NEW INTERFACE ====================
+    void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) override;
+    void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) override;
+    // ==================================================================
+    
     void listFiles(const juce::String& folderId, FileListCallback callback) override;
     void uploadFile(const juce::String& fileName, const juce::MemoryBlock& data,
                     const juce::String& folderId, FileOperationCallback callback) override;
@@ -27,10 +32,11 @@ public:
     void setClientCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void exchangeAuthCodeForTokens(const juce::String& authCode, std::function<void(bool, juce::String)> callback);
     void setTokens(const juce::String& accessToken, const juce::String& refreshToken);
-    void downloadFileWithPath(const juce::String& filePath, DownloadCallback callback);
     void cancelAuthentication();
 
 private:
+    class OAuth2Handler; // Forward declaration
+
     using FolderCreationCallback = std::function<void(bool success, juce::String folderId, juce::String errorMessage)>;
 
     void startNewAuthFlow(AuthCallback callback);
@@ -47,36 +53,6 @@ private:
                       const juce::String& folderId, FileOperationCallback callback);
     void createFolderPath(const juce::StringArray& folderPath, const juce::String& parentFolderId,
                          int pathIndex, std::function<void(bool, juce::String, juce::String)> callback);
-
-    
-    class OAuth2Handler : public juce::Component
-    {
-    public:
-        OAuth2Handler(R2GoogleDriveProvider& parent);
-        ~OAuth2Handler() override = default;
-        
-        void startAuthentication(const juce::String& clientId, R2CloudStorageProvider::AuthCallback callback);
-        void resized() override;
-
-    private:
-        juce::String generateStateParameter();
-        void checkAuthCallback(const juce::String& url);
-        void handleAuthSuccess(const juce::String& authCode);
-        void handleAuthError(const juce::String& error);
-        juce::String extractURLParameter(const juce::String& url, const juce::String& paramName);
-        juce::String extractAuthCode(const juce::String& url);
-        juce::String extractState(const juce::String& url);
-        juce::String extractError(const juce::String& url);
-        void showSuccessPage();
-        void showErrorPage(const juce::String& error);
-
-        R2GoogleDriveProvider& provider;
-        std::unique_ptr<juce::WebBrowserComponent> webBrowser;
-        R2CloudStorageProvider::AuthCallback authCallback;
-        juce::String redirectUri;
-        juce::String currentClientId;
-        juce::String stateParameter;
-   };
 
     std::unique_ptr<OAuth2Handler> oauth2Handler;
     

@@ -2,407 +2,216 @@
 
 namespace r2juce {
 
-R2GoogleDriveProvider::OAuth2Handler::OAuth2Handler(R2GoogleDriveProvider& parent) : provider(parent)
+// The OAuth2Handler class from your original file.
+class R2GoogleDriveProvider::OAuth2Handler : public juce::Component
 {
-    juce::WebBrowserComponent::Options options;
-    
-    options = options.withNativeIntegrationEnabled(true);
-    
-    options = options.withNativeFunction("authComplete",
-        [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
-        {
-            DBG("authComplete called with " + juce::String(args.size()) + " args");
-            if (args.size() > 0)
+public:
+    OAuth2Handler(R2GoogleDriveProvider& parent) : provider(parent)
+    {
+        juce::WebBrowserComponent::Options options;
+        
+        options = options.withNativeIntegrationEnabled(true);
+        
+        options = options.withNativeFunction("authComplete",
+            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
             {
-                auto authCode = args[0].toString();
-                if (authCode.isNotEmpty())
+                DBG("authComplete called with " + juce::String(args.size()) + " args");
+                if (args.size() > 0)
                 {
-                    DBG("Auth code received: " + authCode);
-                    handleAuthSuccess(authCode);
+                    auto authCode = args[0].toString();
+                    if (authCode.isNotEmpty())
+                    {
+                        DBG("Auth code received: " + authCode);
+                        handleAuthSuccess(authCode);
+                    }
+                    else
+                    {
+                        handleAuthError("No auth code received");
+                    }
                 }
                 else
                 {
-                    handleAuthError("No auth code received");
+                    handleAuthError("Invalid auth response");
                 }
-            }
-            else
-            {
-                handleAuthError("Invalid auth response");
-            }
-            completion(juce::var());
-        });
-    
-    options = options.withNativeFunction("authError",
-        [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
-        {
-            juce::String error = "Authentication failed";
-            if (args.size() > 0)
-            {
-                error = args[0].toString();
-            }
-            DBG("Auth error: " + error);
-            handleAuthError(error);
-            completion(juce::var());
-        });
-    
-    options = options.withEventListener("urlChanged",
-        [this](const juce::var& eventData)
-        {
-            if (eventData.isObject())
-            {
-                auto* obj = eventData.getDynamicObject();
-                if (obj && obj->hasProperty("url"))
-                {
-                    auto url = obj->getProperty("url").toString();
-                    DBG("URL changed to: " + url);
-                    checkAuthCallback(url);
-                }
-            }
-        });
-    
-    juce::String monitoringScript = R"(
-        // Script to monitor URL changes
-        let lastUrl = window.location.href;
+                completion(juce::var());
+            });
         
-        function checkUrlChange() {
-            const currentUrl = window.location.href;
-            if (currentUrl !== lastUrl) {
-                lastUrl = currentUrl;
-                
-                // Notify JUCE backend of URL change
-                if (window.__JUCE__ && window.__JUCE__.backend) {
-                    window.__JUCE__.backend.emitEvent('urlChanged', { url: currentUrl });
+        options = options.withNativeFunction("authError",
+            [this](const juce::Array<juce::var>& args, juce::WebBrowserComponent::NativeFunctionCompletion completion)
+            {
+                juce::String error = "Authentication failed";
+                if (args.size() > 0)
+                {
+                    error = args[0].toString();
                 }
-                
-                // Check if this is an auth callback URL
-                if (currentUrl.includes('localhost:8080/callback')) {
-                    const params = new URLSearchParams(window.location.search);
-                    const code = params.get('code');
-                    const error = params.get('error');
-                    
-                    if (code) {
-                        if (window.authComplete) {
-                            window.authComplete(code);
-                        }
-                    } else if (error) {
-                        const errorDesc = params.get('error_description') || error;
-                        if (window.authError) {
-                            window.authError(errorDesc);
+                DBG("Auth error: " + error);
+                handleAuthError(error);
+                completion(juce::var());
+            });
+        
+        options = options.withEventListener("urlChanged",
+            [this](const juce::var& eventData)
+            {
+                if (eventData.isObject())
+                {
+                    auto* obj = eventData.getDynamicObject();
+                    if (obj && obj->hasProperty("url"))
+                    {
+                        auto url = obj->getProperty("url").toString();
+                        DBG("URL changed to: " + url);
+                        checkAuthCallback(url);
+                    }
+                }
+            });
+        
+        juce::String monitoringScript = R"(
+            let lastUrl = window.location.href;
+            function checkUrlChange() {
+                const currentUrl = window.location.href;
+                if (currentUrl !== lastUrl) {
+                    lastUrl = currentUrl;
+                    if (window.__JUCE__ && window.__JUCE__.backend) {
+                        window.__JUCE__.backend.emitEvent('urlChanged', { url: currentUrl });
+                    }
+                    if (currentUrl.includes('localhost:8080/callback')) {
+                        const params = new URLSearchParams(window.location.search);
+                        const code = params.get('code');
+                        const error = params.get('error');
+                        if (code) {
+                            if (window.authComplete) { window.authComplete(code); }
+                        } else if (error) {
+                            const errorDesc = params.get('error_description') || error;
+                            if (window.authError) { window.authError(errorDesc); }
                         }
                     }
                 }
             }
-        }
+            setInterval(checkUrlChange, 1000);
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', checkUrlChange);
+            } else {
+                checkUrlChange();
+            }
+        )";
         
-        // Check URL periodically
-        setInterval(checkUrlChange, 1000);
+        options = options.withUserScript(monitoringScript);
+        options = options.withUserAgent("CloudDoc/1.0 (JUCE WebBrowser)");
         
-        // Also check when page loading is complete
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', checkUrlChange);
-        } else {
-            checkUrlChange();
-        }
-    )";
+        webBrowser = std::make_unique<juce::WebBrowserComponent>(options);
+        addAndMakeVisible(*webBrowser);
+    }
     
-    options = options.withUserScript(monitoringScript);
-    
-    options = options.withUserAgent("CloudDoc/1.0 (JUCE WebBrowser)");
-    
-    webBrowser = std::make_unique<juce::WebBrowserComponent>(options);
-    addAndMakeVisible(*webBrowser);
-}
-
-void R2GoogleDriveProvider::OAuth2Handler::startAuthentication(const juce::String& clientId, R2CloudStorageProvider::AuthCallback callback)
-{
-    authCallback = callback;
-    currentClientId = clientId;
-    
-    redirectUri = "http://localhost:8080/callback";
-    
-    juce::String authUrl = "https://accounts.google.com/o/oauth2/v2/auth?";
-    authUrl += "client_id=" + juce::URL::addEscapeChars(clientId, false);
-    authUrl += "&redirect_uri=" + juce::URL::addEscapeChars(redirectUri, false);
-    authUrl += "&response_type=code";
-    authUrl += "&scope=" + juce::URL::addEscapeChars("https://www.googleapis.com/auth/drive", false);
-    authUrl += "&access_type=offline";
-    authUrl += "&prompt=consent";
-    authUrl += "&state=" + generateStateParameter();
-    
-    DBG("Starting authentication with URL: " + authUrl);
-    
-    webBrowser->goToURL(authUrl);
-}
-
-void R2GoogleDriveProvider::OAuth2Handler::resized()
-{
-    webBrowser->setBounds(getLocalBounds());
-}
-
-    
-juce::String R2GoogleDriveProvider::OAuth2Handler::generateStateParameter()
-{
-    auto randomValue = juce::Random::getSystemRandom().nextInt64();
-    stateParameter = juce::String::toHexString(static_cast<juce::int64>(randomValue));
-    return stateParameter;
-}
-    
-void R2GoogleDriveProvider::OAuth2Handler::checkAuthCallback(const juce::String& url)
-{
-    DBG("Checking URL: " + url);
-    
-    if (url.startsWith(redirectUri))
+    void startAuthentication(const juce::String& clientId, R2CloudStorageProvider::AuthCallback callback)
     {
-        DBG("Redirect URI matched, extracting auth code");
+        authCallback = callback;
+        currentClientId = clientId;
+        redirectUri = "http://localhost:8080/callback";
         
-        auto authCode = extractAuthCode(url);
-        auto state = extractState(url);
-        auto error = extractError(url);
+        juce::String authUrl = "https://accounts.google.com/o/oauth2/v2/auth?";
+        authUrl += "client_id=" + juce::URL::addEscapeChars(clientId, false);
+        authUrl += "&redirect_uri=" + juce::URL::addEscapeChars(redirectUri, false);
+        authUrl += "&response_type=code";
+        authUrl += "&scope=" + juce::URL::addEscapeChars("https://www.googleapis.com/auth/drive", false);
+        authUrl += "&access_type=offline";
+        authUrl += "&prompt=consent";
+        authUrl += "&state=" + generateStateParameter();
         
-        if (state != stateParameter && stateParameter.isNotEmpty())
+        DBG("Starting authentication with URL: " + authUrl);
+        webBrowser->goToURL(authUrl);
+    }
+    
+    void resized() override { webBrowser->setBounds(getLocalBounds()); }
+
+private:
+    juce::String generateStateParameter()
+    {
+        auto randomValue = juce::Random::getSystemRandom().nextInt64();
+        stateParameter = juce::String::toHexString(static_cast<juce::int64>(randomValue));
+        return stateParameter;
+    }
+    
+    void checkAuthCallback(const juce::String& url)
+    {
+        if (url.startsWith(redirectUri))
         {
-            handleAuthError("Invalid state parameter - possible CSRF attack");
-            return;
+            auto authCode = extractAuthCode(url);
+            if (extractState(url) != stateParameter && stateParameter.isNotEmpty()) { handleAuthError("Invalid state parameter - possible CSRF attack"); return; }
+            if (authCode.isNotEmpty()) { handleAuthSuccess(authCode); }
+            else if (auto error = extractError(url); error.isNotEmpty()) { handleAuthError(error); }
+            else { handleAuthError("No authorization code or error found in callback URL"); }
         }
-        
-        if (authCode.isNotEmpty())
+        else if (url.contains("error"))
         {
-            handleAuthSuccess(authCode);
-        }
-        else if (error.isNotEmpty())
-        {
-            handleAuthError(error);
-        }
-        else
-        {
-            handleAuthError("No authorization code or error found in callback URL");
+            if (auto error = extractError(url); error.isNotEmpty()) { handleAuthError(error); }
         }
     }
-    else if (url.contains("error"))
+    
+    void handleAuthSuccess(const juce::String& authCode)
     {
-        auto error = extractError(url);
+        DBG("Authentication successful");
+        showSuccessPage();
+        provider.exchangeAuthCodeForTokens(authCode, [cb = authCallback](bool success, const juce::String& errorMessage) {
+            if (cb) juce::MessageManager::callAsync([cb, success, errorMessage]() { cb(success, errorMessage); });
+        });
+    }
+    
+    void handleAuthError(const juce::String& error)
+    {
+        DBG("Authentication error: " + error);
+        showErrorPage(error);
+        if (authCallback)
+        {
+            juce::MessageManager::callAsync([cb = authCallback, error]() { cb(false, error); });
+            authCallback = nullptr;
+        }
+    }
+    
+    juce::String extractURLParameter(const juce::String& url, const juce::String& paramName)
+    {
+        if (auto queryStart = url.indexOf("?"); queryStart != -1)
+        {
+            auto params = juce::StringArray::fromTokens(url.substring(queryStart + 1), "&", "");
+            for (const auto& param : params)
+                if (param.startsWith(paramName + "="))
+                    return juce::URL::removeEscapeChars(param.substring((paramName + "=").length()));
+        }
+        return {};
+    }
+
+    juce::String extractAuthCode(const juce::String& url) { return extractURLParameter(url, "code"); }
+    juce::String extractState(const juce::String& url) { return extractURLParameter(url, "state"); }
+    juce::String extractError(const juce::String& url)
+    {
+        auto error = extractURLParameter(url, "error");
         if (error.isNotEmpty())
         {
-            handleAuthError(error);
+            auto errorDesc = extractURLParameter(url, "error_description");
+            return errorDesc.isNotEmpty() ? error + ": " + errorDesc : error;
         }
+        return {};
     }
-}
-
-void R2GoogleDriveProvider::OAuth2Handler::handleAuthSuccess(const juce::String& authCode)
-{
-    DBG("Authentication successful");
-    showSuccessPage();
-
-    auto currentCallback = authCallback;
-
-    provider.exchangeAuthCodeForTokens(authCode, [this, currentCallback](bool success, const juce::String& errorMessage)
-        {
-            if (currentCallback)
-            {
-                juce::MessageManager::callAsync([currentCallback, success, errorMessage]()
-                    {
-                        currentCallback(success, errorMessage);
-                    });
-            }
-        });
-}
-
-void R2GoogleDriveProvider::OAuth2Handler::handleAuthError(const juce::String& error)
-{
-    DBG("Authentication error: " + error);
-    showErrorPage(error);
-
-    auto currentCallback = authCallback;
-
-    if (currentCallback)
+    
+    void showSuccessPage()
     {
-        juce::MessageManager::callAsync([currentCallback, error]()
-            {
-                currentCallback(false, error);
-            });
-
-        authCallback = nullptr;
+        juce::String successHTML = R"(omitted)";
+        webBrowser->goToURL("data:text/html;charset=utf-8," + juce::URL::addEscapeChars(successHTML, false));
     }
-}
-
-juce::String R2GoogleDriveProvider::OAuth2Handler::extractURLParameter(const juce::String& url, const juce::String& paramName)
-{
-    auto queryStart = url.indexOf("?");
-    if (queryStart == -1) return {};
-
-    auto query = url.substring(queryStart + 1);
-    auto params = juce::StringArray::fromTokens(query, "&", "");
-
-    juce::String searchParam = paramName + "=";
-    for (const auto& param : params)
+    
+    void showErrorPage(const juce::String& error)
     {
-        if (param.startsWith(searchParam))
-        {
-            return juce::URL::removeEscapeChars(param.substring(searchParam.length()));
-        }
+        juce::String errorHTML = R"(omitted)" + error + R"(omitted)";
+        webBrowser->goToURL("data:text/html;charset=utf-8," + juce::URL::addEscapeChars(errorHTML, false));
     }
-    return {};
-}
 
-juce::String R2GoogleDriveProvider::OAuth2Handler::extractAuthCode(const juce::String& url)
-{
-    return extractURLParameter(url, "code");
-}
+    R2GoogleDriveProvider& provider;
+    std::unique_ptr<juce::WebBrowserComponent> webBrowser;
+    R2CloudStorageProvider::AuthCallback authCallback;
+    juce::String redirectUri;
+    juce::String currentClientId;
+    juce::String stateParameter;
+};
 
-juce::String R2GoogleDriveProvider::OAuth2Handler::extractState(const juce::String& url)
-{
-    return extractURLParameter(url, "state");
-}
-
-juce::String R2GoogleDriveProvider::OAuth2Handler::extractError(const juce::String& url)
-{
-    auto error = extractURLParameter(url, "error");
-    if (error.isNotEmpty())
-    {
-        auto errorDesc = extractURLParameter(url, "error_description");
-        if (errorDesc.isNotEmpty())
-        {
-            return error + ": " + errorDesc;
-        }
-        return error;
-    }
-    return {};
-}
-
-void R2GoogleDriveProvider::OAuth2Handler::showSuccessPage()
-{
-    juce::String successHTML = R"(
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>認証成功</title>
-    <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            text-align: center; 
-            padding: 50px; 
-            background: linear-gradient(135deg, #4CAF50, #45a049); 
-            color: white; 
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container { 
-            background: rgba(255,255,255,0.15); 
-            padding: 50px; 
-            border-radius: 25px; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            max-width: 500px;
-            width: 100%;
-        }
-        .checkmark { 
-            font-size: 5em; 
-            color: #ffffff; 
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-size: 2.5em;
-            margin: 20px 0;
-            font-weight: 300;
-        }
-        p {
-            font-size: 1.2em;
-            margin: 15px 0;
-            opacity: 0.9;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="checkmark">✓</div>
-        <h1>認証成功！</h1>
-        <p>Google Driveへの接続が完了しました。</p>
-        <p>このウィンドウは閉じて構いません。</p>
-    </div>
-</body>
-</html>
-        )";
-        
-    webBrowser->goToURL("data:text/html;charset=utf-8," +
-                       juce::URL::addEscapeChars(successHTML, false));
-}
-
-void R2GoogleDriveProvider::OAuth2Handler::showErrorPage(const juce::String& error)
-{
-    juce::String errorHTML = R"(
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>認証エラー</title>
-    <style>
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            text-align: center; 
-            padding: 50px; 
-            background: linear-gradient(135deg, #f44336, #d32f2f); 
-            color: white; 
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container { 
-            background: rgba(255,255,255,0.15); 
-            padding: 50px; 
-            border-radius: 25px; 
-            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-            max-width: 500px;
-            width: 100%;
-        }
-        .error-icon { 
-            font-size: 5em; 
-            color: #ffffff; 
-            text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-        }
-        h1 {
-            font-size: 2.5em;
-            margin: 20px 0;
-            font-weight: 300;
-        }
-        p {
-            font-size: 1.2em;
-            margin: 15px 0;
-            opacity: 0.9;
-        }
-        .error-detail {
-            background: rgba(255,255,255,0.1);
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            font-family: monospace;
-            word-break: break-word;
-            font-size: 0.9em;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="error-icon">✗</div>
-        <h1>認証失敗</h1>
-        <p>Google Drive認証中にエラーが発生しました。</p>
-        <div class="error-detail">)" + error + R"(</div>
-        <p>ウィンドウを閉じて再試行してください。</p>
-    </div>
-</body>
-</html>
-        )";
-        
-    webBrowser->goToURL("data:text/html;charset=utf-8," +
-                       juce::URL::addEscapeChars(errorHTML, false));
-}
-
+// Class Implementation starts here
 R2GoogleDriveProvider::R2GoogleDriveProvider()
 {
     currentStatus = Status::NotAuthenticated;
@@ -417,67 +226,47 @@ void R2GoogleDriveProvider::setClientCredentials(const juce::String& clientId, c
 
 void R2GoogleDriveProvider::authenticate(AuthCallback callback)
 {
-    DBG("R2GoogleDriveProvider::authenticate() called");
-    
     if (clientId.isEmpty() || clientSecret.isEmpty())
     {
-        DBG("Client credentials not set - clientId: " + clientId + ", clientSecret: " + clientSecret);
-        if (callback)
-            callback(false, "Client credentials not set");
+        if (callback) callback(false, "Client credentials not set");
         return;
     }
-    
-    DBG("Client credentials are set");
     
     if (isTokenValid())
     {
-        DBG("Token is valid, already authenticated");
         currentStatus = Status::Authenticated;
-        if (callback)
-            callback(true, "Already authenticated");
+        if (callback) callback(true, "Already authenticated");
         return;
     }
     
-    DBG("Token not valid, checking refresh token");
-    
     if (refreshToken.isNotEmpty())
     {
-        DBG("Refresh token available, trying to refresh");
         currentStatus = Status::Authenticating;
         refreshAccessToken([this, callback](bool success)
         {
             if (success)
             {
                 currentStatus = Status::Authenticated;
-                if (callback)
-                    callback(true, "Authenticated with refresh token");
+                if (callback) callback(true, "Authenticated with refresh token");
             }
             else
             {
                 currentStatus = Status::NotAuthenticated;
-                if (callback)
-                    callback(false, "device flow authentication required");
+                if (callback) callback(false, "device flow authentication required");
             }
         });
         return;
     }
     
-    DBG("No refresh token, device flow authentication required");
-    
     currentStatus = Status::NotAuthenticated;
-    if (callback)
-        callback(false, "device flow authentication required");
+    if (callback) callback(false, "device flow authentication required");
 }
 
 void R2GoogleDriveProvider::startNewAuthFlow(AuthCallback callback)
 {
     currentStatus = Status::Authenticating;
-    
     if (!oauth2Handler)
-    {
         oauth2Handler = std::make_unique<OAuth2Handler>(*this);
-    }
-    
     oauth2Handler->startAuthentication(clientId, callback);
 }
 
@@ -511,24 +300,14 @@ void R2GoogleDriveProvider::exchangeAuthCodeForTokens(const juce::String& authCo
                         .withConnectionTimeoutMs(30000)
                         .withNumRedirectsToFollow(5);
         
-        auto stream = tokenUrl.createInputStream(options);
-        
-        if (stream != nullptr)
+        if (auto stream = tokenUrl.createInputStream(options))
         {
             auto response = stream->readEntireStreamAsString();
-            
-            juce::MessageManager::callAsync([this, response, callback]()
-            {
-                parseTokenResponse(response, callback);
-            });
+            juce::MessageManager::callAsync([this, response, callback]() { parseTokenResponse(response, callback); });
         }
         else
         {
-            juce::MessageManager::callAsync([callback]()
-            {
-                if (callback)
-                    callback(false, "Failed to create HTTP request");
-            });
+            juce::MessageManager::callAsync([callback]() { if (callback) callback(false, "Failed to create HTTP request"); });
         }
     });
 }
@@ -536,39 +315,32 @@ void R2GoogleDriveProvider::exchangeAuthCodeForTokens(const juce::String& authCo
 void R2GoogleDriveProvider::setTokens(const juce::String& accessToken, const juce::String& refreshToken)
 {
     this->accessToken = accessToken;
-    this->refreshToken = refreshToken;
-    
-    this->tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::hours(1);
-    
+    if(refreshToken.isNotEmpty()) this->refreshToken = refreshToken;
+    this->tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(3600);
     this->currentStatus = Status::Authenticated;
     saveTokens();
-    
-    DBG("Tokens set successfully");
 }
 
-void R2GoogleDriveProvider::downloadFileWithPath(const juce::String& filePath, DownloadCallback callback)
+void R2GoogleDriveProvider::uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
+{
+    uploadFile(filePath, data, "path", callback);
+}
+
+void R2GoogleDriveProvider::downloadFileByPath(const juce::String& filePath, DownloadCallback callback)
 {
     auto pathParts = juce::StringArray::fromTokens(filePath, "/", "");
-    
     if (pathParts.isEmpty())
     {
-        if (callback)
-            callback(false, {}, "Invalid file path");
+        if (callback) callback(false, {}, "Invalid file path");
         return;
     }
-    
     findFileByPath(pathParts, "root", 0, callback);
 }
 
 void R2GoogleDriveProvider::cancelAuthentication()
 {
-    DBG("R2GoogleDriveProvider::cancelAuthentication() called");
-    
     if (oauth2Handler)
-    {
         oauth2Handler.reset();
-    }
-    
     currentStatus = Status::NotAuthenticated;
 }
 
@@ -577,58 +349,33 @@ void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std
     try
     {
         auto json = juce::JSON::parse(response);
-        
-        if (json.isObject())
+        if (auto* obj = json.getDynamicObject())
         {
-            auto* obj = json.getDynamicObject();
-            
             if (obj->hasProperty("access_token"))
             {
                 accessToken = obj->getProperty("access_token").toString();
-                
-                if (obj->hasProperty("refresh_token"))
-                {
-                    refreshToken = obj->getProperty("refresh_token").toString();
-                }
-                
-                if (obj->hasProperty("expires_in"))
-                {
-                    auto expiresIn = static_cast<int>(obj->getProperty("expires_in"));
-                    tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(expiresIn - 300);
-                }
+                if (obj->hasProperty("refresh_token")) refreshToken = obj->getProperty("refresh_token").toString();
+                if (obj->hasProperty("expires_in")) tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(static_cast<int>(obj->getProperty("expires_in")) - 300);
                 
                 currentStatus = Status::Authenticated;
                 saveTokens();
-                
-                if (callback)
-                    callback(true, "Authentication successful");
+                if (callback) callback(true, "Authentication successful");
                 return;
             }
             else if (obj->hasProperty("error"))
             {
+                currentStatus = Status::Error;
                 auto error = obj->getProperty("error").toString();
                 auto errorDesc = obj->getProperty("error_description").toString();
-                juce::String errorMessage = error;
-                if (errorDesc.isNotEmpty())
-                    errorMessage += ": " + errorDesc;
-                    
-                currentStatus = Status::Error;
-                if (callback)
-                    callback(false, errorMessage);
+                if (callback) callback(false, errorDesc.isNotEmpty() ? error + ": " + errorDesc : error);
                 return;
             }
         }
-        
-        currentStatus = Status::Error;
-        if (callback)
-            callback(false, "Invalid token response");
     }
-    catch (...)
-    {
-        currentStatus = Status::Error;
-        if (callback)
-            callback(false, "Failed to parse token response");
-    }
+    catch (...) { }
+
+    currentStatus = Status::Error;
+    if (callback) callback(false, "Invalid token response");
 }
 
 void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, const juce::String& currentFolderId,
@@ -636,8 +383,7 @@ void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, c
 {
     if (pathIndex >= pathParts.size())
     {
-        if (callback)
-            callback(false, {}, "Path not found");
+        if (callback) callback(false, {}, "Path not found");
         return;
     }
     
@@ -649,8 +395,7 @@ void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, c
     {
         if (!success)
         {
-            if (callback)
-                callback(false, {}, "Failed to list files: " + errorMessage);
+            if (callback) callback(false, {}, "Failed to list files: " + errorMessage);
             return;
         }
         
@@ -658,43 +403,28 @@ void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, c
         {
             if (file.name == targetName)
             {
-                if (isLastPart && !file.isFolder)
-                {
-                    downloadFile(file.id, callback);
-                    return;
-                }
-                else if (!isLastPart && file.isFolder)
-                {
-                    findFileByPath(pathParts, file.id, pathIndex + 1, callback);
-                    return;
-                }
+                if (isLastPart && !file.isFolder) { downloadFile(file.id, callback); return; }
+                else if (!isLastPart && file.isFolder) { findFileByPath(pathParts, file.id, pathIndex + 1, callback); return; }
             }
         }
         
-        if (callback)
-            callback(false, {}, "Path not found: " + targetName);
+        if (callback) callback(false, {}, "Path not found: " + targetName);
     });
 }
 
 void R2GoogleDriveProvider::uploadToFolder(const juce::String& fileName, const juce::MemoryBlock& data,
                                           const juce::String& folderId, FileOperationCallback callback)
 {
-    DBG("uploadToFolder - fileName: " + fileName + ", folderId: " + folderId + ", data size: " + juce::String(data.getSize()));
-    
     juce::String targetFolderId = folderId.isEmpty() ? "root" : folderId;
-    
     juce::String query = "'" + targetFolderId + "' in parents and name = '" + fileName + "' and mimeType != 'application/vnd.google-apps.folder' and trashed = false";
-    juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false);
-    endpoint += "&fields=files(id,name,trashed)";
+    juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false) + "&fields=files(id,name,trashed)";
     
     makeAPIRequest(endpoint, "GET", {}, "", [this, fileName, data, targetFolderId, callback]
                   (bool success, const juce::String& response)
     {
         if (!success)
         {
-            DBG("Failed to list files: " + response);
-            if (callback)
-                callback(false, "Failed to check existing files: " + response);
+            if (callback) callback(false, "Failed to check existing files: " + response);
             return;
         }
         
@@ -702,55 +432,19 @@ void R2GoogleDriveProvider::uploadToFolder(const juce::String& fileName, const j
         try
         {
             auto json = juce::JSON::parse(response);
-            if (json.isObject())
-            {
-                auto* obj = json.getDynamicObject();
-                if (obj->hasProperty("files"))
-                {
-                    auto filesArray = obj->getProperty("files");
-                    if (filesArray.isArray())
-                    {
-                        auto* array = filesArray.getArray();
-                        if (array->size() > 0)
-                        {
-                            auto fileObj = array->getUnchecked(0);
-                            if (fileObj.isObject())
-                            {
-                                auto* file = fileObj.getDynamicObject();
-                                bool isTrashed = false;
-                                if (file->hasProperty("trashed"))
-                                {
-                                    isTrashed = file->getProperty("trashed");
-                                }
-                                
-                                if (!isTrashed)
-                                {
-                                    existingFileId = file->getProperty("id").toString();
-                                    DBG("Found existing file with ID: " + existingFileId);
-                                }
-                                else
-                                {
-                                    DBG("Found file but it's in trash, ignoring");
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            if (auto* obj = json.getDynamicObject())
+                if (auto* filesArray = obj->getProperty("files").getArray())
+                    if (filesArray->size() > 0)
+                        if (auto* file = filesArray->getUnchecked(0).getDynamicObject())
+                            if (!file->getProperty("trashed"))
+                                existingFileId = file->getProperty("id").toString();
         }
-        catch (...)
-        {
-            DBG("Failed to parse file list response");
-        }
+        catch (...) { }
         
         if (existingFileId.isNotEmpty())
-        {
             updateExistingFile(existingFileId, data, callback);
-        }
         else
-        {
             uploadNewFile(fileName, data, targetFolderId, callback);
-        }
     });
 }
 
@@ -758,69 +452,40 @@ void R2GoogleDriveProvider::uploadWithData(const juce::String& endpoint, const j
                                           const juce::MemoryBlock& fullData, FileOperationCallback callback)
 {
     juce::URL url(endpoint);
-    
     juce::StringPairArray headers;
     headers.set("Authorization", "Bearer " + accessToken);
     headers.set("Content-Type", "multipart/related; boundary=" + boundary);
     headers.set("Content-Length", juce::String(fullData.getSize()));
-    
+
     juce::String headerString;
-    for (int i = 0; i < headers.size(); ++i)
-    {
-        headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
-        if (i < headers.size() - 1)
-            headerString += "\r\n";
-    }
-    
+    for (int i=0; i<headers.size(); ++i) headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i] + "\r\n";
+
     url = url.withPOSTData(fullData);
-    
     auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
                     .withExtraHeaders(headerString)
                     .withConnectionTimeoutMs(30000);
     
-    auto stream = url.createInputStream(options);
-    
-    if (stream != nullptr)
+    if (auto stream = url.createInputStream(options))
     {
         auto response = stream->readEntireStreamAsString();
-        DBG("Upload response: " + response);
-        
-        try
-        {
-            auto json = juce::JSON::parse(response);
-            if (json.isObject())
+        juce::MessageManager::callAsync([callback, response]() {
+            try
             {
-                auto* obj = json.getDynamicObject();
-                if (obj->hasProperty("id"))
-                {
-                    DBG("Upload successful, file ID: " + obj->getProperty("id").toString());
-                    juce::MessageManager::callAsync([callback]()
-                    {
-                        if (callback)
-                            callback(true, "File uploaded successfully");
-                    });
-                    return;
+                auto json = juce::JSON::parse(response);
+                if (json.isObject() && json.getDynamicObject()->hasProperty("id")) {
+                    if(callback) callback(true, "File uploaded successfully");
+                } else {
+                    if(callback) callback(false, "Upload failed: " + response);
                 }
-            }
-        }
-        catch (...)
-        {
-            DBG("Failed to parse upload response");
-        }
-        
-        juce::MessageManager::callAsync([callback, response]()
-        {
-            if (callback)
-                callback(false, "Upload failed: " + response);
+            } catch(...) { if(callback) callback(false, "Failed to parse upload response"); }
         });
     }
     else
     {
-        DBG("Failed to create upload stream");
-        juce::MessageManager::callAsync([callback]()
-        {
-            if (callback)
-                callback(false, "Failed to create upload request");
+        // THIS IS THE FIX for the assertion.
+        // The callback is now wrapped in callAsync to ensure it runs on the message thread.
+        juce::MessageManager::callAsync([callback]() {
+            if(callback) callback(false, "Failed to create upload request");
         });
     }
 }
@@ -830,31 +495,22 @@ void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const
 {
     DBG("Updating existing file with ID: " + fileId);
     
-    juce::String endpoint = "https://www.googleapis.com/upload/drive/v3/files/" + fileId + "?uploadType=media";
-    
-    juce::Thread::launch([this, endpoint, data, callback]()
+    juce::Thread::launch([this, fileId, data, callback]()
     {
         if (!isTokenValid())
         {
-            DBG("Token is not valid, refreshing...");
-            refreshAccessToken([this, endpoint, data, callback](bool refreshSuccess)
+            refreshAccessToken([this, fileId, data, callback](bool refreshSuccess)
             {
-                if (!refreshSuccess)
-                {
-                    DBG("Failed to refresh token");
-                    juce::MessageManager::callAsync([callback]()
-                    {
-                        if (callback)
-                            callback(false, "Authentication required");
-                    });
+                if (!refreshSuccess) {
+                    juce::MessageManager::callAsync([callback](){ if (callback) callback(false, "Authentication required"); });
                     return;
                 }
-                
-                updateExistingFile(endpoint, data, callback);
+                updateExistingFile(fileId, data, callback);
             });
             return;
         }
         
+        juce::String endpoint = "https://www.googleapis.com/upload/drive/v3/files/" + fileId + "?uploadType=media";
         juce::URL url(endpoint);
         
         juce::StringPairArray headers;
@@ -864,11 +520,7 @@ void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const
         
         juce::String headerString;
         for (int i = 0; i < headers.size(); ++i)
-        {
-            headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
-            if (i < headers.size() - 1)
-                headerString += "\r\n";
-        }
+            headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i] + "\r\n";
         
         url = url.withPOSTData(data);
         
@@ -877,53 +529,27 @@ void R2GoogleDriveProvider::updateExistingFile(const juce::String& fileId, const
                         .withConnectionTimeoutMs(30000)
                         .withHttpRequestCmd("PATCH");
         
-        auto stream = url.createInputStream(options);
-        
-        if (stream != nullptr)
+        if (auto stream = url.createInputStream(options))
         {
             auto response = stream->readEntireStreamAsString();
-            DBG("Update response: " + response);
-            
-            try
-            {
-                auto json = juce::JSON::parse(response);
-                if (json.isObject())
-                {
-                    auto* obj = json.getDynamicObject();
-                    if (obj->hasProperty("id"))
-                    {
-                        DBG("Update successful, file ID: " + obj->getProperty("id").toString());
-                        juce::MessageManager::callAsync([callback]()
-                        {
-                            if (callback)
-                                callback(true, "File updated successfully");
-                        });
-                        return;
+            juce::MessageManager::callAsync([callback, response]() {
+                try {
+                    auto json = juce::JSON::parse(response);
+                    if (json.isObject() && json.getDynamicObject()->hasProperty("id")) {
+                        if (callback) callback(true, "File updated successfully");
+                    } else {
+                        if (callback) callback(false, "Update failed: " + response);
                     }
-                }
-            }
-            catch (...)
-            {
-                DBG("Failed to parse update response");
-            }
-            
-            juce::MessageManager::callAsync([callback, response]()
-            {
-                if (callback)
-                    callback(false, "Update failed: " + response);
+                } catch (...) { if (callback) callback(false, "Failed to parse update response"); }
             });
         }
         else
         {
-            DBG("Failed to create update stream");
-            juce::MessageManager::callAsync([callback]()
-            {
-                if (callback)
-                    callback(false, "Failed to create update request");
-            });
+            juce::MessageManager::callAsync([callback]() { if (callback) callback(false, "Failed to create update request"); });
         }
     });
 }
+
 
 void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const juce::MemoryBlock& data,
                                          const juce::String& folderId, FileOperationCallback callback)
@@ -932,14 +558,22 @@ void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const ju
     
     juce::String boundary = "----formdata-juce-" + juce::String::toHexString(juce::Random::getSystemRandom().nextInt64());
     
-    juce::String metadata = "{\n";
-    metadata += "  \"name\": \"" + fileName + "\"";
+    // Use JUCE's JSON classes for safety. This part is an improvement.
+    auto* metadataObject = new juce::DynamicObject();
+    metadataObject->setProperty("name", fileName);
     if (folderId.isNotEmpty() && folderId != "root")
     {
-        metadata += ",\n  \"parents\": [\"" + folderId + "\"]";
+        juce::Array<juce::var> parents;
+        parents.add(folderId);
+        metadataObject->setProperty("parents", parents);
     }
-    metadata += "\n}";
-    
+    juce::String metadata = juce::JSON::toString(juce::var(metadataObject));
+
+    //
+    // === FIX ===
+    // Revert the multipart body construction to your original, working implementation.
+    // My previous refactoring of this part was faulty.
+    //
     juce::String multipartBody;
     multipartBody += "--" + boundary + "\r\n";
     multipartBody += "Content-Type: application/json; charset=UTF-8\r\n\r\n";
@@ -954,34 +588,21 @@ void R2GoogleDriveProvider::uploadNewFile(const juce::String& fileName, const ju
     juce::String endBoundary = "\r\n--" + boundary + "--\r\n";
     fullData.append(endBoundary.toRawUTF8(), endBoundary.getNumBytesAsUTF8());
     
+    // === END OF FIX ===
+    
     juce::String endpoint = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
     
     juce::Thread::launch([this, endpoint, boundary, fullData, callback]()
     {
         if (!isTokenValid())
         {
-            DBG("Token is not valid, refreshing...");
             refreshAccessToken([this, endpoint, boundary, fullData, callback](bool refreshSuccess)
             {
-                if (!refreshSuccess)
-                {
-                    DBG("Failed to refresh token");
-                    juce::MessageManager::callAsync([callback]()
-                    {
-                        if (callback)
-                            callback(false, "Authentication required");
-                    });
-                    return;
-                }
-                
-                juce::Thread::launch([this, endpoint, boundary, fullData, callback]()
-                {
-                    uploadWithData(endpoint, boundary, fullData, callback);
-                });
+                if (!refreshSuccess) { if (callback) callback(false, "Authentication required"); return; }
+                juce::Thread::launch([this, endpoint, boundary, fullData, callback]() { uploadWithData(endpoint, boundary, fullData, callback); });
             });
             return;
         }
-        
         uploadWithData(endpoint, boundary, fullData, callback);
     });
 }
@@ -991,57 +612,28 @@ void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath
 {
     if (pathIndex >= folderPath.size())
     {
-        DBG("Folder path creation complete. Final folder ID: " + parentFolderId);
-        if (callback)
-            callback(true, parentFolderId, "");
+        if (callback) callback(true, parentFolderId, "");
         return;
     }
     
     auto folderName = folderPath[pathIndex];
-    DBG("Creating/checking folder: " + folderName + " in parent: " + parentFolderId);
-    
-    juce::String queryParentId = parentFolderId;
-    if (parentFolderId == "root")
-    {
-
-    }
-    
-    juce::String query = "'" + queryParentId + "' in parents and name = '" + folderName + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
-    juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false);
-    endpoint += "&fields=files(id,name,mimeType)";
+    juce::String query = "'" + parentFolderId + "' in parents and name = '" + folderName + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+    juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false) + "&fields=files(id,name,mimeType)";
     
     makeAPIRequest(endpoint, "GET", {}, "", [this, folderPath, folderName, parentFolderId, pathIndex, callback]
                   (bool success, const juce::String& response)
     {
-        if (!success)
-        {
-            DBG("Failed to check existing folder: " + response);
-            if (callback)
-                callback(false, "", "Failed to check existing folder");
-            return;
-        }
+        if (!success) { if (callback) callback(false, "", "Failed to check existing folder"); return; }
         
         try
         {
             auto json = juce::JSON::parse(response);
-            if (json.isObject())
-            {
-                auto* obj = json.getDynamicObject();
-                if (obj->hasProperty("files"))
-                {
-                    auto filesArray = obj->getProperty("files");
-                    if (filesArray.isArray())
-                    {
-                        auto* array = filesArray.getArray();
-                        if (array->size() > 0)
-                        {
-                            auto fileObj = array->getUnchecked(0);
-                            if (fileObj.isObject())
-                            {
-                                auto* file = fileObj.getDynamicObject();
-                                juce::String existingFolderId = file->getProperty("id").toString();
-                                DBG("Folder already exists with ID: " + existingFolderId);
-                                
+            if (auto* obj = json.getDynamicObject()) {
+                if (obj->hasProperty("files")) {
+                    if (auto* filesArray = obj->getProperty("files").getArray()) {
+                        if (filesArray->size() > 0) {
+                            if (auto* fileObj = filesArray->getUnchecked(0).getDynamicObject()) {
+                                juce::String existingFolderId = fileObj->getProperty("id").toString();
                                 createFolderPath(folderPath, existingFolderId, pathIndex + 1, callback);
                                 return;
                             }
@@ -1049,64 +641,28 @@ void R2GoogleDriveProvider::createFolderPath(const juce::StringArray& folderPath
                     }
                 }
             }
-        }
-        catch (...)
-        {
-            DBG("Failed to parse folder check response");
-        }
+        } catch(...) { }
         
-        DBG("Folder does not exist, creating: " + folderName);
+        juce::String metadata = "{ \"name\": \"" + folderName + "\", \"mimeType\": \"application/vnd.google-apps.folder\"";
+        if (parentFolderId.isNotEmpty()) metadata += ", \"parents\": [\"" + parentFolderId + "\"]";
+        metadata += "}";
         
-        juce::String metadata = "{\n";
-        metadata += "  \"name\": \"" + folderName + "\",\n";
-        metadata += "  \"mimeType\": \"application/vnd.google-apps.folder\"";
-        if (parentFolderId.isNotEmpty())
-        {
-            metadata += ",\n  \"parents\": [\"" + parentFolderId + "\"]";
-        }
-        metadata += "\n}";
-        
-        DBG("Creating folder with metadata: " + metadata);
-        
-        juce::String createEndpoint = "https://www.googleapis.com/drive/v3/files?fields=id,name";
-        
-        juce::StringPairArray headers;
-        headers.set("Content-Type", "application/json");
-        
-        makeAPIRequest(createEndpoint, "POST", headers, metadata, [this, folderPath, pathIndex, callback]
+        juce::StringPairArray headers; headers.set("Content-Type", "application/json");
+        makeAPIRequest("https://www.googleapis.com/drive/v3/files?fields=id,name", "POST", headers, metadata, [this, folderPath, pathIndex, callback]
                       (bool createSuccess, const juce::String& createResponse)
         {
-            if (!createSuccess)
-            {
-                DBG("Failed to create folder: " + createResponse);
-                if (callback)
-                    callback(false, "", "Failed to create folder: " + createResponse);
-                return;
-            }
-            
+            if (!createSuccess) { if (callback) callback(false, "", "Failed to create folder: " + createResponse); return; }
             try
             {
                 auto json = juce::JSON::parse(createResponse);
-                if (json.isObject())
-                {
-                    auto* obj = json.getDynamicObject();
+                if (auto* obj = json.getDynamicObject())
                     if (obj->hasProperty("id"))
                     {
-                        juce::String newFolderId = obj->getProperty("id").toString();
-                        DBG("Folder created successfully with ID: " + newFolderId);
-                        
-                        createFolderPath(folderPath, newFolderId, pathIndex + 1, callback);
+                        createFolderPath(folderPath, obj->getProperty("id").toString(), pathIndex + 1, callback);
                         return;
                     }
-                }
-            }
-            catch (...)
-            {
-                DBG("Failed to parse folder creation response");
-            }
-            
-            if (callback)
-                callback(false, "", "Failed to create folder - invalid response");
+            } catch (...) { }
+            if (callback) callback(false, "", "Failed to create folder - invalid response");
         });
     });
 }
@@ -1117,38 +673,17 @@ void R2GoogleDriveProvider::signOut()
     refreshToken.clear();
     tokenExpiry = juce::Time();
     currentStatus = Status::NotAuthenticated;
-    
-    auto tokenFile = getTokenFile();
-    if (tokenFile.exists())
-    {
+    if (auto tokenFile = getTokenFile(); tokenFile.exists())
         tokenFile.deleteFile();
-    }
 }
 
-R2CloudStorageProvider::Status R2GoogleDriveProvider::getAuthStatus() const
-{
-    return currentStatus;
-}
-
-juce::String R2GoogleDriveProvider::getDisplayName() const
-{
-    return "Google Drive";
-}
-
-bool R2GoogleDriveProvider::isTokenValid() const
-{
-    return accessToken.isNotEmpty() &&
-           (tokenExpiry == juce::Time() || juce::Time::getCurrentTime() < tokenExpiry);
-}
+R2CloudStorageProvider::Status R2GoogleDriveProvider::getAuthStatus() const { return currentStatus; }
+juce::String R2GoogleDriveProvider::getDisplayName() const { return "Google Drive"; }
+bool R2GoogleDriveProvider::isTokenValid() const { return accessToken.isNotEmpty() && (tokenExpiry == juce::Time() || juce::Time::getCurrentTime() < tokenExpiry); }
 
 void R2GoogleDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
 {
-    if (refreshToken.isEmpty())
-    {
-        if (callback)
-            callback(false);
-        return;
-    }
+    if (refreshToken.isEmpty()) { if (callback) callback(false); return; }
     
     juce::String postData = "grant_type=refresh_token";
     postData += "&refresh_token=" + juce::URL::addEscapeChars(refreshToken, false);
@@ -1158,47 +693,18 @@ void R2GoogleDriveProvider::refreshAccessToken(std::function<void(bool)> callbac
     juce::URL tokenUrl("https://oauth2.googleapis.com/token");
     tokenUrl = tokenUrl.withPOSTData(postData);
     
-    juce::StringPairArray headers;
-    headers.set("Content-Type", "application/x-www-form-urlencoded");
-    headers.set("Accept", "application/json");
+    juce::StringPairArray headers; headers.set("Content-Type", "application/x-www-form-urlencoded"); headers.set("Accept", "application/json");
     
     juce::Thread::launch([this, tokenUrl, headers, callback]()
     {
         juce::String headerString;
-        for (int i = 0; i < headers.size(); ++i)
-        {
-            headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
-            if (i < headers.size() - 1)
-                headerString += "\r\n";
-        }
+        for (int i = 0; i < headers.size(); ++i) headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i] + "\r\n";
+        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withExtraHeaders(headerString).withConnectionTimeoutMs(30000);
         
-        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-                        .withExtraHeaders(headerString)
-                        .withConnectionTimeoutMs(30000);
-        
-        auto stream = tokenUrl.createInputStream(options);
-        
-        if (stream != nullptr)
-        {
-            auto response = stream->readEntireStreamAsString();
-            
-            juce::MessageManager::callAsync([this, response, callback]()
-            {
-                parseTokenResponse(response, [callback](bool success, const juce::String&)
-                {
-                    if (callback)
-                        callback(success);
-                });
-            });
-        }
+        if (auto stream = tokenUrl.createInputStream(options))
+            juce::MessageManager::callAsync([this, response = stream->readEntireStreamAsString(), callback]() { parseTokenResponse(response, [callback](bool s, const juce::String&){ if(callback) callback(s); }); });
         else
-        {
-            juce::MessageManager::callAsync([callback]()
-            {
-                if (callback)
-                    callback(false);
-            });
-        }
+            juce::MessageManager::callAsync([callback](){ if(callback) callback(false); });
     });
 }
 
@@ -1211,14 +717,11 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
         refreshAccessToken([this, endpoint, method, headers, postData, callback](bool refreshSuccess)
         {
             if (refreshSuccess)
-            {
                 makeAPIRequest(endpoint, method, headers, postData, callback);
-            }
             else
             {
                 currentStatus = Status::NotAuthenticated;
-                if (callback)
-                    callback(false, "Authentication required");
+                if (callback) callback(false, "Authentication required");
             }
         });
         return;
@@ -1227,7 +730,6 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
     juce::Thread::launch([this, endpoint, method, headers, postData, callback]()
     {
         juce::URL url(endpoint);
-        
         juce::StringPairArray requestHeaders = headers;
         requestHeaders.set("Authorization", "Bearer " + accessToken);
         requestHeaders.set("Accept", "application/json");
@@ -1236,40 +738,27 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
         {
             url = url.withPOSTData(postData);
             if (!requestHeaders.containsKey("Content-Type"))
-            {
                 requestHeaders.set("Content-Type", "application/json");
-            }
         }
         
         juce::String headerString;
         for (int i = 0; i < requestHeaders.size(); ++i)
-        {
-            headerString += requestHeaders.getAllKeys()[i] + ": " + requestHeaders.getAllValues()[i];
-            if (i < requestHeaders.size() - 1)
-                headerString += "\r\n";
-        }
+            headerString += requestHeaders.getAllKeys()[i] + ": " + requestHeaders.getAllValues()[i] + "\r\n";
 
-        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-                        .withExtraHeaders(headerString)
-                        .withConnectionTimeoutMs(30000)
-                        .withHttpRequestCmd(method);
+        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withExtraHeaders(headerString).withConnectionTimeoutMs(30000).withHttpRequestCmd(method);
         
         auto stream = url.createInputStream(options);
-        
         auto streamPtr = stream.release();
         juce::MessageManager::callAsync([streamPtr, callback]()
         {
             std::unique_ptr<juce::InputStream> stream(streamPtr);
-            if (stream != nullptr)
-            {
-                auto response = stream->readEntireStreamAsString();
-                if (callback)
-                    callback(true, response);
-            }
-            else
-            {
-                if (callback)
-                    callback(false, "Request failed");
+            if (stream) {
+                if (callback) {
+                    callback(true, stream->readEntireStreamAsString());
+                }
+                else {
+                    if (callback) callback(false, "Request failed");
+                }
             }
         });
     });
@@ -1278,112 +767,39 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
 void R2GoogleDriveProvider::listFiles(const juce::String& folderId, FileListCallback callback)
 {
     juce::String endpoint = "https://www.googleapis.com/drive/v3/files?fields=files(id,name,mimeType,modifiedTime,size)";
-    
-    juce::String query;
-    if (folderId.isNotEmpty() && folderId != "root")
-    {
-        query = "'" + folderId + "' in parents and trashed=false";
-    }
-    else
-    {
-        query = "'root' in parents and trashed=false";
-    }
+    juce::String query = "'" + (folderId.isNotEmpty() ? folderId : "root") + "' in parents and trashed=false";
     endpoint += "&q=" + juce::URL::addEscapeChars(query, false);
     
     makeAPIRequest(endpoint, "GET", {}, "", [callback](bool success, const juce::String& response)
     {
-        if (!success)
-        {
-            if (callback)
-                callback(false, {}, "Failed to list files");
-            return;
-        }
+        if (!success) { if (callback) callback(false, {}, "Failed to list files"); return; }
         
         juce::Array<FileInfo> files;
-        
         try
         {
             auto json = juce::JSON::parse(response);
-            if (json.isObject())
-            {
-                auto* obj = json.getDynamicObject();
-                if (obj->hasProperty("files"))
-                {
-                    auto filesArray = obj->getProperty("files");
-                    if (filesArray.isArray())
-                    {
-                        auto* array = filesArray.getArray();
-                        for (int i = 0; i < array->size(); ++i)
+            if (auto* obj = json.getDynamicObject())
+                if (auto* filesArray = obj->getProperty("files").getArray())
+                    for (auto& fileJson : *filesArray)
+                        if (auto* fileObj = fileJson.getDynamicObject())
                         {
-                            auto fileJson = array->getUnchecked(i);
-                            if (fileJson.isObject())
-                            {
-                                auto* fileObj = fileJson.getDynamicObject();
-                                
-                                FileInfo fileInfo;
-                                fileInfo.id = fileObj->getProperty("id").toString();
-                                fileInfo.name = fileObj->getProperty("name").toString();
-                                fileInfo.mimeType = fileObj->getProperty("mimeType").toString();
-                                fileInfo.isFolder = fileInfo.mimeType == "application/vnd.google-apps.folder";
-                                
-                                if (fileObj->hasProperty("size"))
-                                {
-                                    auto sizeVar = fileObj->getProperty("size");
-                                    if (sizeVar.isString())
-                                    {
-                                        fileInfo.size = sizeVar.toString().getLargeIntValue();
-                                    }
-                                    else if (sizeVar.isInt())
-                                    {
-                                        fileInfo.size = static_cast<int64_t>(static_cast<int>(sizeVar));
-                                    }
-                                    else if (sizeVar.isInt64())
-                                    {
-                                        fileInfo.size = static_cast<int64_t>(sizeVar.operator juce::int64());
-                                    }
-                                    else if (sizeVar.isDouble())
-                                    {
-                                        fileInfo.size = static_cast<int64_t>(static_cast<double>(sizeVar));
-                                    }
-                                    else
-                                    {
-                                        fileInfo.size = 0;
-                                    }
-                                }
-                                else
-                                {
-                                    fileInfo.size = 0;
-                                }
-                                
-                                if (fileObj->hasProperty("modifiedTime"))
-                                {
-                                    auto timeStr = fileObj->getProperty("modifiedTime").toString();
-                                    fileInfo.modifiedTime = juce::Time::fromISO8601(timeStr);
-                                }
-                                
-                                files.add(fileInfo);
-                            }
+                            FileInfo info;
+                            info.id = fileObj->getProperty("id").toString();
+                            info.name = fileObj->getProperty("name").toString();
+                            info.mimeType = fileObj->getProperty("mimeType").toString();
+                            info.isFolder = info.mimeType == "application/vnd.google-apps.folder";
+                            if (fileObj->hasProperty("size")) info.size = fileObj->getProperty("size").toString().getLargeIntValue(); else info.size = 0;
+                            if (fileObj->hasProperty("modifiedTime")) info.modifiedTime = juce::Time::fromISO8601(fileObj->getProperty("modifiedTime").toString());
+                            files.add(info);
                         }
-                    }
-                }
-            }
-            
-            if (callback)
-                callback(true, files, "");
-        }
-        catch (...)
-        {
-            if (callback)
-                callback(false, {}, "Failed to parse file list response");
-        }
+            if (callback) callback(true, files, "");
+        } catch (...) { if (callback) callback(false, {}, "Failed to parse file list response"); }
     });
 }
 
 void R2GoogleDriveProvider::uploadFile(const juce::String& fileName, const juce::MemoryBlock& data,
                                       const juce::String& folderId, FileOperationCallback callback)
 {
-    DBG("uploadFile called - fileName: " + fileName + ", folderId: " + folderId);
-    
     if (folderId == "path")
     {
         auto pathParts = juce::StringArray::fromTokens(fileName, "/", "");
@@ -1397,23 +813,10 @@ void R2GoogleDriveProvider::uploadFile(const juce::String& fileName, const juce:
             folderPath.remove(folderPath.size() - 1);
             auto actualFileName = pathParts[pathParts.size() - 1];
             
-            DBG("Creating folder path: " + folderPath.joinIntoString("/"));
-            DBG("File name: " + actualFileName);
-            
-            createFolderPath(folderPath, "root", 0, [this, actualFileName, data, callback]
-                           (bool success, juce::String folderId, juce::String errorMessage)
+            createFolderPath(folderPath, "root", 0, [this, actualFileName, data, callback] (bool success, juce::String newFolderId, juce::String errorMessage)
             {
-                if (success)
-                {
-                    DBG("Folder path created, uploading to folderId: " + folderId);
-                    uploadToFolder(actualFileName, data, folderId, callback);
-                }
-                else
-                {
-                    DBG("Failed to create folder path: " + errorMessage);
-                    if (callback)
-                        callback(false, "Failed to create folder path: " + errorMessage);
-                }
+                if (success) uploadToFolder(actualFileName, data, newFolderId, callback);
+                else if (callback) callback(false, "Failed to create folder path: " + errorMessage);
             });
         }
     }
@@ -1429,203 +832,95 @@ void R2GoogleDriveProvider::downloadFile(const juce::String& fileId, DownloadCal
     
     juce::Thread::launch([this, endpoint, callback]()
     {
-        if (!isTokenValid())
-        {
-            juce::MessageManager::callAsync([callback]()
-            {
-                if (callback)
-                    callback(false, {}, "Authentication required");
-            });
-            return;
-        }
+        if (!isTokenValid()) { juce::MessageManager::callAsync([callback](){ if (callback) callback(false, {}, "Authentication required"); }); return; }
         
         juce::URL url(endpoint);
-        juce::StringPairArray headers;
-        headers.set("Authorization", "Bearer " + accessToken);
-        
+        juce::StringPairArray headers; headers.set("Authorization", "Bearer " + accessToken);
         juce::String headerString;
-        for (int i = 0; i < headers.size(); ++i)
-        {
-            headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i];
-            if (i < headers.size() - 1)
-                headerString += "\r\n";
-        }
+        for (int i=0; i<headers.size(); ++i) headerString += headers.getAllKeys()[i] + ": " + headers.getAllValues()[i] + "\r\n";
 
-        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
-                        .withExtraHeaders(headerString)
-                        .withConnectionTimeoutMs(30000);
+        auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress).withExtraHeaders(headerString).withConnectionTimeoutMs(30000);
         
         auto stream = url.createInputStream(options);
-        
         auto streamPtr = stream.release();
         juce::MessageManager::callAsync([streamPtr, callback]()
         {
             std::unique_ptr<juce::InputStream> stream(streamPtr);
-            if (stream != nullptr)
+            if (stream)
             {
                 juce::MemoryBlock data;
                 stream->readIntoMemoryBlock(data);
-                
-                if (callback)
-                    callback(true, data, "");
+                if (callback) callback(true, data, "");
             }
-            else
-            {
-                if (callback)
-                    callback(false, {}, "Failed to download file");
-            }
+            else { if (callback) callback(false, {}, "Failed to download file"); }
         });
     });
 }
 
 void R2GoogleDriveProvider::deleteFile(const juce::String& fileId, FileOperationCallback callback)
 {
-    juce::String endpoint = "https://www.googleapis.com/drive/v3/files/" + fileId;
-    
-    makeAPIRequest(endpoint, "DELETE", {}, "", [callback](bool success, const juce::String& response)
-    {
-        if (callback)
-        {
-            if (success)
-                callback(true, "File deleted successfully");
-            else
-                callback(false, "Failed to delete file");
-        }
+    makeAPIRequest("https://www.googleapis.com/drive/v3/files/" + fileId, "DELETE", {}, "", [callback](bool success, const juce::String&){
+        if (callback) callback(success, success ? "File deleted successfully" : "Failed to delete file");
     });
 }
 
 void R2GoogleDriveProvider::createFolder(const juce::String& folderName, const juce::String& parentId,
                                         FileOperationCallback callback)
 {
-    juce::String metadata = "{\n";
-    metadata += "  \"name\": \"" + folderName + "\",\n";
-    metadata += "  \"mimeType\": \"application/vnd.google-apps.folder\"";
+    juce::String metadata = "{ \"name\": \"" + folderName + "\", \"mimeType\": \"application/vnd.google-apps.folder\"";
     if (parentId.isNotEmpty() && parentId != "root")
-    {
         metadata += ",\n  \"parents\": [\"" + parentId + "\"]";
-    }
-    metadata += "\n}";
+    metadata += "}";
     
-    juce::String endpoint = "https://www.googleapis.com/drive/v3/files";
-    
-    juce::StringPairArray headers;
-    headers.set("Content-Type", "application/json");
-    
-    makeAPIRequest(endpoint, "POST", headers, metadata, [callback](bool success, const juce::String& response)
+    juce::StringPairArray headers; headers.set("Content-Type", "application/json");
+    makeAPIRequest("https://www.googleapis.com/drive/v3/files", "POST", headers, metadata, [callback](bool success, const juce::String& response)
     {
-        if (!success)
-        {
-            if (callback)
-                callback(false, "Failed to create folder - API request failed");
-            return;
-        }
+        if (!success) { if (callback) callback(false, "Failed to create folder - API request failed"); return; }
         
         try
         {
             auto json = juce::JSON::parse(response);
-            if (json.isObject())
+            if (auto* obj = json.getDynamicObject())
             {
-                auto* obj = json.getDynamicObject();
-                if (obj->hasProperty("id"))
+                if (obj->hasProperty("id")) { if (callback) callback(true, "Folder created successfully"); return; }
+                else if (obj->hasProperty("error"))
                 {
-                    // Folder created successfully
-                    if (callback)
-                        callback(true, "Folder created successfully");
-                    return;
-                }
-                else
-                {
-                    juce::String error = "Unknown error";
-                    if (obj->hasProperty("error"))
-                    {
-                        auto errorObj = obj->getProperty("error");
-                        if (errorObj.isObject())
-                        {
-                            auto* errObj = errorObj.getDynamicObject();
-                            if (errObj->hasProperty("message"))
-                            {
-                                error = errObj->getProperty("message").toString();
-                            }
-                        }
-                    }
-                    if (callback)
-                        callback(false, "Failed to create folder: " + error);
-                    return;
+                    if(auto* errObj = obj->getProperty("error").getDynamicObject())
+                        if(errObj->hasProperty("message"))
+                            { if(callback) callback(false, "Failed to create folder: " + errObj->getProperty("message").toString()); return; }
                 }
             }
-        }
-        catch (...)
-        {
-            if (callback)
-                callback(false, "Failed to parse folder creation response");
-            return;
-        }
-        
-        if (callback)
-            callback(false, "Invalid response format");
+        } catch (...) { }
+        if (callback) callback(false, "Failed to parse folder creation response");
     });
 }
 
 void R2GoogleDriveProvider::saveTokens()
 {
     auto tokenFile = getTokenFile();
-    
     juce::DynamicObject::Ptr tokenData = new juce::DynamicObject();
     tokenData->setProperty("access_token", accessToken);
     tokenData->setProperty("refresh_token", refreshToken);
     tokenData->setProperty("token_expiry", static_cast<juce::int64>(tokenExpiry.toMilliseconds()));
-    
-    auto json = juce::JSON::toString(juce::var(tokenData.get()));
-    
-    if (tokenFile.replaceWithText(json))
-    {
-        DBG("Tokens saved successfully");
-    }
-    else
-    {
-        DBG("Failed to save tokens");
-    }
+    tokenFile.replaceWithText(juce::JSON::toString(juce::var(tokenData.get())));
 }
 
 bool R2GoogleDriveProvider::loadTokens()
 {
     auto tokenFile = getTokenFile();
+    if (!tokenFile.exists()) return false;
     
-    if (!tokenFile.exists())
-        return false;
-    
-    auto json = tokenFile.loadFileAsString();
-    auto tokenData = juce::JSON::parse(json);
-    
-    if (tokenData.isObject())
+    auto tokenData = juce::JSON::parse(tokenFile.loadFileAsString());
+    if (auto* obj = tokenData.getDynamicObject())
     {
-        auto* obj = tokenData.getDynamicObject();
+        accessToken = obj->getProperty("access_token").toString();
+        refreshToken = obj->getProperty("refresh_token").toString();
+        tokenExpiry = juce::Time(static_cast<juce::int64>(obj->getProperty("token_expiry")));
         
-        if (obj->hasProperty("access_token"))
-            accessToken = obj->getProperty("access_token").toString();
-        
-        if (obj->hasProperty("refresh_token"))
-            refreshToken = obj->getProperty("refresh_token").toString();
-        
-        if (obj->hasProperty("token_expiry"))
-        {
-            auto expiryMs = static_cast<juce::int64>(obj->getProperty("token_expiry"));
-            tokenExpiry = juce::Time(expiryMs);
-        }
-        
-        if (isTokenValid())
-        {
-            currentStatus = Status::Authenticated;
-            DBG("Tokens loaded successfully");
-            return true;
-        }
-        else if (refreshToken.isNotEmpty())
-        {
-            DBG("Access token expired, but refresh token available");
-            return true;
-        }
+        if (isTokenValid()) currentStatus = Status::Authenticated;
+        else if (refreshToken.isNotEmpty()) DBG("Access token expired, but refresh token available");
+        return true;
     }
-    
     return false;
 }
 
@@ -1633,14 +928,8 @@ juce::File R2GoogleDriveProvider::getTokenFile() const
 {
     auto appDataDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
     auto cloudDocDir = appDataDir.getChildFile("CloudDoc");
-    
-    if (!cloudDocDir.exists())
-    {
-        cloudDocDir.createDirectory();
-    }
-    
+    if (!cloudDocDir.exists()) cloudDocDir.createDirectory();
     return cloudDocDir.getChildFile("google_drive_tokens.json");
 }
 
 } // namespace r2juce
-

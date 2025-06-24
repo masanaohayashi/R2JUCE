@@ -41,7 +41,6 @@ public:
     using FileOperationCallback = std::function<void(bool success, juce::String errorMessage)>;
     using FileContentCallback = std::function<void(bool success, juce::String content, juce::String errorMessage)>;
     
-    //==================== REFACTORED METHODS ====================
     /**
      * @brief 指定されたパスにファイルを保存します。
      * パスに'/'が含まれている場合、プロバイダはパスを解釈して適切なフォルダに保存します。
@@ -58,7 +57,6 @@ public:
      * @param callback 操作完了時のコールバック (成功時、ファイルの内容を含む)
      */
     void loadFile(const juce::String& filePath, FileContentCallback callback);
-    //============================================================
 
     bool needsAuthentication() const;
     void showAuthenticationUI(juce::Component* parentComponent);
