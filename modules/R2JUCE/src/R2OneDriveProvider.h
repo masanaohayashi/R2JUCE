@@ -3,6 +3,7 @@
 #include "R2CloudStorageProvider.h"
 
 namespace r2juce {
+
 class R2OneDriveProvider : public R2CloudStorageProvider
 {
 public:
@@ -15,6 +16,11 @@ public:
     Status getAuthStatus() const override;
     juce::String getDisplayName() const override;
     
+    void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) override;
+    void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) override;
+
+    // These methods are part of the interface but might not be used directly
+    // if all operations are path-based. We'll provide basic implementations.
     void listFiles(const juce::String& folderId, FileListCallback callback) override;
     void uploadFile(const juce::String& fileName, const juce::MemoryBlock& data,
                     const juce::String& folderId, FileOperationCallback callback) override;
@@ -22,63 +28,33 @@ public:
     void deleteFile(const juce::String& fileId, FileOperationCallback callback) override;
     void createFolder(const juce::String& folderName, const juce::String& parentId,
                       FileOperationCallback callback) override;
-    
+
     // OneDrive specific
     void setClientCredentials(const juce::String& clientId, const juce::String& clientSecret);
-    void exchangeAuthCodeForTokens(const juce::String& authCode, std::function<void(bool, juce::String)> callback);
     void setTokens(const juce::String& accessToken, const juce::String& refreshToken);
-    void downloadFileWithPath(const juce::String& filePath, DownloadCallback callback);
-    void cancelAuthentication(); // OAuth2Handlerを安全に閉じるメソッド
+    void cancelAuthentication() { /* TODO: Implement if needed */ }
+
 
 private:
-    void startNewAuthFlow(AuthCallback callback);
-    void parseTokenResponse(const juce::String& response, std::function<void(bool, juce::String)> callback);
+    void findItemByPath(const juce::String& path, std::function<void(const juce::var&)> callback);
+    void createFolderPath(const juce::StringArray& folderPath, const juce::String& parentId, int pathIndex, std::function<void(bool, juce::String)> callback);
+    void uploadToFolder(const juce::String& fileName, const juce::String& parentId, const juce::MemoryBlock& data, FileOperationCallback callback);
 
-    class OAuth2Handler : public juce::Component
-    {
-    public:
-        OAuth2Handler(R2OneDriveProvider& parent);
-        ~OAuth2Handler() override = default;
-        
-        void startAuthentication(const juce::String& clientId, R2CloudStorageProvider::AuthCallback callback);
-        void resized() override;
-
-    private:
-        juce::String generateStateParameter();
-        void checkAuthCallback(const juce::String& url);
-        void handleAuthSuccess(const juce::String& authCode);
-        void handleAuthError(const juce::String& error);
-        juce::String extractURLParameter(const juce::String& url, const juce::String& paramName);
-        juce::String extractAuthCode(const juce::String& url);
-        juce::String extractState(const juce::String& url);
-        juce::String extractError(const juce::String& url);
-        void showSuccessPage();
-        void showErrorPage(const juce::String& error);
-
-        R2OneDriveProvider& provider;
-        std::unique_ptr<juce::WebBrowserComponent> webBrowser;
-        R2CloudStorageProvider::AuthCallback authCallback;
-        juce::String redirectUri;
-        juce::String currentClientId;
-        juce::String stateParameter;
-   };
-
-    std::unique_ptr<OAuth2Handler> oauth2Handler;
+    bool isTokenValid() const;
+    void refreshAccessToken(std::function<void(bool)> callback);
+    void makeAPIRequest(const juce::String& endpoint, const juce::String& method,
+                        const juce::StringPairArray& headers, const juce::String& body,
+                        std::function<void(bool, int, juce::String)> callback);
     
+    void saveTokens();
+    bool loadTokens();
+    juce::File getTokenFile() const;
+
     juce::String clientId;
     juce::String clientSecret;
     juce::String accessToken;
     juce::String refreshToken;
     juce::Time tokenExpiry;
-    
-    bool isTokenValid() const;
-    void refreshAccessToken(std::function<void(bool)> callback);
-    void makeAPIRequest(const juce::String& endpoint, const juce::String& method,
-                        const juce::StringPairArray& headers, const juce::String& postData,
-                        std::function<void(bool, juce::String)> callback);
-    
-    void saveTokens();
-    bool loadTokens();
-    juce::File getTokenFile() const;
 };
-}   //  namespace r2juce
+
+} // namespace r2juce

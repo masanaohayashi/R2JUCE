@@ -192,21 +192,24 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
         switch (selectedId)
         {
             case 1: // Local Storage
+                DBG("MainComponent::comboBoxChanged() - Selecting Local Storage");
                 cloudManager->selectService(r2juce::R2CloudManager::ServiceType::Local);
                 break;
 
             case 2: // Google Drive
+                DBG("MainComponent::comboBoxChanged() - Selecting Google Drive");
                 cloudManager->selectService(r2juce::R2CloudManager::ServiceType::GoogleDrive);
-
-                if (cloudManager->needsAuthentication())
-                {
+                if (cloudManager->needsAuthentication()) {
+                    DBG("MainComponent::comboBoxChanged() - Google Drive needs authentication. Showing UI.");
                     cloudManager->showAuthenticationUI(this);
                 }
                 break;
+
             case 3: // OneDrive
+                DBG("MainComponent::comboBoxChanged() - Selecting OneDrive");
                 cloudManager->selectService(r2juce::R2CloudManager::ServiceType::OneDrive);
-                if (cloudManager->needsAuthentication())
-                {
+                if (cloudManager->needsAuthentication()) {
+                    DBG("MainComponent::comboBoxChanged() - OneDrive needs authentication. Showing UI.");
                     cloudManager->showAuthenticationUI(this);
                 }
                 break;
@@ -226,18 +229,21 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
     if (buttonThatWasClicked == textButtonLoad.get())
     {
         //[UserButtonCode_textButtonLoad] -- add your button handler code here..
+        DBG("MainComponent::buttonClicked() - Load button clicked.");
         loadFromFile();
         //[/UserButtonCode_textButtonLoad]
     }
     else if (buttonThatWasClicked == textButtonSave.get())
     {
         //[UserButtonCode_textButtonSave] -- add your button handler code here..
+        DBG("MainComponent::buttonClicked() - Save button clicked.");
         saveToFile();
         //[/UserButtonCode_textButtonSave]
     }
     else if (buttonThatWasClicked == textButtonSignOut.get())
     {
         //[UserButtonCode_textButtonSignOut] -- add your button handler code here..
+        DBG("MainComponent::buttonClicked() - Sign Out button clicked.");
         cloudManager->signOut();
         //[/UserButtonCode_textButtonSignOut]
     }
@@ -252,6 +258,7 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
 void MainComponent::loadFromFile()
 {
     auto filename = textEditorFilename->getText().trim();
+    DBG("MainComponent::loadFromFile() - Filename: " + filename);
 
     if (filename.isEmpty())
     {
@@ -261,6 +268,7 @@ void MainComponent::loadFromFile()
 
     cloudManager->loadFile(filename, [this](bool success, juce::String content, juce::String errorMessage)
     {
+        DBG(juce::String("MainComponent::loadFromFile() - Callback received. Success: ") + juce::String(success? "true": "false"));
         if (success)
         {
             textEditorData->setText(content);
@@ -275,30 +283,19 @@ void MainComponent::loadFromFile()
 
 void MainComponent::saveToFile()
 {
-    DBG("=== saveToFile() called ===");
-
-    // The text from the editor can be a simple filename or a full path.
     auto filePath = textEditorFilename->getText().trim();
     auto content = textEditorData->getText();
-
-    DBG("File path: " + filePath);
-    DBG("Content length: " + juce::String(content.length()));
+    DBG("MainComponent::saveToFile() - File path: " + filePath);
 
     if (filePath.isEmpty())
     {
-        DBG("Error: file path is empty");
         showMessage("Error", "Please enter a filename or path");
         return;
     }
 
-    DBG("Current service type: " + juce::String((int)cloudManager->getCurrentService()));
-    DBG("Auth status: " + juce::String((int)cloudManager->getAuthStatus()));
-
-    // The if/else block for path checking is no longer needed.
-    // We simply pass the entire string from the text editor to the new unified saveFile method.
-    // The R2CloudManager will handle whether it's a simple filename or a full path.
     cloudManager->saveFile(filePath, content, [this](bool success, juce::String errorMessage)
     {
+        DBG(juce::String("MainComponent::saveToFile() - Callback received. Success: ") + juce::String(success? "true": "false"));
         if (success)
         {
             showMessage("Success", "File saved successfully");
