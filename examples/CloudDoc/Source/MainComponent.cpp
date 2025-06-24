@@ -277,60 +277,37 @@ void MainComponent::saveToFile()
 {
     DBG("=== saveToFile() called ===");
 
-    auto filename = textEditorFilename->getText().trim();
+    // The text from the editor can be a simple filename or a full path.
+    auto filePath = textEditorFilename->getText().trim();
     auto content = textEditorData->getText();
 
-    DBG("Filename: " + filename);
+    DBG("File path: " + filePath);
     DBG("Content length: " + juce::String(content.length()));
 
-    if (filename.isEmpty())
+    if (filePath.isEmpty())
     {
-        DBG("Error: filename is empty");
-        showMessage("Error", "Please enter a filename");
+        DBG("Error: file path is empty");
+        showMessage("Error", "Please enter a filename or path");
         return;
     }
 
     DBG("Current service type: " + juce::String((int)cloudManager->getCurrentService()));
     DBG("Auth status: " + juce::String((int)cloudManager->getAuthStatus()));
 
-    juce::String folderPath;
-    juce::String actualFilename;
-
-    if (filename.contains("/"))
+    // The if/else block for path checking is no longer needed.
+    // We simply pass the entire string from the text editor to the new unified saveFile method.
+    // The R2CloudManager will handle whether it's a simple filename or a full path.
+    cloudManager->saveFile(filePath, content, [this](bool success, juce::String errorMessage)
     {
-        auto lastSlash = filename.lastIndexOf("/");
-        folderPath = filename.substring(0, lastSlash);
-        actualFilename = filename.substring(lastSlash + 1);
-
-        DBG("Folder path: " + folderPath);
-        DBG("Actual filename: " + actualFilename);
-
-        cloudManager->saveFileWithPath(folderPath, actualFilename, content, [this](bool success, juce::String errorMessage)
+        if (success)
         {
-            if (success)
-            {
-                showMessage("Success", "File saved successfully");
-            }
-            else
-            {
-                showMessage("Error", "Failed to save file: " + errorMessage);
-            }
-        });
-    }
-    else
-    {
-        cloudManager->saveFile(filename, content, [this](bool success, juce::String errorMessage)
+            showMessage("Success", "File saved successfully");
+        }
+        else
         {
-            if (success)
-            {
-                showMessage("Success", "File saved successfully");
-            }
-            else
-            {
-                showMessage("Error", "Failed to save file: " + errorMessage);
-            }
-        });
-    }
+            showMessage("Error", "Failed to save file: " + errorMessage);
+        }
+    });
 }
 
 void MainComponent::handleAuthStatusChanged(r2juce::R2CloudManager::AuthStatus status)

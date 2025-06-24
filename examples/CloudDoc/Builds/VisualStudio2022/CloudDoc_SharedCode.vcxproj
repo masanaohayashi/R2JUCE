@@ -2794,10 +2794,10 @@
     <ClCompile Include="C:\JUCE\modules\juce_gui_extra\juce_gui_extra.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\modules\R2JUCE\src\R2CloudAuthComponent.cpp">
+    <ClCompile Include="..\..\..\..\modules\R2JUCE\src\R2AlertComponent.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\modules\R2JUCE\src\R2CloudAuthComponentOld.cpp">
+    <ClCompile Include="..\..\..\..\modules\R2JUCE\src\R2CloudAuthComponent.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\..\..\modules\R2JUCE\src\R2CloudManager.cpp">
@@ -4156,9 +4156,9 @@
     <ClInclude Include="C:\JUCE\modules\juce_gui_extra\misc\juce_WebControlRelays.h"/>
     <ClInclude Include="C:\JUCE\modules\juce_gui_extra\native\juce_NSViewFrameWatcher_mac.h"/>
     <ClInclude Include="..\..\..\..\..\..\..\JUCE\modules\juce_gui_extra\juce_gui_extra.h"/>
+    <ClInclude Include="..\..\..\..\modules\R2JUCE\src\R2AlertComponent.h"/>
     <ClInclude Include="..\..\..\..\modules\R2JUCE\src\R2AudioConfigManager.h"/>
     <ClInclude Include="..\..\..\..\modules\R2JUCE\src\R2CloudAuthComponent.h"/>
-    <ClInclude Include="..\..\..\..\modules\R2JUCE\src\R2CloudAuthComponentOld.h"/>
     <ClInclude Include="..\..\..\..\modules\R2JUCE\src\R2CloudManager.h"/>
     <ClInclude Include="..\..\..\..\modules\R2JUCE\src\R2CloudStorageProvider.h"/>
     <ClInclude Include="..\..\..\..\modules\R2JUCE\src\R2GoogleDriveProvider.h"/>

@@ -41,10 +41,24 @@ public:
     using FileOperationCallback = std::function<void(bool success, juce::String errorMessage)>;
     using FileContentCallback = std::function<void(bool success, juce::String content, juce::String errorMessage)>;
     
-    void saveFile(const juce::String& filename, const juce::String& content, FileOperationCallback callback = nullptr);
-    void saveFileWithPath(const juce::String& folderPath, const juce::String& filename, const juce::String& content, FileOperationCallback callback = nullptr);
-    void loadFile(const juce::String& filename, FileContentCallback callback);
-    void loadFileWithPath(const juce::String& filePath, FileContentCallback callback);
+    //==================== REFACTORED METHODS ====================
+    /**
+     * @brief 指定されたパスにファイルを保存します。
+     * パスに'/'が含まれている場合、プロバイダはパスを解釈して適切なフォルダに保存します。
+     * 含まれていない場合は、ルート直下に保存します。
+     * @param filePath 保存するファイルのパス (e.g., "presets/bass/my_preset.txt" or "my_preset.txt")
+     * @param content  保存するファイルの内容
+     * @param callback 操作完了時のコールバック
+     */
+    void saveFile(const juce::String& filePath, const juce::String& content, FileOperationCallback callback = nullptr);
+
+    /**
+     * @brief 指定されたパスのファイルを読み込みます。
+     * @param filePath 読み込むファイルのパス (e.g., "presets/bass/my_preset.txt" or "my_preset.txt")
+     * @param callback 操作完了時のコールバック (成功時、ファイルの内容を含む)
+     */
+    void loadFile(const juce::String& filePath, FileContentCallback callback);
+    //============================================================
 
     bool needsAuthentication() const;
     void showAuthenticationUI(juce::Component* parentComponent);
