@@ -3,9 +3,7 @@
 
   This is an automatically generated GUI class created by the Projucer!
 
-  Be careful when adding custom code to these files, as only the code within
-  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
-  and re-saved.
+  Be careful when adding custom code to these "//[xyz]" and "//[/xyz]" sections.
 
   Created with Projucer version: 7.0.12
 
@@ -28,8 +26,8 @@ namespace r2juce {
 //[/MiscUserDefs]
 
 //==============================================================================
-R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String& title, const juce::String& message, const juce::StringArray& buttonLabels, std::function<void(int)> callback)
-: parentComponent (parent), onResult (callback)
+R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String& title, const juce::String& message, const juce::StringArray& buttonLabels, bool showProgressBar, std::function<void(int)> callback)
+: parentComponent (parent), onResult (callback), isProgressBarVisible (showProgressBar), currentProgress (0.0) // currentProgress を初期化
 {
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
@@ -71,7 +69,6 @@ R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String&
     button3->addListener (this);
     button3->setColour (juce::TextButton::buttonColourId, juce::Colour (0xff505050));
     
-    
     //[UserPreSize]
     jassert (parent != nullptr);
     parent->addAndMakeVisible (this);
@@ -89,6 +86,12 @@ R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String&
         button->setButtonText (buttonLabels[i]);
     }
     
+    if (isProgressBarVisible)
+    {
+        progressBar.reset (new juce::ProgressBar (currentProgress)); // double 参照を渡す
+        addAndMakeVisible (progressBar.get());
+        progressBar->setColour (juce::ProgressBar::foregroundColourId, juce::Colours::darkgreen);
+    }
     //[/UserPreSize]
     
     setSize (568, 320);
@@ -99,6 +102,7 @@ R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String&
     setTopLeftPosition(0, 0);
     setWantsKeyboardFocus(true);
     grabKeyboardFocus();
+    selectedButtonIndex = 1; // Default to first button
     updateButtonFocus();
     //[/Constructor]
 }
@@ -114,8 +118,8 @@ R2AlertComponent::~R2AlertComponent()
     button2 = nullptr;
     button3 = nullptr;
     
-    
     //[Destructor]. You can add your own custom destruction code here..
+    progressBar = nullptr;
     //[/Destructor]
 }
 
@@ -144,12 +148,13 @@ void R2AlertComponent::resized()
 {
     //[UserPreResize] Add your own custom resize code here..
     //[/UserPreResize]
-    
+
     labelTitle->setBounds ((getWidth() / 2) - (488 / 2), (getHeight() / 2) + -80, 488, 32);
     labelMessage->setBounds ((getWidth() / 2) - (488 / 2), (getHeight() / 2) - (80 / 2), 488, 80);
     button1->setBounds ((getWidth() / 2) + -144 - (120 / 2), (getHeight() / 2) + 60 - (24 / 2), 120, 24);
     button2->setBounds ((getWidth() / 2) - (120 / 2), (getHeight() / 2) + 60 - (24 / 2), 120, 24);
     button3->setBounds ((getWidth() / 2) + 144 - (120 / 2), (getHeight() / 2) + 60 - (24 / 2), 120, 24);
+    
     //[UserResized] Add your own custom resize handling here..
     if (numButtons == 1)
     {
@@ -162,6 +167,11 @@ void R2AlertComponent::resized()
         button1->setBounds ((getWidth() / 2) + -80 - (120 / 2), (getHeight() / 2) + 60 - (24 / 2), 120, 24);
         button2->setBounds ((getWidth() / 2) + 80 - (120 / 2), (getHeight() / 2) + 60 - (24 / 2), 120, 24);
         button3->setVisible (false);
+    }
+    
+    if (isProgressBarVisible)
+    {
+        progressBar->setBounds ((getWidth() / 2) - (488 / 2), (getHeight() / 2) + 20, 488, 15);
     }
     //[/UserResized]
 }
@@ -230,8 +240,7 @@ bool R2AlertComponent::keyPressed (const juce::KeyPress& key)
 void R2AlertComponent::buttonClicked (int index)
 {
     if (onResult) onResult (index);
-    getParentComponent()->removeChildComponent(this);
-    delete this;
+    close(); // ボタンがクリックされたらダイアログを閉じる (メソッド名を close に変更)
 }
 
 void R2AlertComponent::updateButtonFocus()
@@ -247,24 +256,52 @@ void R2AlertComponent::updateButtonFocus()
 
 void R2AlertComponent::forOK (juce::Component* parent, const juce::String& title, const juce::String& message, std::function<void(int)> callback)
 {
-    new R2AlertComponent (parent, title, message, { TRANS("OK") }, callback);
+    new R2AlertComponent (parent, title, message, { TRANS("OK") }, false, callback);
 }
 
 void R2AlertComponent::forYesNo (juce::Component* parent, const juce::String& title, const juce::String& message, std::function<void(int)> callback)
 {
-    new R2AlertComponent (parent, title, message, { TRANS("Yes"), TRANS("No") }, callback);
+    new R2AlertComponent (parent, title, message, { TRANS("Yes"), TRANS("No") }, false, callback);
 }
 
 void R2AlertComponent::forYesNoCancel (juce::Component* parent, const juce::String& title, const juce::String& message, std::function<void(int)> callback)
 {
-    new R2AlertComponent (parent, title, message, { TRANS("Yes"), TRANS("No"), TRANS("Cancel") }, callback);
+    new R2AlertComponent (parent, title, message, { TRANS("Yes"), TRANS("No"), TRANS("Cancel") }, false, callback);
 }
+
+R2AlertComponent* R2AlertComponent::forProgress (juce::Component* parent, const juce::String& title, const juce::String& message, double initialProgress, std::function<void(int)> callback)
+{
+    auto* alert = new R2AlertComponent (parent, title, message, { TRANS("Cancel") }, true, callback);
+    alert->selectedButtonIndex = 1; // For progress bar, only one button "Cancel" is available
+    alert->updateButtonFocus();
+    alert->setProgress (initialProgress); // R2AlertComponent::setProgress を呼び出す
+    return alert;
+}
+
+void R2AlertComponent::setProgress (double newProgress)
+{
+    if (progressBar != nullptr)
+    {
+        currentProgress = newProgress; // double 変数を直接更新する
+    }
+}
+
+void R2AlertComponent::close() // メソッド名をcloseAlert()からclose()に変更
+{
+    if (getParentComponent() != nullptr)
+    {
+        getParentComponent()->removeChildComponent(this);
+    }
+    delete this;
+}
+
+}   //  namespace r2juce
 //[/MiscUserCode]
 
 
 //==============================================================================
 #if 0
-/*  -- Projucer information section --
+/* -- Projucer information section --
  
  This is where the Projucer stores the metadata that describe this GUI layout, so
  make changes in here at your peril!
@@ -272,8 +309,8 @@ void R2AlertComponent::forYesNoCancel (juce::Component* parent, const juce::Stri
  BEGIN_JUCER_METADATA
  
  <JUCER_COMPONENT documentType="Component" className="R2AlertComponent" componentName=""
- parentClasses="public juce::Component" constructorParams="juce::Component* parent, const juce::String&amp; title, const juce::String&amp; message, const juce::StringArray&amp; buttonLabels, std::function&lt;void(int)&gt; callback"
- variableInitialisers="parentComponent (parent), onResult (callback)"
+ parentClasses="public juce::Component, public juce::Button::Listener" constructorParams="juce::Component* parent, const juce::String&amp; title, const juce::String&amp; message, const juce::StringArray&amp; buttonLabels, bool showProgressBar, std::function&lt;void(int)&gt; callback"
+ variableInitialisers="parentComponent (parent), onResult (callback), isProgressBarVisible (showProgressBar)"
  snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330"
  fixedSize="1" initialWidth="568" initialHeight="320">
  <BACKGROUND backgroundColour="c0000000">
@@ -298,14 +335,11 @@ void R2AlertComponent::forYesNoCancel (juce::Component* parent, const juce::Stri
  <TEXTBUTTON name="" id="213a4c7b38492acb" memberName="button3" virtualName=""
  explicitFocusOrder="0" pos="144Cc 60Cc 120 24" bgColOff="ff505050"
  buttonText="3" connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+ <JUCER_COMPONENT name="" id="9a7b5c1d3e4f5a6b" memberName="progressBar" virtualName=""
+ explicitFocusOrder="0" pos="0Cc 20C 488 15" bgColOff="ff000000"
+ buttonText="" connectedEdges="0" needsCallback="0" radioGroupId="0"/>
  </JUCER_COMPONENT>
  
  END_JUCER_METADATA
  */
 #endif
-
-
-//[EndFile] You can add extra defines here...
-}   //  namespace r2juce
-//[/EndFile]
-

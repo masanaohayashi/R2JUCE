@@ -3,9 +3,7 @@
 
   This is an automatically generated GUI class created by the Projucer!
 
-  Be careful when adding custom code to these files, as only the code within
-  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
-  and re-saved.
+  Be careful when adding custom code to these "//[xyz]" and "//[/xyz]" sections.
 
   Created with Projucer version: 7.0.12
 
@@ -48,10 +46,11 @@ public:
      @param title        The title displayed at the top of the dialog.
      @param message      The main message text to display in the dialog.
      @param buttonLabels An array of strings for the button labels. Must contain 1 to 3 elements.
+     @param showProgressBar If true, a progress bar will be shown below the message.
      @param callback     The function to call when a button is clicked. It receives the 1-based
                          index of the button that was pressed.
     */
-    R2AlertComponent (juce::Component* parent, const juce::String& title, const juce::String& message, const juce::StringArray& buttonLabels, std::function<void(int)> callback);
+    R2AlertComponent (juce::Component* parent, const juce::String& title, const juce::String& message, const juce::StringArray& buttonLabels, bool showProgressBar, std::function<void(int)> callback);
 
     /** @brief Destructor. */
     ~R2AlertComponent() override;
@@ -97,6 +96,31 @@ public:
      @param callback An optional callback function. Receives 1 for "Yes", 2 for "No", and 3 for "Cancel".
     */
     static void forYesNoCancel (juce::Component* parent, const juce::String& title, const juce::String& message, std::function<void(int)> callback=nullptr);
+
+    /**
+     @brief A static helper function to display an alert dialog with a progress bar and a single "Cancel" button.
+     @param parent   The parent component for the alert.
+     @param title    The dialog's title.
+     @param message  The dialog's message.
+     @param callback An optional callback function. Receives 1 for "Cancel".
+     @param initialProgress An optional initial progress value (0.0 to 1.0). Defaults to -1.0 if not used.
+     @return A pointer to the created R2AlertComponent, allowing external updates to the progress bar.
+    */
+    static R2AlertComponent* forProgress (juce::Component* parent, const juce::String& title, const juce::String& message, double initialProgress=-1.0, std::function<void(int)> callback=nullptr);
+
+    /**
+     @brief Updates the progress bar's current value.
+     @param newProgress A value between 0.0 and 1.0 representing the current progress.
+    */
+    void setProgress (double newProgress);
+
+    /**
+     @brief Closes the alert dialog.
+     @details This method removes the alert from its parent and deletes itself.
+              It can be called externally to dismiss the alert programmatically.
+    */
+    void close(); // メソッド名をcloseAlert()からclose()に変更
+
     //[/UserMethods]
 
     /** @brief Paints the component. (Overridden from juce::Component). */
@@ -126,6 +150,10 @@ private:
     std::function<void(int)> onResult;
     int numButtons;
     int selectedButtonIndex;
+    bool isProgressBarVisible;
+    double currentProgress; // ProgressBar に直接渡す double 変数
+    std::unique_ptr<juce::ProgressBar> progressBar;
+
     //[/UserVariables]
 
     //==============================================================================

@@ -347,17 +347,36 @@ void MainComponent::saveToFile()
     // Convert string content to MemoryBlock for saving
     juce::MemoryBlock data(content.toRawUTF8(), content.getNumBytesAsUTF8());
 
-    cloudManager->saveFile(filePath, data, [this](bool success, juce::String errorMessage) // dataを渡す
+    // R2AlertComponentをローカルスコープで動的に生成し、ポインタで操作
+    auto* currentSaveAlert = r2juce::R2AlertComponent::forProgress(this, "Saving File", "Uploading " + filePath + "...", -1.0,
+        // Cancelボタンが押された場合のコールバック
+        [](int buttonIndex) {
+            if (buttonIndex == 1) // "Cancel"ボタンが1番目のボタンとして設定されている場合
+            {
+                DBG("File upload cancelled by user.");
+                // 現状のR2CloudManagerにはキャンセル機構がないため、ここではダイアログを閉じるのみです。
+            }
+        });
+
+    // safeAlertとしてポインタを保持し、ラムダキャプチャで使用
+    juce::Component::SafePointer<r2juce::R2AlertComponent> safeSaveAlert = currentSaveAlert;
+
+    cloudManager->saveFile(filePath, data, [this, safeSaveAlert](bool success, juce::String errorMessage)
     {
-        DBG(juce::String("MainComponent::saveToFile() - Callback received. Success: ") + juce::String(success? "true": "false"));
-        if (success)
-        {
-            showMessage("Success", "File saved successfully");
-        }
-        else
-        {
-            showMessage("Error", "Failed to save file: " + errorMessage);
-        }
+        // UIスレッドで処理するためにMessageManager::callAsyncを使用
+        juce::MessageManager::callAsync([this, success, errorMessage, safeSaveAlert]() {
+            if (safeSaveAlert != nullptr)
+            {
+                // ダイアログを閉じる
+                safeSaveAlert->close();
+            }
+
+            // 元のshowMessageも必要に応じて残す
+            if (success)
+                showMessage("Success", "File saved successfully");
+            else
+                showMessage("Error", "File save failed: " + errorMessage);
+        });
     });
 }
 
