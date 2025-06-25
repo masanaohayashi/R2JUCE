@@ -157,8 +157,25 @@ MainComponent::MainComponent ()
         handleServiceChanged(service);
     };
 
-    cloudManager->selectService(r2juce::R2CloudManager::ServiceType::Local);
-    comboService->setSelectedId(1);
+    // Initialize PropertiesFile for settings
+    juce::File settingsDir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
+                                 .getChildFile (JucePlugin_Manufacturer) // Use manufacturer name for top-level folder
+                                 .getChildFile (JucePlugin_Name);        // Use product name for subfolder
+
+    juce::File settingsFileLocation = settingsDir.getChildFile ("settings.xml");
+
+    settingsFile.reset (new juce::PropertiesFile (settingsFileLocation,
+                                                   juce::PropertiesFile::Options {}));
+
+    // Load last saved settings
+    int lastServiceId = settingsFile->getIntValue(lastSelectedServiceKey, 1); // Default to Local
+    juce::String lastPath = settingsFile->getValue(lastFilePathKey, "");
+    juce::String lastFilename = settingsFile->getValue(lastFileNameKey, "my_document.txt");
+
+    // Apply loaded settings to UI
+    textEditorPath->setText(lastPath, juce::dontSendNotification);
+    textEditorFilename->setText(lastFilename, juce::dontSendNotification);
+    comboService->setSelectedId(lastServiceId, juce::sendNotification); // This will trigger comboBoxChanged and select the service
 
     // Initialize DropArea without direct dependencies
     dropArea.reset (new DropArea());
@@ -183,6 +200,7 @@ MainComponent::MainComponent ()
 MainComponent::~MainComponent()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
+    saveSettings(); // Save settings on application exit
     //[/Destructor_pre]
 
     labelCloudService = nullptr;
@@ -264,6 +282,9 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
                 }
                 break;
         }
+        // Save the selected service type
+        if (settingsFile != nullptr)
+            settingsFile->setValue(lastSelectedServiceKey, selectedId);
         //[/UserComboBoxCode_comboService]
     }
 
@@ -281,6 +302,7 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
         //[UserButtonCode_textButtonLoad] -- add your button handler code here..
         DBG("MainComponent::buttonClicked() - Load button clicked.");
         loadFromFile();
+        saveSettings(); // Save current path and filename on load
         //[/UserButtonCode_textButtonLoad]
     }
     else if (buttonThatWasClicked == textButtonSave.get())
@@ -288,6 +310,7 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
         //[UserButtonCode_textButtonSave] -- add your button handler code here..
         DBG("MainComponent::buttonClicked() - Save button clicked.");
         saveToFile();
+        saveSettings(); // Save current path and filename on save
         //[/UserButtonCode_textButtonSave]
     }
     else if (buttonThatWasClicked == textButtonSignOut.get())
@@ -378,6 +401,17 @@ void MainComponent::saveToFile()
                 showMessage("Error", "File save failed: " + errorMessage);
         });
     });
+}
+
+void MainComponent::saveSettings()
+{
+    if (settingsFile != nullptr)
+    {
+        settingsFile->setValue(lastFilePathKey, textEditorPath->getText().trim());
+        settingsFile->setValue(lastFileNameKey, textEditorFilename->getText().trim());
+        settingsFile->setValue(lastSelectedServiceKey, comboService->getSelectedId());
+        settingsFile->saveIfNeeded();
+    }
 }
 
 void MainComponent::handleAuthStatusChanged(r2juce::R2CloudManager::AuthStatus status)
@@ -513,6 +547,7 @@ void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const 
                 showMessage("Error", "File upload failed: " + errorMessage);
         });
     }
+    saveSettings(); // Save current path and filename on file drop
 }
 
 //==============================================================================

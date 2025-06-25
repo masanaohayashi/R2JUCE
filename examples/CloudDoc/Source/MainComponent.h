@@ -60,6 +60,7 @@ private:
     void loadFromFile();
     void saveToFile();
     void showMessage(const juce::String& title, const juce::String& message);
+    void saveSettings(); // Save settings to PropertiesFile
 
     void handleAuthStatusChanged(r2juce::R2CloudManager::AuthStatus status);
     void handleServiceChanged(r2juce::R2CloudManager::ServiceType service);
@@ -67,6 +68,12 @@ private:
     void handleFileDroppedInArea(const juce::String& filePath, const juce::MemoryBlock& fileContent);
 
     std::unique_ptr<r2juce::R2CloudManager> cloudManager;
+    std::unique_ptr<juce::PropertiesFile> settingsFile; // For saving application settings
+
+    // Keys for saving and loading settings
+    static inline const juce::Identifier lastSelectedServiceKey    { "lastSelectedService" };
+    static inline const juce::Identifier lastFilePathKey           { "lastFilePath" };
+    static inline const juce::Identifier lastFileNameKey           { "lastFileName" };
 
 
     class DropArea : public juce::Component,
