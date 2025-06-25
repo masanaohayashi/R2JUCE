@@ -72,6 +72,10 @@ private:
     juce::String clientId, clientSecret, accessToken, refreshToken;
     juce::Time tokenExpiry;
     
+    // NOTE: tokenLock has been removed as per user instruction.
+    // If multi-threading issues related to token access persist,
+    // explicit synchronization should be reconsidered.
+
     // Recursively creates the folder structure for a given path.
     void createFolderPath(const juce::StringArray& folderPath, const juce::String& parentId, int pathIndex, std::function<void(bool, juce::String)> callback);
     // Helper to upload data to a specific folder after the path has been resolved.
@@ -79,11 +83,14 @@ private:
 
     // Token management helpers
     bool isTokenValid() const;
-    void refreshAccessToken(std::function<void(bool)> callback);
+    // FIX: Change refreshAccessToken signature to return errorMessage
+    void refreshAccessToken(AuthCallback callback);
     
     // Core API request wrapper
-    void makeAPIRequest(const juce::String& endpoint, const juce::String& method,
-                        const juce::StringPairArray& headers, const juce::String& body,
+    void makeAPIRequest(const juce::String& endpoint,
+                        const juce::String& method,
+                        const juce::StringPairArray& headers,
+                        const juce::String& body,
                         std::function<void(bool, int, const juce::var&)> callback);
     
     /** @brief Core API request wrapper for binary data.
@@ -93,8 +100,10 @@ private:
         @param body The request body as a MemoryBlock.
         @param callback The callback to be invoked with the result.
     */
-    void makeAPIRequest(const juce::String& endpoint, const juce::String& method,
-                        const juce::StringPairArray& headers, const juce::MemoryBlock& body,
+    void makeAPIRequest(const juce::String& endpoint,
+                        const juce::String& method,
+                        const juce::StringPairArray& headers,
+                        const juce::MemoryBlock& body,
                         std::function<void(bool, int, const juce::var&)> callback);
 
     // Token persistence helpers

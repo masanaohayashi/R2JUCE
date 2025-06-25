@@ -10,7 +10,7 @@ R2OneDriveProvider::R2OneDriveProvider()
 
 void R2OneDriveProvider::setClientCredentials(const juce::String& cid, const juce::String& csecret)
 {
-    // Removed juce::ScopedLock
+    // Removed juce::ScopedLock sl(tokenLock);
     clientId = cid;
     clientSecret = csecret;
 }
@@ -19,7 +19,7 @@ void R2OneDriveProvider::authenticate(AuthCallback callback)
 {
     DBG("R2OneDriveProvider::authenticate called. Current status: " + juce::String(static_cast<int>(currentStatus)));
 
-    // Removed juce::ScopedLock
+    // Removed juce::ScopedLock sl(tokenLock);
     if (isTokenValid()) { // isTokenValid will acquire its own lock, it's safe to call here.
         currentStatus = Status::Authenticated;
         DBG("Token is valid, already authenticated.");
@@ -33,15 +33,17 @@ void R2OneDriveProvider::authenticate(AuthCallback callback)
         DBG("Refresh token found, attempting to refresh access token.");
         auto self = shared_from_this(); // shared_ptr ensures R2OneDriveProvider instance lives
         // Removed sl.release();
-        refreshAccessToken([this, self, callback](bool success)
+
+        // FIX: AuthCallback now accepts errorMessage
+        refreshAccessToken([this, self, callback](bool success, juce::String errorMessage)
         {
             // This callback runs on the message thread after refreshAccessToken completes its work
-            juce::MessageManager::callAsync([self, success, callback]() {
+            juce::MessageManager::callAsync([self, success, errorMessage, callback]() { // Capture errorMessage
                 if (auto providerPtr = dynamic_cast<R2OneDriveProvider*>(self.get())) {
-                    // Removed juce::ScopedLock
+                    // Removed juce::ScopedLock sl_msg(providerPtr->tokenLock);
                     providerPtr->currentStatus = success ? Status::Authenticated : Status::NotAuthenticated;
                     DBG("Refresh token callback completed. New status: " + juce::String(static_cast<int>(providerPtr->currentStatus)));
-                    if (callback) callback(success, success ? "Refreshed token" : "Refresh failed");
+                    if (callback) callback(success, success ? "Refreshed token" : errorMessage); // Pass errorMessage
                 } else {
                     DBG("R2OneDriveProvider instance invalid during authenticate callback after refresh.");
                 }
@@ -90,32 +92,34 @@ void R2OneDriveProvider::setTokens(const juce::String& newAccessToken, const juc
 
     tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds(3500); // Token expiry set to 3500 seconds (approx 58 minutes)
     currentStatus = Status::Authenticated;
-    saveTokens(); // This also needs to be thread-safe for reading/writing tokens (handled by saveTokens logic)
+    saveTokens();
     
     DBG("Tokens set and saved. Access Token length: " + juce::String(accessToken.length()) + ", Refresh Token length: " + juce::String(refreshToken.length()));
+    DBG("setTokens post-check: accessToken.isEmpty() = " + juce::String(accessToken.isEmpty() ? "true" : "false") + ", refreshToken.isEmpty() = " + juce::String(refreshToken.isEmpty() ? "true" : "false"));
+    DBG("setTokens post-check: accessToken (first 50): " + accessToken.substring(0, juce::jmin(accessToken.length(), 50)));
+    DBG("setTokens post-check: refreshToken (first 50): " + refreshToken.substring(0, juce::jmin(refreshToken.length(), 50)));
 }
 
-void R2OneDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
+// FIX: Change refreshAccessToken signature to return errorMessage
+void R2OneDriveProvider::refreshAccessToken(AuthCallback callback)
 {
-    // No lock here at the start, as it might be called from another function already holding a lock,
-    // or from a new thread. Individual member variable accesses are locked when copied.
     if (refreshToken.isEmpty()) {
         DBG("Refresh token failed: No refresh token available.");
-        if (callback) callback(false);
+        if (callback) callback(false, "No refresh token available."); // FIX: Pass errorMessage
         return;
     }
 
     DBG("R2OneDriveProvider::refreshAccessToken: Starting refresh process.");
     auto selfWeak = std::weak_ptr<R2CloudStorageProvider>(shared_from_this());
     
-    // Ensure initial member variables are copied safely without CriticalSection.
-    // Relying on juce::String's thread-safety for const access, and explicit deep copy for captured vars.
     juce::String clientIdCopy = clientId;
     juce::String refreshTokenCopy = refreshToken;
 
     juce::Thread::launch([selfWeak, callback, clientIdCopy, refreshTokenCopy] {
         DBG("refreshAccessToken thread started.");
         DBG("refreshAccessToken thread: clientIdCopy len=" + juce::String(clientIdCopy.length()) + ", refreshTokenCopy len=" + juce::String(refreshTokenCopy.length()));
+        DBG("refreshAccessToken thread: refreshTokenCopy (first 50): " + refreshTokenCopy.substring(0, juce::jmin(refreshTokenCopy.length(), 50)));
+
 
         if (auto selfShared = selfWeak.lock()) { // Lock weak_ptr to ensure object is still valid
             juce::String postDataString = "client_id=" + clientIdCopy
@@ -141,11 +145,11 @@ void R2OneDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
                 stream = tokenUrl.createInputStream(options);
             } catch (const std::exception& e) {
                 DBG("Exception creating refresh token input stream: " + juce::String(e.what()));
-                juce::MessageManager::callAsync([callback](){ if (callback) callback(false); });
+                juce::MessageManager::callAsync([callback, e_what = juce::String(e.what())](){ if (callback) callback(false, "Network error: " + e_what); }); // FIX: Capture e.what() by value
                 return;
             } catch (...) {
                 DBG("Unknown exception creating refresh token input stream.");
-                juce::MessageManager::callAsync([callback](){ if (callback) callback(false); });
+                juce::MessageManager::callAsync([callback](){ if (callback) callback(false, "Unknown network error."); });
                 return;
             }
 
@@ -175,10 +179,10 @@ void R2OneDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
                                             juce::String::fromUTF8(obj->getProperty("access_token").toString().toRawUTF8(), (int)obj->getProperty("access_token").toString().getNumBytesAsUTF8()),
                                             juce::String::fromUTF8(obj->getProperty("refresh_token").toString().toRawUTF8(), (int)obj->getProperty("refresh_token").toString().getNumBytesAsUTF8())
                                         );
-                                        if (callback) callback(true);
+                                        if (callback) callback(true, ""); // Success with empty error message
                                     } else {
                                         DBG("R2OneDriveProvider instance no longer valid or not of expected type during refresh token UI callback.");
-                                        if (callback) callback(false);
+                                        if (callback) callback(false, "Internal error: Provider invalid.");
                                     }
                                 });
                                 return;
@@ -186,15 +190,17 @@ void R2OneDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
                         }
                     }
                 }
-                DBG("Refresh token failed. Status: " + juce::String(statusCode) + ", Response: " + responseString);
-                juce::MessageManager::callAsync([callback](){ if (callback) callback(false); });
+                // If refresh failed (e.g. invalid_grant), pass the error message from the response.
+                juce::String errorMessage = "Refresh token failed. Status: " + juce::String(statusCode) + ", Response: " + responseString;
+                DBG(errorMessage);
+                juce::MessageManager::callAsync([callback, errorMessage](){ if (callback) callback(false, errorMessage); });
             } else {
                 DBG("Refresh token failed: Stream creation returned nullptr.");
-                juce::MessageManager::callAsync([callback](){ if (callback) callback(false); });
+                juce::MessageManager::callAsync([callback](){ if (callback) callback(false, "Network error: Stream creation failed."); });
             }
         } else {
             DBG("R2OneDriveProvider instance invalid during refreshAccessToken thread. Aborting.");
-            juce::MessageManager::callAsync([callback](){ if (callback) callback(false); });
+            juce::MessageManager::callAsync([callback](){ if (callback) callback(false, "Internal error: Provider invalid."); });
         }
     });
 }
@@ -202,14 +208,16 @@ void R2OneDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
 // makeAPIRequest (string body)
 void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce::String& method, const juce::StringPairArray& headers, const juce::String& body, std::function<void(bool, int, const juce::var&)> callback)
 {
-    // Removed juce::ScopedLock
+    // isTokenValid() has its own internal logic.
     if (!isTokenValid())
     {
         auto self = shared_from_this();
-        // Removed sl.release();
-        refreshAccessToken([this, self, endpoint, method, headers, body, callback](bool success) {
+        // Pass a more descriptive error message from refreshAccessToken
+        refreshAccessToken([this, self, endpoint, method, headers, body, callback](bool success, juce::String refreshErrorMessage) {
             if (success) this->makeAPIRequest(endpoint, method, headers, body, callback);
-            else juce::MessageManager::callAsync([callback]() { if (callback) callback(false, 401, juce::var()); });
+            else juce::MessageManager::callAsync([callback, refreshErrorMessage]() {
+                if (callback) callback(false, 401, juce::var(refreshErrorMessage));
+            });
         });
         return;
     }
@@ -217,12 +225,11 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
     DBG("R2OneDriveProvider::makeAPIRequest (string body): " + method + " " + endpoint);
     auto selfWeak = std::weak_ptr<R2CloudStorageProvider>(shared_from_this());
     
-    // Explicitly copy strings
-    juce::String accessTokenCopy = accessToken; // Copy from member
+    juce::String accessTokenCopy = accessToken;
     juce::String endpointCopy = endpoint;
     juce::String methodCopy = method;
     juce::String bodyCopy = body;
-    juce::StringPairArray headersCopy = headers; // StringPairArray handles its own copies of juce::String internally
+    juce::StringPairArray headersCopy = headers;
 
     juce::Thread::launch([selfWeak, callback, accessTokenCopy, endpointCopy, methodCopy, bodyCopy, headersCopy] () mutable {
         DBG("makeAPIRequest (string body) thread started.");
@@ -253,11 +260,11 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
                 stream = url.createInputStream(options);
             } catch (const std::exception& e) {
                 DBG("Exception creating HTTP input stream (string body): " + juce::String(e.what()));
-                juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var()); });
+                juce::MessageManager::callAsync([callback, e_what = juce::String(e.what())](){ if (callback) callback(false, 0, juce::var("Network error: " + e_what)); }); // FIX: Capture e.what()
                 return;
             } catch (...) {
                 DBG("Unknown exception creating HTTP input stream (string body).");
-                juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var()); });
+                juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var("Unknown network error")); });
                 return;
             }
 
@@ -281,11 +288,11 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
                 });
             } else {
                 DBG("makeAPIRequest (string body): Stream creation returned nullptr.");
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, 0, juce::var()); });
+                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, 0, juce::var("Network error: Stream creation failed.")); });
             }
         } else {
             DBG("R2OneDriveProvider instance invalid during makeAPIRequest (string body) thread. Aborting.");
-            juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var()); });
+            juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var("Internal error: Provider invalid.")); });
         }
     });
 }
@@ -293,14 +300,13 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
 // makeAPIRequest (MemoryBlock body)
 void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce::String& method, const juce::StringPairArray& headers, const juce::MemoryBlock& body, std::function<void(bool, int, const juce::var&)> callback)
 {
-    // Removed juce::ScopedLock
+    // isTokenValid() has its own internal logic.
     if (!isTokenValid())
     {
         auto self = shared_from_this();
-        // Removed sl.release();
-        refreshAccessToken([this, self, endpoint, method, headers, body, callback](bool success) {
+        refreshAccessToken([this, self, endpoint, method, headers, body, callback](bool success, juce::String refreshErrorMessage) {
             if (success) this->makeAPIRequest(endpoint, method, headers, body, callback);
-            else juce::MessageManager::callAsync([callback]() { if (callback) callback(false, 401, juce::var()); });
+            else juce::MessageManager::callAsync([callback, refreshErrorMessage]() { if (callback) callback(false, 401, juce::var(refreshErrorMessage)); });
         });
         return;
     }
@@ -308,8 +314,7 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
     DBG("R2OneDriveProvider::makeAPIRequest (MemoryBlock body): " + method + " " + endpoint);
     auto selfWeak = std::weak_ptr<R2CloudStorageProvider>(shared_from_this());
     
-    // Explicitly copy strings
-    juce::String accessTokenCopy = accessToken; // Copy from member
+    juce::String accessTokenCopy = accessToken;
     juce::String endpointCopy = endpoint;
     juce::String methodCopy = method;
     juce::MemoryBlock bodyCopy = body; // MemoryBlock already performs deep copy
@@ -344,11 +349,11 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
                 stream = url.createInputStream(options);
             } catch (const std::exception& e) {
                 DBG("Exception creating HTTP input stream (MemoryBlock body): " + juce::String(e.what()));
-                juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var()); });
+                juce::MessageManager::callAsync([callback, e_what = juce::String(e.what())](){ if (callback) callback(false, 0, juce::var("Network error: " + e_what)); });
                 return;
             } catch (...) {
                 DBG("Unknown exception creating HTTP input stream (MemoryBlock body).");
-                juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var()); });
+                juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var("Unknown network error")); });
                 return;
             }
             
@@ -372,11 +377,11 @@ void R2OneDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce
                 });
             } else {
                 DBG("makeAPIRequest (MemoryBlock body): Stream creation returned nullptr.");
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, 0, juce::var()); });
+                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, 0, juce::var("Network error: Stream creation failed.")); });
             }
         } else {
             DBG("R2OneDriveProvider instance invalid during makeAPIRequest (MemoryBlock body) thread. Aborting.");
-            juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var()); });
+            juce::MessageManager::callAsync([callback](){ if (callback) callback(false, 0, juce::var("Internal error: Provider invalid.")); });
         }
     });
 }
@@ -636,7 +641,6 @@ void R2OneDriveProvider::saveTokens()
             juce::String verifyAccessToken = verifyObj->getProperty("access_token").toString();
             juce::String verifyRefreshToken = verifyObj->getProperty("refresh_token").toString();
 
-            // FIX: Check for complete match of saved tokens
             if (verifyAccessToken == accessToken && verifyRefreshToken == refreshToken)
             {
                 DBG("Token file verification SUCCESS: Content matches!");
