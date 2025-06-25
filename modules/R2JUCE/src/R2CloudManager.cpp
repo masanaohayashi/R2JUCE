@@ -211,7 +211,7 @@ void R2CloudManager::saveFile(const juce::String& filePath, const juce::MemoryBl
     auto provider = getCurrentProvider();
     if (!provider) { if (callback) callback(false, "No provider"); return; }
     if (needsAuthentication()) { if (callback) callback(false, "Authentication required"); return; }
-    provider->uploadFileByPath(filePath, data, callback); // MemoryBlockを直接渡す
+    provider->uploadFileByPath(filePath, data, callback);
 }
 
 void R2CloudManager::loadFile(const juce::String& filePath, FileContentCallback callback)
