@@ -140,6 +140,11 @@ MainComponent::MainComponent ()
 
     labelData->setBounds (16, 112, 72, 24);
 
+    dropArea.reset (new DropArea());
+    addAndMakeVisible (dropArea.get());
+
+    dropArea->setBounds (472, 72, 86, 96);
+
 
     //[UserPreSize]
     DBG("OneDrive ClientID: " + juce::String(ONEDRIVE_CLIENT_ID));
@@ -295,7 +300,7 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
 void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
 {
     //[UserbuttonClicked_Pre]
-    //[/UserButtonCode_buttonClicked_Pre]
+    //[/UserbuttonClicked_Pre]
 
     if (buttonThatWasClicked == textButtonLoad.get())
     {
@@ -322,7 +327,7 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
     }
 
     //[UserbuttonClicked_Post]
-    //[/UserButtonCode_buttonClicked_Post]
+    //[/UserbuttonClicked_Post]
 }
 
 
@@ -366,7 +371,7 @@ void MainComponent::saveToFile()
         showMessage("Error", "Please enter a filename or path");
         return;
     }
-    
+
     // Convert string content to MemoryBlock for saving
     juce::MemoryBlock data(content.toRawUTF8(), content.getNumBytesAsUTF8());
 
@@ -521,7 +526,7 @@ void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const 
     // 4. Determine upload path
     juce::String uploadFileName = droppedFile.getFileName();
     juce::String uploadPath = textEditorPath->getText().trim();
-    
+
     // Construct the full path for upload: path/filename
     if (uploadPath.isEmpty())
     {
@@ -622,7 +627,7 @@ void MainComponent::DropArea::fileDragExit(const juce::StringArray& files)
 
 //==============================================================================
 #if 0
-/* -- Projucer information section --
+/*  -- Projucer information section --
 
     This is where the Projucer stores the metadata that describe this GUI layout, so
     make changes in here at your peril!
@@ -685,7 +690,9 @@ BEGIN_JUCER_METADATA
 
 END_JUCER_METADATA
 */
-#endif // Close the Projucer metadata block
+#endif
+
 
 //[EndFile] You can add extra defines here...
 //[/EndFile]
+

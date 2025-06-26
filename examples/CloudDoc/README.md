@@ -1,261 +1,125 @@
-# Google Drive OAuth認証設定ガイド
+# CloudDoc: R2JUCEクラウド連携サンプルアプリケーション
 
-このガイドでは、CloudDocアプリケーションでGoogle Drive認証を使用するために必要なGoogle Cloud Console設定手順を説明します。
+English follows Japanese
 
-## 📋 目次
+CloudDocは、JUCEフレームワークとカスタムモジュールR2JUCEを使用して、クラウドストレージ（Google Drive、OneDrive）およびローカルストレージとの間でファイルを操作するサンプルアプリケーションです。このアプリケーションは、R2JUCEが提供するクラウド連携機能を実演します。
 
-- [事前準備](#事前準備)
-- [Google Cloud Consoleでの設定](#google-cloud-consoleでの設定)
-- [OAuth同意画面の設定](#oauth同意画面の設定)
-- [OAuth Client IDの作成](#oauth-client-idの作成)
-- [認証情報の取得](#認証情報の取得)
-- [アプリケーションへの設定](#アプリケーションへの設定)
-- [テストモードと本番環境](#テストモードと本番環境)
-- [トラブルシューティング](#トラブルシューティング)
+## 主な機能
 
-## 🚀 事前準備
+* **クラウドサービス選択**: Google Drive、Microsoft OneDrive、およびローカルストレージ間で切り替えてファイル操作を行うことができます。
+* **OAuth 2.0デバイス認証フロー**: Google DriveおよびOneDriveへの初回アクセス時には、OAuth 2.0デバイス認証フローを介したユーザー認証が必要です。このプロセスはアプリケーション内で完結し、ユーザーは表示されるURLにアクセスし、コードを入力することで認証を完了できます。この認証方式は、通常、TV用アプリなど、キーボード入力が困難なデバイスで用いられます。そのため、Raspberry Piなどのデバイスで動作するCloudDocアプリケーションを認証する際にも、スマートフォンやMac/PCを使用して認証を行うことが可能です。
+* **ファイル操作**: 画面内のテキストエディタに表示されたテキストデータをクラウドまたはローカルに保存したり、読み込んだりすることができます。
+* **ドラッグ＆ドロップによるファイルアップロード**: アプリケーションの指定されたエリアにファイルをドラッグ＆ドロップすることで、その内容を読み込み、現在選択されているクラウドサービスにアップロードできます。この機能は主に画像や音声などのファイルに対応しています。フォルダのアップロードはサポートされておらず、ファイルサイズは10MBに制限されています。
+* **設定の永続化**: 最後に選択したクラウドサービス、ファイルパス、ファイル名がアプリケーションの終了時に保存され、次回起動時に自動的に復元されます。
+* **カスタムUIコンポーネント**: 進捗表示付きアラートや、ソフトウェアキーボード対応（Raspberry Pi向け）のテキストエディタなど、R2JUCEが提供するカスタムUIコンポーネントを使用しています。
 
-### 必要なもの
-- Googleアカウント
-- ブラウザ（Chrome、Firefox、Safari等）
-- インターネット接続
+## はじめに
 
-### 注意事項
-- Google Drive APIは**無料**で使用できます（月間1億回のAPIコールまで）
-- 設定には約10-15分かかります
+このプロジェクトをビルドして実行するには、JUCEフレームワークの基本的な知識と、C++開発環境がセットアップされている必要があります。
 
-## 🔧 Google Cloud Consoleでの設定
+### Google Drive / OneDrive 認証情報の取得
 
-### 1. Google Cloud Consoleにアクセス
+Google DriveおよびOneDriveと連携するためには、ご自身のクラウドプラットフォームでアプリケーションを登録し、**クライアントID**と**クライアントシークレット**を取得する必要があります。これらの情報は機密性が高いため、公開リポジトリにコミットしないように注意してください。
 
-1. [Google Cloud Console](https://console.cloud.google.com/) にアクセス
-2. Googleアカウントでサインイン
+#### Google Driveの場合:
 
-### 2. プロジェクトの作成
+1.  [Google Cloud Console](https://console.cloud.google.com/)にアクセスします。
+2.  新規プロジェクトを作成するか、既存のプロジェクトを選択します。
+3.  「APIとサービス」>「ライブラリ」から「**Google Drive API**」を有効にします。
+4.  「APIとサービス」>「認証情報」に移動します。
+5.  「認証情報を作成」をクリックし、「OAuth クライアント ID」を選択します。
+6.  アプリケーションの種類として「**デスクトップ アプリケーション**」を選択し、クライアントを作成します。
+7.  作成されたクライアントの「**クライアント ID**」と「**クライアント シークレット**」をメモします。
 
-1. 画面上部の「**プロジェクトの選択**」をクリック
-2. 「**新しいプロジェクト**」をクリック
-3. プロジェクト名を入力（例：`CloudDoc-App`）
-4. 「**作成**」をクリック
-5. 作成されたプロジェクトが選択されていることを確認
+#### Microsoft OneDriveの場合:
 
-### 3. Google Drive APIの有効化
+1.  [Azure Portal](https://portal.azure.com/)にアクセスし、サインインします。
+2.  「Azure Active Directory」>「アプリの登録」に移動します。
+3.  「新規登録」をクリックし、以下の情報を入力します。
+    * **名前**: `CloudDoc Desktop Client` (任意の名前)
+    * **サポートされているアカウントの種類**: 「個人用 Microsoft アカウントのみ」を選択します。
+    * **リダイレクト URI**: ここは**空欄**のまま進めてください。デバイス認証フローではリダイレクトURIは使用しません。
+4.  アプリの登録後、左メニューの「証明書とシークレット」に移動し、「**新しいクライアント シークレット**」を作成します。**表示される値（シークレット）を必ずすぐにメモしてください。この値は一度しか表示されず、後から確認することはできません。メモを忘れた場合は、シークレットを削除して再作成する必要があります。**
+5.  左メニューの「API のアクセス許可」に移動し、「アクセス許可の追加」をクリックします。
+6.  「Microsoft Graph」を選択し、「委任されたアクセス許可」タブで以下のアクセス許可を追加します。
+    * `Files.ReadWrite`
+    * `offline_access`
+7.  追加後、「管理者の同意を与えます」をクリックします。
 
-1. 左サイドバーの「**APIs & Services**」→「**Library**」をクリック
-2. 検索ボックスに「**Google Drive API**」と入力
-3. 「**Google Drive API**」をクリック
-4. 「**有効にする**」ボタンをクリック
+### 認証情報の設定
 
-## 🔐 OAuth同意画面の設定
+取得したクライアントIDとクライアントシークレットは、`Source/Credentials_template.h` ファイルを `Source/Credentials.h` にリネームし、そのファイルに定義されている以下のマクロを置き換えることで設定します。
 
-### 1. OAuth同意画面の設定
+**警告**: `Credentials.h` ファイルは機密情報を含むため、バージョン管理システム（Gitなど）にコミットしないでください。
 
-1. 左サイドバーの「**APIs & Services**」→「**OAuth consent screen**」をクリック
-2. 「**External**」を選択（個人用アカウントの場合）
-3. 「**作成**」をクリック
+## ビルドと実行
 
-### 2. アプリ情報の入力
+1.  Projucerでプロジェクトファイル（`.jucer`）を開きます。
+2.  適切なエクスポートターゲット（Visual Studio, Xcode, Makefileなど）を選択し、IDEプロジェクトを生成します。
+3.  生成されたプロジェクトをIDE（Visual Studio, Xcodeなど）で開き、ビルドして実行します。
 
-**必須項目：**
-- **App name**: `CloudDoc`（または任意のアプリ名）
-- **User support email**: あなたのGmailアドレス
-- **Developer contact information**: あなたのGmailアドレス
-
-**オプション項目：**
-- **App logo**: アプリのロゴ（120x120px、推奨）
-- **App domain**: 空欄でOK
-- **App privacy policy link**: 空欄でOK
-- **App terms of service link**: 空欄でOK
-
-### 3. スコープの設定
-
-1. 「**保存して次へ**」をクリック
-2. 「**Scopes**」ページでは何も設定せず「**保存して次へ**」をクリック
-
-### 4. テストユーザーの追加
-
-1. 「**Test users**」ページで「**+ ADD USERS**」をクリック
-2. **あなたのGmailアドレス**を入力
-3. 「**保存**」をクリック
-4. 「**保存して次へ**」をクリック
-
-### 5. 概要の確認
-
-1. 設定内容を確認
-2. 「**ダッシュボードに戻る**」をクリック
-
-## 🔑 OAuth Client IDの作成
-
-### 1. 認証情報の作成
-
-1. 左サイドバーの「**APIs & Services**」→「**Credentials**」をクリック
-2. 上部の「**+ 認証情報を作成**」→「**OAuth 2.0 クライアント ID**」をクリック
-
-### 2. アプリケーションタイプの選択
-
-1. 「**Application type**」で「**Desktop application**」を選択
-2. 「**Name**」に `CloudDoc Desktop Client`（または任意の名前）を入力
-3. 「**作成**」をクリック
-
-## 📝 認証情報の取得
-
-### Client IDとSecretの確認
-
-作成完了後、以下の情報が表示されます：
-
-```
-Client ID: 123456789012-xxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com
-Client Secret: GOCSPX-xxxxxxxxxxxxxxxxxxxxxx
-```
-
-**重要：** これらの情報は**安全に保管**してください。
-
-### JSONファイルのダウンロード（オプション）
-
-1. 「**JSON をダウンロード**」をクリック
-2. ファイルを安全な場所に保存
-
-## 🔧 アプリケーションへの設定
-
-### MainComponent.hでの設定
-
-`MainComponent.h`ファイルの以下の部分を編集：
-
-```cpp
-// Google OAuth認証情報（取得した値に置き換え）
-const juce::String googleClientId = "あなたのClient ID";
-const juce::String googleClientSecret = "あなたのClient Secret";
-```
-
-### 設定例
-
-```cpp
-const juce::String googleClientId = "123456789012-abcdefghijklmnopqrstuvwxyz123456.apps.googleusercontent.com";
-const juce::String googleClientSecret = "GOCSPX-AbCdEfGhIjKlMnOpQrStUvWxYz";
-```
-
-## 🔄 テストモードと本番環境
-
-### テストモード（開発用）
-
-**設定状態：**
-- Publishing status: **Testing**
-- Test users: 開発者とテストユーザーのみ
-
-**特徴：**
-- 警告なしでアプリを使用可能
-- テストユーザーのみアクセス可能
-- 設定変更が即座に反映
-
-**推奨用途：**
-- 開発とテスト
-- 小規模な内部使用
-- プロトタイプ
-
-### 本番環境（公開用）
-
-**設定手順：**
-1. OAuth consent screen → **PUBLISH APP**をクリック
-2. App Verificationプロセスの開始（必要に応じて）
-
-**注意事項：**
-- `https://www.googleapis.com/auth/drive.file`スコープは通常、App Verification不要
-- 全フォルダアクセス（`drive`スコープ）は審査が必要
-
-### モード切り替え
-
-**テスト → 本番：**
-1. OAuth consent screen
-2. 「**PUBLISH APP**」をクリック
-3. 確認ダイアログで「**CONFIRM**」
-
-**本番 → テスト：**
-1. OAuth consent screen  
-2. 「**BACK TO TESTING**」をクリック
-
-## 🛠️ トラブルシューティング
-
-### よくある問題と解決方法
-
-#### 1. "このアプリは Google で確認されていません"
-**原因：** アプリがテストモードでテストユーザーに追加されていない  
-**解決方法：** OAuth consent screen → Test users に自分を追加
-
-#### 2. "無効なクライアント"エラー  
-**原因：** Client IDが間違っている  
-**解決方法：** MainComponent.hのClient IDを確認
-
-#### 3. "認証に失敗しました"
-**原因：** Client Secretが間違っている  
-**解決方法：** MainComponent.hのClient Secretを確認
-
-#### 4. "スコープが無効です"エラー
-**原因：** 使用しているスコープがサポートされていない  
-**解決方法：** `drive.file`スコープを使用（現在の実装で対応済み）
-
-### デバッグ方法
-
-1. **コンソール出力を確認**
-   ```
-   DBG("Device code response - Success: true/false");
-   DBG("Response content: ...");
-   ```
-
-2. **Google Cloud Consoleで使用状況を確認**
-   - APIs & Services → Dashboard
-   - 使用統計とエラーログを確認
-
-3. **認証情報の再作成**
-   - 問題が解決しない場合は新しいOAuth Client IDを作成
-
-## 📊 使用量とクォータ
-
-### 無料枠
-- **1日**: 1,000,000 リクエスト
-- **月間**: 100,000,000 リクエスト
-
-### 一般的な使用量
-- ファイル1個の保存/読み込み: 2-3 リクエスト
-- 個人使用: 月間数千リクエスト程度
-
-### クォータ監視
-1. Google Cloud Console → APIs & Services → Dashboard
-2. Google Drive APIの使用量を確認
-
-## 🔒 セキュリティのベストプラクティス
-
-### 認証情報の管理
-- Client SecretをGitにコミットしない
-- 本番環境では環境変数を使用を検討
-- 定期的にClient Secretをローテーション
-
-### アクセス権限
-- 最小権限の原則（`drive.file`スコープのみ）
-- 不要になったOAuth Clientは削除
-
-## 📞 サポート
-
-### Googleサポート
-- [Google Cloud Support](https://cloud.google.com/support)
-- [OAuth 2.0 ドキュメント](https://developers.google.com/identity/protocols/oauth2)
-
-### このプロジェクトのサポート
-- GitHubのIssuesページで質問・バグ報告
-- READMEの更新提案はPull Requestで
+アプリケーションが起動したら、ドロップダウンメニューからクラウドサービスを選択し、ファイル操作を試すことができます。
 
 ---
 
-## ✅ チェックリスト
+# CloudDoc: R2JUCE Cloud Integration Sample Application
 
-設定完了前に以下を確認してください：
+English follows Japanese
 
-- [ ] Google Cloud Consoleでプロジェクトを作成
-- [ ] Google Drive APIを有効化
-- [ ] OAuth同意画面を設定
-- [ ] テストユーザーに自分を追加
-- [ ] OAuth Client IDを作成（Desktop application）
-- [ ] Client IDとSecretを取得
-- [ ] MainComponent.hに認証情報を設定
-- [ ] アプリケーションをビルド・テスト
+CloudDoc is a sample application that demonstrates how to interact with cloud storage (Google Drive, OneDrive) and local storage for file operations, built using the JUCE framework and the custom R2JUCE module. This application showcases R2JUCE's cloud integration features.
 
-すべて完了したら、CloudDocアプリでGoogle Drive認証が使用できます！
+## Key Features
+
+* **Cloud Service Selection**: Switch between Google Drive, Microsoft OneDrive, and local storage for file operations.
+* **OAuth 2.0 Device Authorization Flow**: Initial access to Google Drive and OneDrive requires user authentication via the OAuth 2.0 Device Authorization Flow. This process is handled within the application, allowing users to complete authentication by visiting a displayed URL and entering a code. This authentication method is typically used for devices like smart TVs where direct keyboard input is difficult. Therefore, when authenticating the CloudDoc application running on devices such as Raspberry Pi, it is possible to perform authentication using a smartphone or a Mac/PC.
+* **File Operations**: Save and load text data displayed in the on-screen text editor to/from cloud or local storage.
+* **Drag & Drop File Upload**: Drag and drop files onto a designated area within the application to read their content and upload them to the currently selected cloud service. This feature primarily supports files such as images and audio. Folder uploads are not supported, and file size is limited to 10MB.
+* **Settings Persistence**: The last selected cloud service, file path, and file name are saved upon application exit and automatically restored on the next launch.
+* **Custom UI Components**: Utilizes R2JUCE's custom UI components, including an alert with a progress bar and a text editor with on-screen keyboard support (for Raspberry Pi).
+
+## Getting Started
+
+To build and run this project, you need a basic understanding of the JUCE framework and a C++ development environment set up.
+
+### Obtaining Google Drive / OneDrive Credentials
+
+To integrate with Google Drive and OneDrive, you must register your application with their respective cloud platforms and obtain your **Client ID** and **Client Secret**. These are sensitive information and should not be committed to public repositories.
+
+#### For Google Drive:
+
+1.  Go to [Google Cloud Console](https://console.cloud.google.com/).
+2.  Create a new project or select an existing one.
+3.  Enable the "**Google Drive API**" under "APIs & Services" > "Library".
+4.  Navigate to "APIs & Services" > "Credentials".
+5.  Click "Create Credentials" and select "OAuth client ID".
+6.  Choose "**Desktop application**" as the application type and create the client.
+7.  Make a note of the "**Client ID**" and "**Client Secret**" displayed.
+
+#### For Microsoft OneDrive:
+
+1.  Go to [Azure Portal](https://portal.azure.com/) and sign in.
+2.  Navigate to "Azure Active Directory" > "App registrations".
+3.  Click "New registration" and fill in the following details:
+    * **Name**: `CloudDoc Desktop Client` (or any name you prefer)
+    * **Supported account types**: Select "Personal Microsoft accounts only".
+    * **Redirect URI**: Leave this **blank**. Redirect URIs are not used for device authorization flow.
+4.  After registering the app, go to "Certificates & secrets" in the left menu and create a "**New client secret**". **Immediately copy the Value (secret) that is displayed. This value is shown only once and cannot be retrieved later. If you forget to copy it, you will need to delete the secret and create a new one.**
+5.  Go to "API permissions" in the left menu and click "Add a permission".
+6.  Select "Microsoft Graph" and add the following delegated permissions:
+    * `Files.ReadWrite`
+    * `offline_access`
+7.  After adding, click "Grant admin consent".
+
+### Setting up Credentials
+
+The obtained Client ID and Client Secret should be set by renaming the `Source/Credentials_template.h` file to `Source/Credentials.h` and then replacing the following macros defined in that file:
+
+**WARNING**: `Credentials.h` file contains sensitive information and should **NOT** be committed to version control systems (like Git).
+
+## Build and Run
+
+1.  Open the project file (`.jucer`) with Projucer.
+2.  Select the appropriate export target (Visual Studio, Xcode, Makefile, etc.) and generate the IDE project.
+3.  Open the generated project in your IDE (Visual Studio, Xcode, etc.), then build and run the application.
+
+Once the application starts, you can select a cloud service from the dropdown menu and try out the file operations.
