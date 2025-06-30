@@ -60,6 +60,23 @@ Google DriveおよびOneDriveと連携するためには、ご自身のクラウ
 
 アプリケーションが起動したら、ドロップダウンメニューからクラウドサービスを選択し、ファイル操作を試すことができます。
 
+
+## CloudDoc アプリケーションの Google Drive および OneDrive API を使ったファイル読み書きの詳細（ソースコード引用付き）
+
+CloudDoc アプリケーションは、`R2CloudManager` クラスを介して抽象化された `R2CloudStorageProvider` インターフェースを利用し、具体的なクラウドサービスプロバイダ（`R2GoogleDriveProvider`、`R2OneDriveProvider`）がそれぞれの API と連携しています。
+
+### 認証方式 (OAuth 2.0 Device Authorization Flow)
+
+Google Drive と OneDrive の両方で、OAuth 2.0 Device Authorization Flow が使用されています。これは、Web ブラウザを持たないデバイス（例: Raspberry Pi）から認証を行う場合に適したフローです。
+
+1. デバイスコードのリクエスト:
+- アプリは、選択されたサービス（Google DriveまたはOneDrive）に応じて、それぞれの認証エンドポイントにデバイスコードをリクエストします。この処理は R2CloudAuthComponent::requestDeviceCode() メソッドで行われます。
+
+- Google Drive: https://oauth2.googleapis.com/device/code
+
+-- client_id と scope (https://www.googleapis.com/auth/drive.file) を POST データとして送信します。
+
+
 ---
 
 # CloudDoc: R2JUCE Cloud Integration Sample Application

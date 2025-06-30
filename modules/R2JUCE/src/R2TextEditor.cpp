@@ -43,6 +43,10 @@ void R2TextEditor::focusGained (FocusChangeType type)
 {
     juce::TextEditor::focusGained (type);
 
+    if (focusChangedCallback != nullptr) {
+        focusChangedCallback(true);
+    }
+
     exitedWithEscape = false;
 
     if (!useScreenKeyboard) return;
@@ -65,26 +69,22 @@ void R2TextEditor::focusGained (FocusChangeType type)
                             parent->getWidth(),
                             keyboard->getHeight());
     }
-    
-    if (focusChangedCallback != nullptr) {
-        focusChangedCallback(true);
-    }
 }
 
 void R2TextEditor::focusLost (FocusChangeType type)
 {
     TextEditor::focusLost (type);
     
+    if (focusChangedCallback != nullptr) {
+        focusChangedCallback(false);
+    }
+
     if (!useScreenKeyboard) return;
 
     if (keyboard != nullptr) {
         auto parent = keyboard->getParentComponent();
         parent->removeChildComponent(keyboard.get());
         keyboard = nullptr;
-    }
-    
-    if (focusChangedCallback != nullptr) {
-        focusChangedCallback(false);
     }
 }
 
