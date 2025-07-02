@@ -323,6 +323,12 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
         //[UserButtonCode_textButtonSignOut] -- add your button handler code here..
         DBG("MainComponent::buttonClicked() - Sign Out button clicked.");
         cloudManager->signOut();
+
+        // After signing out, switch back to "Local only" service.
+        // The ID for "Local only" is 1. Using sendNotification will trigger
+        // the comboBoxChanged callback, which in turn updates the UI state,
+        // including disabling the signout button.
+        comboService->setSelectedId(1, juce::sendNotification);
         //[/UserButtonCode_textButtonSignOut]
     }
 
@@ -627,7 +633,7 @@ void MainComponent::DropArea::fileDragExit(const juce::StringArray& files)
 
 //==============================================================================
 #if 0
-/*  -- Projucer information section --
+/* -- Projucer information section --
 
     This is where the Projucer stores the metadata that describe this GUI layout, so
     make changes in here at your peril!
