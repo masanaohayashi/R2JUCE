@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="Q3Zrt0" name="R2JUCEComponentEdit" projectType="guiapp" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
+  <MAINGROUP id="hbZXBN" name="R2JUCEComponentEdit">
+    <GROUP id="{D6A4F9EA-8606-6E45-CF7C-05406DE25F72}" name="Source">
+      <FILE id="BvBIoC" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="woBZcO" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+      <FILE id="tIr6Vl" name="MainComponent.cpp" compile="1" resource="0"
+            file="Source/MainComponent.cpp"/>
+    </GROUP>
+    <GROUP id="{6453F65C-B3AE-7758-3771-913578DA57A0}" name="R2JUCE">
+      <FILE id="JczvG8" name="R2AlertComponent.cpp" compile="1" resource="0"
+            file="../../modules/R2JUCE/src/R2AlertComponent.cpp"/>
+      <FILE id="rnM5RQ" name="R2AlertComponent.h" compile="0" resource="0"
+            file="../../modules/R2JUCE/src/R2AlertComponent.h"/>
+      <FILE id="a9fBQE" name="R2CloudAuthComponent.cpp" compile="1" resource="0"
+            file="../../modules/R2JUCE/src/R2CloudAuthComponent.cpp"/>
+      <FILE id="LgJNE3" name="R2CloudAuthComponent.h" compile="0" resource="0"
+            file="../../modules/R2JUCE/src/R2CloudAuthComponent.h"/>
+      <FILE id="nEX6Bq" name="R2WiFiSelector.cpp" compile="1" resource="0"
+            file="../../modules/R2JUCE/src/R2WiFiSelector.cpp"/>
+      <FILE id="S1vnqA" name="R2WiFiSelector.h" compile="0" resource="0"
+            file="../../modules/R2JUCE/src/R2WiFiSelector.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="R2JUCEComponentEdit"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="R2JUCEComponentEdit"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../../../JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+</JUCERPROJECT>

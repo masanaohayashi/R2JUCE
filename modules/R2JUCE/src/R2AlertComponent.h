@@ -3,7 +3,9 @@
 
   This is an automatically generated GUI class created by the Projucer!
 
-  Be careful when adding custom code to these "//[xyz]" and "//[/xyz]" sections.
+  Be careful when adding custom code to these files, as only the code within
+  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
+  and re-saved.
 
   Created with Projucer version: 7.0.12
 
@@ -23,9 +25,10 @@ namespace r2juce {
 //[/Headers]
 
 
+
 //==============================================================================
 /**
- //[Comments]
+                                                                    //[Comments]
   @brief A component that displays a modal alert dialog.
 
   This class is displayed as an overlay on top of a parent component
@@ -33,26 +36,14 @@ namespace r2juce {
   It can have a title, a message, and 1 to 3 custom buttons.
   It also supports keyboard navigation (arrow keys, Enter, Esc).
   The result is returned via a callback function passed in the constructor.
- //[/Comments]
- */
+                                                                    //[/Comments]
+*/
 class R2AlertComponent  : public juce::Component,
                           public juce::Button::Listener
 {
 public:
     //==============================================================================
-    /**
-     @brief Constructs an R2AlertComponent.
-     @param parent       The parent component on which to display this alert. Must not be nullptr.
-     @param title        The title displayed at the top of the dialog.
-     @param message      The main message text to display in the dialog.
-     @param buttonLabels An array of strings for the button labels. Must contain 1 to 3 elements.
-     @param showProgressBar If true, a progress bar will be shown below the message.
-     @param callback     The function to call when a button is clicked. It receives the 1-based
-                         index of the button that was pressed.
-    */
     R2AlertComponent (juce::Component* parent, const juce::String& title, const juce::String& message, const juce::StringArray& buttonLabels, bool showProgressBar, std::function<void(int)> callback);
-
-    /** @brief Destructor. */
     ~R2AlertComponent() override;
 
     //==============================================================================
@@ -123,13 +114,8 @@ public:
 
     //[/UserMethods]
 
-    /** @brief Paints the component. (Overridden from juce::Component). */
     void paint (juce::Graphics& g) override;
-
-    /** @brief Adjusts the layout of child components when the component's size is changed. (Overridden from juce::Component). */
     void resized() override;
-
-    /** @brief Handles button click events. (Overridden from juce::Button::Listener). */
     void buttonClicked (juce::Button* buttonThatWasClicked) override;
 
 
@@ -171,3 +157,4 @@ private:
 //[EndFile] You can add extra defines here...
 }   //  namespace r2juce
 //[/EndFile]
+

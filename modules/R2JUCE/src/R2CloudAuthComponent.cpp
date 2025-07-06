@@ -123,23 +123,23 @@ R2CloudAuthComponent::~R2CloudAuthComponent()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
     DBG("R2CloudAuthComponent destructor called");
-    
+
     // Stop any active authentication process
     deviceFlowActive = false;
     if (isTimerRunning())
     {
         stopTimer();
     }
-    
+
     // Clear callbacks to prevent crashes
     onAuthenticationComplete = nullptr;
     onAuthenticationCancelled = nullptr;
-    
+
     // Cancel any pending HTTP requests by clearing state
     deviceCode.clear();
     userCode.clear();
     verificationUrl.clear();
-    
+
     // Wait briefly for any pending operations
     juce::Thread::sleep(10);
 
@@ -198,9 +198,9 @@ void R2CloudAuthComponent::buttonClicked (juce::Button* buttonThatWasClicked)
     {
         //[UserButtonCode_buttonCancel] -- add your button handler code here..
         DBG("Cancel button clicked");
-        
+
         stopAuthentication();
-        
+
         if (onAuthenticationCancelled)
         {
             try
@@ -251,7 +251,7 @@ void R2CloudAuthComponent::setOneDriveCredentials(const juce::String& clientId, 
 void R2CloudAuthComponent::setServiceType(ServiceType type)
 {
     serviceType = type;
-    
+
     switch (type)
     {
         case ServiceType::GoogleDrive:
@@ -267,70 +267,70 @@ void R2CloudAuthComponent::startAuthentication()
 {
     if (deviceFlowActive)
         return;
-    
+
     setVisible(true);
     toFront(true);
     grabKeyboardFocus();
-    
+
     updateStatus(TRANS("Requesting authentication code..."));
     progressValue = 0.1;
     progressBar->repaint();
-    
+
     deviceFlowActive = true;
     pollCount = 0;
     interval = 5;
-    
+
     requestDeviceCode();
 }
 
 void R2CloudAuthComponent::stopAuthentication()
 {
     DBG("R2CloudAuthComponent::stopAuthentication() called");
-    
+
     deviceFlowActive = false;
-    
+
     if (isTimerRunning())
     {
         stopTimer();
     }
-    
+
     deviceCode.clear();
     userCode.clear();
     verificationUrl.clear();
     pollCount = 0;
     interval = 5;
     progressValue = 0.0;
-    
+
     auto updateUI = [this]()
     {
         if (labelCodeDisplay != nullptr)
             labelCodeDisplay->setText(TRANS("Waiting for code..."), juce::dontSendNotification);
-        
+
         if (buttonURL != nullptr)
         {
             buttonURL->setButtonText(TRANS("Waiting for code..."));
             buttonURL->setTooltip(TRANS("Waiting for code..."));
             buttonURL->setEnabled(false);
         }
-        
+
         if (buttonCopyUrl != nullptr)
             buttonCopyUrl->setEnabled(false);
-            
+
         if (buttonCopyCode != nullptr)
             buttonCopyCode->setEnabled(false);
-        
+
         if (labelStatus != nullptr)
         {
             labelStatus->setText(TRANS("Authentication cancelled"), juce::dontSendNotification);
             labelStatus->setColour(juce::Label::textColourId, juce::Colours::orange);
         }
-        
+
         if (progressBar != nullptr)
             progressBar->repaint();
-        
+
         setVisible(false);
     };
-    
+
     if (juce::MessageManager::getInstance()->isThisTheMessageThread())
     {
         updateUI();
@@ -339,7 +339,7 @@ void R2CloudAuthComponent::stopAuthentication()
     {
         juce::MessageManager::callAsync(updateUI);
     }
-    
+
     DBG("R2CloudAuthComponent::stopAuthentication() completed");
 }
 
@@ -347,7 +347,7 @@ void R2CloudAuthComponent::requestDeviceCode()
 {
     juce::String postData;
     juce::String endpoint;
-    
+
     if (serviceType == ServiceType::GoogleDrive)
     {
         if (googleClientId.isEmpty())
@@ -355,7 +355,7 @@ void R2CloudAuthComponent::requestDeviceCode()
             showError(TRANS("Google credentials not set"));
             return;
         }
-        
+
         endpoint = "https://oauth2.googleapis.com/device/code";
         postData = "client_id=" + juce::URL::addEscapeChars(googleClientId, false);
         postData += "&scope=" + juce::URL::addEscapeChars("https://www.googleapis.com/auth/drive.file", false);
@@ -367,12 +367,12 @@ void R2CloudAuthComponent::requestDeviceCode()
             showError(TRANS("OneDrive credentials not set"));
             return;
         }
-        
+
         endpoint = "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode";
         postData = "client_id=" + juce::URL::addEscapeChars(oneDriveClientId, false);
         postData += "&scope=" + juce::URL::addEscapeChars("Files.ReadWrite offline_access", false);
     }
-    
+
     makeHttpRequest(endpoint, postData,
         [this](bool success, juce::String response, int statusCode)
         {
@@ -400,9 +400,9 @@ void R2CloudAuthComponent::parseDeviceCodeResponse(const juce::String& response)
             showError(TRANS("Invalid response format"));
             return;
         }
-        
+
         auto* obj = json.getDynamicObject();
-        
+
         if (obj->hasProperty("error"))
         {
             auto error = obj->getProperty("error").toString();
@@ -410,10 +410,10 @@ void R2CloudAuthComponent::parseDeviceCodeResponse(const juce::String& response)
             showError(error + (errorDesc.isNotEmpty() ? ": " + errorDesc : ""));
             return;
         }
-        
+
         deviceCode = obj->getProperty("device_code").toString();
         userCode = obj->getProperty("user_code").toString();
-        
+
         if (serviceType == ServiceType::GoogleDrive)
         {
             verificationUrl = obj->getProperty("verification_url").toString();
@@ -422,21 +422,21 @@ void R2CloudAuthComponent::parseDeviceCodeResponse(const juce::String& response)
         {
             verificationUrl = obj->getProperty("verification_uri").toString();
         }
-        
+
         if (obj->hasProperty("interval"))
             interval = static_cast<int>(obj->getProperty("interval"));
-        
+
         if (deviceCode.isEmpty() || userCode.isEmpty() || verificationUrl.isEmpty())
         {
             showError(TRANS("Incomplete device code response"));
             return;
         }
-        
+
         updateUI();
         updateStatus(TRANS("Waiting for user authentication..."));
         progressValue = 0.3;
         progressBar->repaint();
-        
+
         startTimer(interval * 1000);
     }
     catch (...)
@@ -451,11 +451,11 @@ void R2CloudAuthComponent::updateUI()
     buttonURL->setButtonText(verificationUrl);
     buttonURL->setTooltip (verificationUrl);
     buttonURL->setURL (verificationUrl);
-    
+
     buttonURL->setEnabled(true);
     buttonCopyUrl->setEnabled (true);
     buttonCopyCode->setEnabled (true);
-    
+
     juce::String instructionText;
     if (serviceType == ServiceType::GoogleDrive)
     {
@@ -465,9 +465,9 @@ void R2CloudAuthComponent::updateUI()
     {
         instructionText = TRANS("1. Click URL or go to aka.ms/devicelogin\n2. Enter the code\n3. Complete authentication");
     }
-    
+
     labelInstruction->setText(instructionText, juce::dontSendNotification);
-    
+
     repaint();
 }
 
@@ -480,21 +480,21 @@ void R2CloudAuthComponent::timerCallback()
 void R2CloudAuthComponent::pollForAccessToken()
 {
     pollCount++;
-    
+
     if (pollCount > maxPolls)
     {
         showError(TRANS("Authentication timeout"));
         return;
     }
-    
+
     progressValue = 0.3 + (static_cast<double>(pollCount) / maxPolls) * 0.6;
     progressBar->repaint();
-    
+
     updateStatus(TRANS("Checking authentication... (") + juce::String(pollCount) + "/" + juce::String(maxPolls) + ")");
-    
+
     juce::String postData;
     juce::String endpoint;
-    
+
     if (serviceType == ServiceType::GoogleDrive)
     {
         endpoint = "https://oauth2.googleapis.com/token";
@@ -511,7 +511,7 @@ void R2CloudAuthComponent::pollForAccessToken()
         postData += "&device_code=" + juce::URL::addEscapeChars(deviceCode, false);
         postData += "&grant_type=urn:ietf:params:oauth:grant-type:device_code";
     }
-    
+
     makeHttpRequest(endpoint, postData,
         [this](bool success, juce::String response, int)
         {
@@ -530,25 +530,25 @@ void R2CloudAuthComponent::parseTokenResponse(const juce::String& response)
         auto json = juce::JSON::parse(response);
         if (!json.isObject())
             return;
-        
+
         auto* obj = json.getDynamicObject();
-        
+
         if (obj->hasProperty("access_token"))
         {
             auto accessToken = obj->getProperty("access_token").toString();
             auto refreshToken = obj->getProperty("refresh_token").toString();
-            
+
             showSuccess();
-            
+
             if (onAuthenticationComplete)
                 onAuthenticationComplete(true, "", accessToken, refreshToken);
-                
+
             return;
         }
         else if (obj->hasProperty("error"))
         {
             auto error = obj->getProperty("error").toString();
-            
+
             if (error == "authorization_pending")
             {
                 return;
@@ -582,25 +582,25 @@ void R2CloudAuthComponent::updateStatus(const juce::String& status)
 void R2CloudAuthComponent::showError(const juce::String& error)
 {
     DBG("R2CloudAuthComponent::showError: " + error);
-    
+
     if (isTimerRunning())
     {
         stopTimer();
     }
     deviceFlowActive = false;
-    
+
     auto updateErrorUI = [this, error]()
     {
         updateStatus(TRANS("Error: ") + error);
         progressValue = 0.0;
-        
+
         if (progressBar != nullptr)
             progressBar->repaint();
-        
+
         if (labelStatus != nullptr)
             labelStatus->setColour(juce::Label::textColourId, juce::Colours::red);
     };
-    
+
     if (juce::MessageManager::getInstance()->isThisTheMessageThread())
     {
         updateErrorUI();
@@ -609,7 +609,7 @@ void R2CloudAuthComponent::showError(const juce::String& error)
     {
         juce::MessageManager::callAsync(updateErrorUI);
     }
-    
+
     if (onAuthenticationComplete)
     {
         try
@@ -626,25 +626,25 @@ void R2CloudAuthComponent::showError(const juce::String& error)
 void R2CloudAuthComponent::showSuccess()
 {
     DBG("R2CloudAuthComponent::showSuccess");
-    
+
     if (isTimerRunning())
     {
         stopTimer();
     }
     deviceFlowActive = false;
-    
+
     auto updateSuccessUI = [this]()
     {
         updateStatus(TRANS("Authentication successful!"));
         progressValue = 1.0;
-        
+
         if (progressBar != nullptr)
             progressBar->repaint();
-        
+
         if (labelStatus != nullptr)
             labelStatus->setColour(juce::Label::textColourId, juce::Colours::green);
     };
-    
+
     if (juce::MessageManager::getInstance()->isThisTheMessageThread())
     {
         updateSuccessUI();
@@ -653,7 +653,7 @@ void R2CloudAuthComponent::showSuccess()
     {
         juce::MessageManager::callAsync(updateSuccessUI);
     }
-    
+
     juce::Timer::callAfterDelay(1000, [safeThis = juce::Component::SafePointer<R2CloudAuthComponent>(this)]()
     {
         if (safeThis != nullptr)
@@ -666,7 +666,7 @@ void R2CloudAuthComponent::showSuccess()
 void R2CloudAuthComponent::copyToClipboard(const juce::String& text)
 {
     juce::SystemClipboard::copyTextToClipboard(text);
-    
+
     if (text == userCode)
     {
         auto prevText = buttonCopyCode->getButtonText();
@@ -719,17 +719,17 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
         try
         {
             juce::URL requestUrl(url);
-            
+
             if (postData.isNotEmpty())
             {
                 requestUrl = requestUrl.withPOSTData(postData);
             }
-            
+
             juce::StringPairArray headers;
             headers.set("Content-Type", "application/x-www-form-urlencoded");
             headers.set("Accept", "application/json");
             headers.set("User-Agent", "R2JUCE CloudAuth/1.0");
-            
+
             juce::String headerString;
             for (int i = 0; i < headers.size(); ++i)
             {
@@ -742,13 +742,13 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
             webStream->withExtraHeaders(headerString);
             webStream->withConnectionTimeout(30000);
             webStream->withNumRedirectsToFollow(5);
-            
+
             if (webStream->connect(nullptr))
             {
                 auto response = webStream->readEntireStreamAsString();
                 int statusCode = webStream->getStatusCode();
                 bool success = (statusCode >= 200 && statusCode < 300);
-                
+
                 DBG("=== HTTP Response ===");
                 DBG("Status Code: " + juce::String(statusCode));
                 DBG("Response: " + response);
@@ -801,4 +801,66 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
 
 }   //  namespace r2juce
 //[/MiscUserCode]
+
+
+//==============================================================================
+#if 0
+/*  -- Projucer information section --
+
+    This is where the Projucer stores the metadata that describe this GUI layout, so
+    make changes in here at your peril!
+
+BEGIN_JUCER_METADATA
+
+<JUCER_COMPONENT documentType="Component" className="R2CloudAuthComponent" componentName=""
+                 parentClasses="public juce::Component, public juce::Timer" constructorParams=""
+                 variableInitialisers="" snapPixels="8" snapActive="1" snapShown="1"
+                 overlayOpacity="0.330" fixedSize="1" initialWidth="568" initialHeight="320">
+  <BACKGROUND backgroundColour="ff323e44"/>
+  <LABEL name="" id="95463433c749ef8" memberName="labelTitle" virtualName=""
+         explicitFocusOrder="0" pos="0Cc 8 32M 32" edTextCol="ff000000"
+         edBkgCol="0" labelText="Title" editableSingleClick="0" editableDoubleClick="0"
+         focusDiscardsChanges="0" fontname="Default font" fontsize="22.0"
+         kerning="0.0" bold="1" italic="0" justification="36" typefaceStyle="Bold"/>
+  <LABEL name="" id="e34e1b93f56c2849" memberName="labelInstruction" virtualName=""
+         explicitFocusOrder="0" pos="0Cc 40 32M 56" edTextCol="ff000000"
+         edBkgCol="0" labelText="1. Click URL or go to the URL below&#10;2. Enter the code&#10;3. Complete authentication"
+         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
+         fontname="Default font" fontsize="15.0" kerning="0.0" bold="0"
+         italic="0" justification="36"/>
+  <LABEL name="" id="88e2d4137011f05b" memberName="labelCodeDisplay" virtualName=""
+         explicitFocusOrder="0" pos="0Cc 168 536 32" edTextCol="ff000000"
+         edBkgCol="0" labelText="XXX-XXX-XXX" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="32.0" kerning="0.0" bold="0" italic="0" justification="36"/>
+  <HYPERLINKBUTTON name="" id="3ff1b1e361014b63" memberName="buttonURL" virtualName=""
+                   explicitFocusOrder="0" pos="0Cc 104 32M 24" tooltip="http://www.juce.com"
+                   buttonText="https://www.xxx.com" connectedEdges="0" needsCallback="0"
+                   radioGroupId="0" url="http://www.juce.com"/>
+  <TEXTBUTTON name="" id="4c5029f7e0459d47" memberName="buttonCancel" virtualName=""
+              explicitFocusOrder="0" pos="0Cc 280 128 24" buttonText="Cancel"
+              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+  <TEXTBUTTON name="" id="b784255939e91b89" memberName="buttonCopyUrl" virtualName=""
+              explicitFocusOrder="0" pos="0Cc 136 128 24" buttonText="Copy URL"
+              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+  <TEXTBUTTON name="" id="c06ddf2a594e77d7" memberName="buttonCopyCode" virtualName=""
+              explicitFocusOrder="0" pos="0Cc 208 128 24" buttonText="Copy Code"
+              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+  <LABEL name="" id="b6ec3558c7c0f3d" memberName="labelStatus" virtualName=""
+         explicitFocusOrder="0" pos="16 240 64 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Status" editableSingleClick="0" editableDoubleClick="0"
+         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
+         kerning="0.0" bold="0" italic="0" justification="33"/>
+  <GENERICCOMPONENT name="" id="2452a8ab4cd2a84c" memberName="progressBar" virtualName=""
+                    explicitFocusOrder="0" pos="16Rr 240 96M 24" class="juce::ProgressBar"
+                    params="progressValue"/>
+</JUCER_COMPONENT>
+
+END_JUCER_METADATA
+*/
+#endif
+
+
+//[EndFile] You can add extra defines here...
+//[/EndFile]
 

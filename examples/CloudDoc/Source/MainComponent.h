@@ -73,6 +73,7 @@ private:
     std::unique_ptr<r2juce::R2CloudManager> cloudManager;
     std::unique_ptr<juce::PropertiesFile> settingsFile; // For saving application settings
     std::unique_ptr<r2juce::R2CloudAuthComponent> authComponent; // Auth UI is now owned by MainComponent
+    r2juce::R2AlertComponent* progressAlert = nullptr;
 
     // Keys for saving and loading settings
     static inline const juce::Identifier lastSelectedServiceKey    { "lastSelectedService" };

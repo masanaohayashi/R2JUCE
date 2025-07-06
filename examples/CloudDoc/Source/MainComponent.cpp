@@ -105,7 +105,7 @@ MainComponent::MainComponent ()
     textButtonSignOut->setButtonText (TRANS ("Signout"));
     textButtonSignOut->addListener (this);
 
-    textButtonSignOut->setBounds (424, 16, 136, 24);
+    textButtonSignOut->setBounds (328, 16, 136, 24);
 
     labelPath.reset (new juce::Label (juce::String(),
                                       TRANS ("Path")));
@@ -146,7 +146,7 @@ MainComponent::MainComponent ()
     dropArea->setBounds (472, 72, 86, 96);
 
     labelStatus.reset (new juce::Label (juce::String(),
-                                        TRANS ("status")));
+                                        TRANS ("Cloud Service")));
     addAndMakeVisible (labelStatus.get());
     labelStatus->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
     labelStatus->setJustificationType (juce::Justification::centredLeft);
@@ -207,6 +207,11 @@ MainComponent::MainComponent ()
 MainComponent::~MainComponent()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
+    if (progressAlert != nullptr)
+    {
+        progressAlert->close();
+        progressAlert = nullptr;
+    }
     saveSettings(); // Save settings on application exit
     if (cloudManager)
         cloudManager->onStateChanged = nullptr;
@@ -255,6 +260,8 @@ void MainComponent::resized()
     textEditorPath->setBounds (88, 48, getWidth() - 192, 24);
     labelStatus->setBounds (8, getHeight() - 24, getWidth() - 16, 24);
     //[UserResized] Add your own custom resize handling here..
+    if (authComponent != nullptr)
+        authComponent->setBounds(getLocalBounds());
     //[/UserResized]
 }
 
@@ -344,12 +351,13 @@ void MainComponent::updateUiForState(const r2juce::R2CloudManager::AppState& sta
     }
 
     // Update button states
-    textButtonSignOut->setEnabled(state.isSignOutButtonEnabled);
-    textButtonLoad->setEnabled(state.areFileButtonsEnabled);
-    textButtonSave->setEnabled(state.areFileButtonsEnabled);
+    const bool isOperationInProgress = (progressAlert != nullptr);
+    textButtonSignOut->setEnabled(state.isSignOutButtonEnabled && !isOperationInProgress);
+    textButtonLoad->setEnabled(state.areFileButtonsEnabled && !isOperationInProgress);
+    textButtonSave->setEnabled(state.areFileButtonsEnabled && !isOperationInProgress);
 
     // Update ComboBox state
-    comboService->setEnabled(state.isComboBoxEnabled);
+    comboService->setEnabled(state.isComboBoxEnabled && !isOperationInProgress);
 
     // Manage Auth UI visibility
     if (state.needsAuthUi && authComponent == nullptr)
@@ -367,7 +375,7 @@ void MainComponent::showAuthUI()
     if (authComponent != nullptr) return;
 
     authComponent = std::make_unique<r2juce::R2CloudAuthComponent>();
-    
+
     auto currentState = cloudManager->getCurrentState();
     if (currentState.selectedService == r2juce::R2CloudManager::ServiceType::GoogleDrive)
     {
@@ -401,6 +409,8 @@ void MainComponent::hideAuthUI()
 
 void MainComponent::loadFromFile()
 {
+    if (progressAlert != nullptr) return;
+
     auto path = textEditorPath->getText().trim();
     auto filename = textEditorFilename->getText().trim();
 
@@ -409,7 +419,7 @@ void MainComponent::loadFromFile()
         showMessage("Error", "Please enter a filename");
         return;
     }
-    
+
     juce::String fullPath;
     if (path.isNotEmpty())
     {
@@ -425,8 +435,31 @@ void MainComponent::loadFromFile()
 
     saveSettings();
 
-    cloudManager->loadFile(fullPath, [this](bool success, juce::String content, juce::String errorMessage)
+    progressAlert = r2juce::R2AlertComponent::forProgress(
+        this,
+        "Loading File",
+        "Loading '" + filename + "'...",
+        -1.0, // Indeterminate progress
+        [this](int buttonIndex) {
+            if (buttonIndex == 1) // Cancel
+            {
+                // NOTE: Cloud operation cancellation is not implemented in this version.
+                // The dialog will close itself. We just nullify the pointer.
+                progressAlert = nullptr;
+                updateUiForState(cloudManager->getCurrentState());
+            }
+        });
+
+    updateUiForState(cloudManager->getCurrentState());
+
+    cloudManager->loadFile(fullPath, [this, filename](bool success, juce::String content, juce::String errorMessage)
     {
+        if (progressAlert != nullptr)
+        {
+            progressAlert->close();
+            progressAlert = nullptr;
+        }
+
         if (success)
         {
             textEditorData->setText(content);
@@ -436,14 +469,18 @@ void MainComponent::loadFromFile()
         {
             showMessage("Error", "Failed to load file: " + errorMessage);
         }
+
+        updateUiForState(cloudManager->getCurrentState());
     });
 }
 
 void MainComponent::saveToFile()
 {
+    if (progressAlert != nullptr) return;
+
     auto path = textEditorPath->getText().trim();
     auto filename = textEditorFilename->getText().trim();
-    
+
     if (filename.isEmpty())
     {
         showMessage("Error", "Please enter a filename");
@@ -462,18 +499,41 @@ void MainComponent::saveToFile()
     {
         fullPath = filename;
     }
-    
+
     auto content = textEditorData->getText();
     saveSettings();
 
     juce::MemoryBlock data(content.toRawUTF8(), content.getNumBytesAsUTF8());
 
-    cloudManager->saveFile(fullPath, data, [this](bool success, juce::String errorMessage)
+    progressAlert = r2juce::R2AlertComponent::forProgress(
+        this,
+        "Saving File",
+        "Saving '" + filename + "'...",
+        -1.0, // Indeterminate progress
+        [this](int buttonIndex) {
+            if (buttonIndex == 1) // Cancel
+            {
+                progressAlert = nullptr;
+                updateUiForState(cloudManager->getCurrentState());
+            }
+        });
+
+    updateUiForState(cloudManager->getCurrentState());
+
+    cloudManager->saveFile(fullPath, data, [this, filename](bool success, juce::String errorMessage)
     {
+        if (progressAlert != nullptr)
+        {
+            progressAlert->close();
+            progressAlert = nullptr;
+        }
+
         if (success)
             showMessage("Success", "File saved successfully");
         else
             showMessage("Error", "File save failed: " + errorMessage);
+
+        updateUiForState(cloudManager->getCurrentState());
     });
 }
 
@@ -514,6 +574,8 @@ void MainComponent::showMessage(const juce::String& title, const juce::String& m
 
 void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const juce::MemoryBlock& fileContentData)
 {
+    if (progressAlert != nullptr) return;
+
     juce::File droppedFile (filePath);
 
     if (droppedFile.isDirectory())
@@ -536,20 +598,43 @@ void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const 
         uploadPath = droppedFile.getFileName();
     else
     {
-        if (!uploadPath.endsWith("/") || !uploadPath.endsWith("\\"))
+        if (!uploadPath.endsWith("/") && !uploadPath.endsWith("\\"))
             uploadPath << "/";
         uploadPath << droppedFile.getFileName();
     }
 
     saveSettings();
 
+    progressAlert = r2juce::R2AlertComponent::forProgress(
+        this,
+        "Uploading File",
+        "Uploading '" + droppedFile.getFileName() + "'...",
+        -1.0, // Indeterminate progress
+        [this](int buttonIndex) {
+            if (buttonIndex == 1) // Cancel
+            {
+                progressAlert = nullptr;
+                updateUiForState(cloudManager->getCurrentState());
+            }
+        });
+
+    updateUiForState(cloudManager->getCurrentState());
+
     cloudManager->saveFile(uploadPath, fileContentData,
                            [this, uploadPath](bool success, juce::String errorMessage)
     {
+        if (progressAlert != nullptr)
+        {
+            progressAlert->close();
+            progressAlert = nullptr;
+        }
+
         if (success)
             showMessage("Success", "File uploaded successfully to: " + uploadPath);
         else
             showMessage("Error", "File upload failed: " + errorMessage);
+
+        updateUiForState(cloudManager->getCurrentState());
     });
 }
 
@@ -594,4 +679,81 @@ void MainComponent::DropArea::fileDragExit(const juce::StringArray&)
 }
 
 //[/MiscUserCode]
+
+
+//==============================================================================
+#if 0
+/*  -- Projucer information section --
+
+    This is where the Projucer stores the metadata that describe this GUI layout, so
+    make changes in here at your peril!
+
+BEGIN_JUCER_METADATA
+
+<JUCER_COMPONENT documentType="Component" className="MainComponent" componentName=""
+                 parentClasses="public juce::Component" constructorParams="" variableInitialisers=""
+                 snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330"
+                 fixedSize="1" initialWidth="568" initialHeight="320">
+  <BACKGROUND backgroundColour="ff323e44"/>
+  <LABEL name="" id="2f02bb18c4366b87" memberName="labelCloudService"
+         virtualName="" explicitFocusOrder="0" pos="16 16 96 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Cloud Service" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
+  <COMBOBOX name="" id="1901ecb05f23698f" memberName="comboService" virtualName=""
+            explicitFocusOrder="0" pos="112 16 200 24" editable="0" layout="33"
+            items="Local only&#10;Google Drive&#10;OneDrive" textWhenNonSelected=""
+            textWhenNoItems="(no choices)"/>
+  <TEXTEDITOR name="" id="70766b9c8981f401" memberName="textEditorData" virtualName="r2juce::R2TextEditor"
+              explicitFocusOrder="0" pos="-8Cc 112 192M 56" bkgcol="ff000000"
+              initialText="" multiline="1" retKeyStartsLine="1" readonly="0"
+              scrollbars="1" caret="1" popupmenu="1"/>
+  <TEXTBUTTON name="" id="353e971405dafbf9" memberName="textButtonLoad" virtualName=""
+              explicitFocusOrder="0" pos="-80Cc 184 136 24" buttonText="Load from File"
+              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+  <TEXTBUTTON name="" id="bc50c6a3420f7701" memberName="textButtonSave" virtualName=""
+              explicitFocusOrder="0" pos="80Cc 184 136 24" buttonText="Save to File"
+              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+  <LABEL name="" id="5000c983e2f78184" memberName="labelFilename" virtualName=""
+         explicitFocusOrder="0" pos="16 80 72 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Filename" editableSingleClick="0" editableDoubleClick="0"
+         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
+         kerning="0.0" bold="0" italic="0" justification="33"/>
+  <TEXTEDITOR name="" id="c69cf648ab860b39" memberName="textEditorFilename"
+              virtualName="r2juce::R2TextEditor" explicitFocusOrder="0" pos="88 80 192M 24"
+              bkgcol="ff000000" initialText="" multiline="0" retKeyStartsLine="0"
+              readonly="0" scrollbars="1" caret="1" popupmenu="1"/>
+  <TEXTBUTTON name="" id="2c94a8614918cc8e" memberName="textButtonSignOut"
+              virtualName="" explicitFocusOrder="0" pos="328 16 136 24" buttonText="Signout"
+              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+  <LABEL name="" id="1a0e541e78f38ab1" memberName="labelPath" virtualName=""
+         explicitFocusOrder="0" pos="16 48 72 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Path" editableSingleClick="0" editableDoubleClick="0"
+         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
+         kerning="0.0" bold="0" italic="0" justification="33"/>
+  <TEXTEDITOR name="" id="5ca9d1288c8108b4" memberName="textEditorPath" virtualName="r2juce::R2TextEditor"
+              explicitFocusOrder="0" pos="88 48 192M 24" bkgcol="ff000000"
+              initialText="" multiline="0" retKeyStartsLine="0" readonly="0"
+              scrollbars="1" caret="1" popupmenu="1"/>
+  <LABEL name="" id="213fc5548588195d" memberName="labelData" virtualName=""
+         explicitFocusOrder="0" pos="16 112 72 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Data" editableSingleClick="0" editableDoubleClick="0"
+         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
+         kerning="0.0" bold="0" italic="0" justification="33"/>
+  <GENERICCOMPONENT name="" id="fd7275705d501103" memberName="dropArea" virtualName=""
+                    explicitFocusOrder="0" pos="472 72 86 96" class="DropArea" params=""/>
+  <LABEL name="" id="4021c25b87690560" memberName="labelStatus" virtualName=""
+         explicitFocusOrder="0" pos="8 0Rr 16M 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="Cloud Service" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
+         fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
+</JUCER_COMPONENT>
+
+END_JUCER_METADATA
+*/
+#endif
+
+
+//[EndFile] You can add extra defines here...
+//[/EndFile]
 
