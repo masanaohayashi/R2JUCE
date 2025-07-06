@@ -6,14 +6,29 @@
 
 namespace r2juce {
 
-R2CloudManager::R2CloudManager() { initializeProviders(); }
-R2CloudManager::~R2CloudManager() { onAuthStatusChanged = nullptr; onServiceChanged = nullptr; }
+R2CloudManager::R2CloudManager()
+{
+    initializeProviders();
+    refreshStateAndNotify();
+}
+
+R2CloudManager::~R2CloudManager() { onStateChanged = nullptr; }
 
 void R2CloudManager::initializeProviders()
 {
     localProvider = createProvider(ServiceType::Local);
     googleDriveProvider = createProvider(ServiceType::GoogleDrive);
     oneDriveProvider = createProvider(ServiceType::OneDrive);
+}
+
+const R2CloudManager::AppState& R2CloudManager::getInitialState() const
+{
+    return currentState;
+}
+
+const R2CloudManager::AppState& R2CloudManager::getCurrentState() const
+{
+    return currentState;
 }
 
 std::shared_ptr<R2CloudStorageProvider> R2CloudManager::createProvider(ServiceType type)
@@ -41,149 +56,90 @@ void R2CloudManager::setOneDriveCredentials(const juce::String& clientId, const 
     if (auto* p = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get())) p->setClientCredentials(clientId, clientSecret);
 }
 
-void R2CloudManager::selectService(ServiceType serviceType)
-{
-    if (currentServiceType == serviceType) return;
-    hideAuthenticationUI();
-    currentServiceType = serviceType;
-    updateAuthStatus();
-    if (onServiceChanged) onServiceChanged(serviceType);
-}
-
-R2CloudManager::AuthStatus R2CloudManager::getAuthStatus() const { return currentAuthStatus; }
-
 std::shared_ptr<R2CloudStorageProvider> R2CloudManager::getCurrentProvider()
 {
-    switch (currentServiceType)
+    switch (currentState.selectedService)
     {
         case ServiceType::GoogleDrive: return googleDriveProvider;
         case ServiceType::OneDrive: return oneDriveProvider;
-        case ServiceType::Local: default: return localProvider;
+        case ServiceType::Local:
+        default: return localProvider;
     }
 }
 
-std::shared_ptr<const R2CloudStorageProvider> R2CloudManager::getCurrentProvider() const
+void R2CloudManager::userSelectedService(ServiceType serviceType)
 {
-    switch (currentServiceType)
-    {
-        case ServiceType::GoogleDrive: return googleDriveProvider;
-        case ServiceType::OneDrive: return oneDriveProvider;
-        case ServiceType::Local: default: return localProvider;
-    }
-}
+    if (currentState.selectedService == serviceType && currentState.authStatus != AuthStatus::Error)
+        return;
 
-void R2CloudManager::updateAuthStatus()
-{
-    auto provider = getCurrentProvider();
-    if (!provider) { setAuthStatus(AuthStatus::Error); return; }
+    previousServiceBeforeAuth = currentState.selectedService;
+    currentState.selectedService = serviceType;
     
-    AuthStatus newStatus;
-    switch (provider->getAuthStatus())
+    auto provider = getCurrentProvider();
+    if (!provider)
     {
-        case R2CloudStorageProvider::Status::Authenticated: newStatus = AuthStatus::Authenticated; break;
-        case R2CloudStorageProvider::Status::Authenticating: newStatus = AuthStatus::Authenticating; break;
-        case R2CloudStorageProvider::Status::Error: newStatus = AuthStatus::Error; break;
-        default: newStatus = AuthStatus::NotAuthenticated; break;
+        currentState.authStatus = AuthStatus::Error;
+        refreshStateAndNotify();
+        return;
     }
-    setAuthStatus(newStatus);
+    
+    auto providerStatus = provider->getAuthStatus();
+    if (providerStatus == R2CloudStorageProvider::Status::Authenticated)
+    {
+        currentState.authStatus = AuthStatus::Authenticated;
+        refreshStateAndNotify();
+    }
+    else
+    {
+        startAuthenticationFlow();
+    }
 }
 
-void R2CloudManager::setAuthStatus(AuthStatus newStatus)
-{
-    if (currentAuthStatus != newStatus)
-    {
-        currentAuthStatus = newStatus;
-        if (onAuthStatusChanged) onAuthStatusChanged(newStatus);
-    }
-}
-
-bool R2CloudManager::needsAuthentication() const
+void R2CloudManager::startAuthenticationFlow()
 {
     auto provider = getCurrentProvider();
-    return provider ? (provider->getAuthStatus() != R2CloudStorageProvider::Status::Authenticated) : false;
-}
-
-void R2CloudManager::showAuthenticationUI(juce::Component* parent)
-{
-    auto provider = getCurrentProvider();
-    if (!provider) { return; }
-
-    if (dynamic_cast<R2LocalStorageProvider*>(provider.get()))
+    if (!provider || dynamic_cast<R2LocalStorageProvider*>(provider.get()))
     {
-        setAuthStatus(AuthStatus::Authenticated);
+        currentState.authStatus = AuthStatus::Authenticated;
+        refreshStateAndNotify();
         return;
     }
 
-    setAuthStatus(AuthStatus::Authenticating);
-    
-    provider->authenticate([this, parent](bool success, juce::String errorMessage)
+    currentState.authStatus = AuthStatus::Authenticating;
+    refreshStateAndNotify();
+
+    provider->authenticate([this](bool success, juce::String errorMessage)
     {
         if (success)
         {
-            juce::MessageManager::callAsync([this]() { setAuthStatus(AuthStatus::Authenticated); });
+            juce::MessageManager::callAsync([this]() {
+                this->currentState.authStatus = AuthStatus::Authenticated;
+                this->refreshStateAndNotify();
+            });
         }
         else
         {
             if (errorMessage.contains("device flow"))
             {
-                juce::MessageManager::callAsync([this, parent]() { startDeviceFlowAuthentication(parent); });
+                juce::MessageManager::callAsync([this]() {
+                    this->currentState.needsAuthUi = true;
+                    this->refreshStateAndNotify();
+                });
             }
             else
             {
-                juce::MessageManager::callAsync([this]() { setAuthStatus(AuthStatus::Error); });
+                juce::MessageManager::callAsync([this]() {
+                    this->currentState.authStatus = AuthStatus::Error;
+                    this->refreshStateAndNotify();
+                });
             }
         }
     });
 }
 
-void R2CloudManager::startDeviceFlowAuthentication(juce::Component* parent)
+void R2CloudManager::authenticationFinished(bool success, const juce::String&, const juce::String& accessToken, const juce::String& refreshToken)
 {
-    authComponent = std::make_unique<R2CloudAuthComponent>();
-    parentForAuth = parent;
-
-    if (currentServiceType == ServiceType::GoogleDrive)
-    {
-        authComponent->setServiceType(R2CloudAuthComponent::ServiceType::GoogleDrive);
-        authComponent->setGoogleCredentials(googleClientId, googleClientSecret);
-    }
-    else if (currentServiceType == ServiceType::OneDrive)
-    {
-        authComponent->setServiceType(R2CloudAuthComponent::ServiceType::OneDrive);
-        authComponent->setOneDriveCredentials(oneDriveClientId, oneDriveClientSecret);
-    }
-
-    authComponent->onAuthenticationComplete = [this](bool success, const juce::String& errorMessage,
-        const juce::String& accessToken, const juce::String& refreshToken)
-    {
-        handleAuthenticationComplete(success, errorMessage, accessToken, refreshToken);
-    };
-
-    authComponent->onAuthenticationCancelled = [this]() {
-        hideAuthenticationUI();
-        setAuthStatus(AuthStatus::NotAuthenticated);
-    };
-
-    if (parent)
-    {
-        parent->addAndMakeVisible(*authComponent);
-        authComponent->setBounds(parent->getLocalBounds());
-    }
-    authComponent->startAuthentication();
-}
-
-void R2CloudManager::hideAuthenticationUI()
-{
-    if (authComponent)
-    {
-        if (parentForAuth) parentForAuth->removeChildComponent(authComponent.get());
-        authComponent.reset();
-        parentForAuth = nullptr;
-    }
-}
-
-void R2CloudManager::handleAuthenticationComplete(bool success, const juce::String&, const juce::String& accessToken, const juce::String& refreshToken)
-{
-    hideAuthenticationUI();
+    currentState.needsAuthUi = false;
     if (success)
     {
         if (auto* p = getCurrentProvider().get()) {
@@ -192,33 +148,119 @@ void R2CloudManager::handleAuthenticationComplete(bool success, const juce::Stri
             else if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(p))
                 oneDriveProv->setTokens(accessToken, refreshToken);
         }
-        setAuthStatus(AuthStatus::Authenticated);
+        currentState.authStatus = AuthStatus::Authenticated;
     } else {
-        setAuthStatus(AuthStatus::Error);
+        currentState.authStatus = AuthStatus::Error;
+        currentState.selectedService = previousServiceBeforeAuth;
+    }
+    refreshStateAndNotify();
+}
+
+void R2CloudManager::userCancelledAuthentication()
+{
+    currentState.needsAuthUi = false;
+    currentState.selectedService = previousServiceBeforeAuth;
+    currentState.authStatus = AuthStatus::NotAuthenticated;
+    refreshStateAndNotify();
+}
+
+void R2CloudManager::userSignedOut()
+{
+    if (auto provider = getCurrentProvider())
+    {
+        provider->signOut();
+    }
+    currentState.selectedService = ServiceType::Local;
+    currentState.authStatus = AuthStatus::Authenticated;
+    refreshStateAndNotify();
+}
+
+void R2CloudManager::refreshStateAndNotify()
+{
+    auto provider = getCurrentProvider();
+    if (!provider)
+    {
+        currentState.authStatus = AuthStatus::Error;
+        currentState.statusLabelText = "Error: Provider not found";
+        currentState.isSignOutButtonEnabled = false;
+        currentState.areFileButtonsEnabled = false;
+    }
+    else
+    {
+        if (currentState.authStatus != AuthStatus::Authenticating && !currentState.needsAuthUi)
+        {
+            auto providerStatus = provider->getAuthStatus();
+            if(providerStatus == R2CloudStorageProvider::Status::Authenticated)
+                currentState.authStatus = AuthStatus::Authenticated;
+            else
+                currentState.authStatus = AuthStatus::NotAuthenticated;
+        }
+
+        switch (currentState.selectedService)
+        {
+            case ServiceType::Local:
+                currentState.statusLabelText = "Local Storage";
+                currentState.isSignOutButtonEnabled = false;
+                currentState.areFileButtonsEnabled = true;
+                break;
+            case ServiceType::GoogleDrive:
+            case ServiceType::OneDrive:
+                currentState.isSignOutButtonEnabled = (currentState.authStatus == AuthStatus::Authenticated);
+                currentState.areFileButtonsEnabled = (currentState.authStatus == AuthStatus::Authenticated);
+                
+                juce::String serviceName = (currentState.selectedService == ServiceType::GoogleDrive) ? "Google Drive" : "OneDrive";
+                switch (currentState.authStatus)
+                {
+                    case AuthStatus::Authenticated:
+                        currentState.statusLabelText = serviceName + " (Authenticated)";
+                        break;
+                    case AuthStatus::NotAuthenticated:
+                        currentState.statusLabelText = serviceName + " (Not Authenticated)";
+                        break;
+                    case AuthStatus::Authenticating:
+                        currentState.statusLabelText = serviceName + " (Authenticating...)";
+                        break;
+                    case AuthStatus::Error:
+                        currentState.statusLabelText = serviceName + " (Authentication Error)";
+                        break;
+                }
+                break;
+        }
+    }
+    
+    currentState.isComboBoxEnabled = (currentState.authStatus != AuthStatus::Authenticating && !currentState.needsAuthUi);
+
+    if (onStateChanged)
+    {
+        onStateChanged(currentState);
     }
 }
 
-void R2CloudManager::signOut()
-{
-    if (auto provider = getCurrentProvider()) provider->signOut();
-    updateAuthStatus();
-    hideAuthenticationUI();
-}
 
-// Modified: contentをjuce::MemoryBlockで受け取る
 void R2CloudManager::saveFile(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
 {
     auto provider = getCurrentProvider();
-    if (!provider) { if (callback) callback(false, "No provider"); return; }
-    if (needsAuthentication()) { if (callback) callback(false, "Authentication required"); return; }
+    if (!provider) { if (callback) callback(false, "No provider selected"); return; }
+    
+    if (currentState.authStatus != AuthStatus::Authenticated)
+    {
+        if (callback) callback(false, "Authentication required");
+        return;
+    }
     provider->uploadFileByPath(filePath, data, callback);
 }
 
 void R2CloudManager::loadFile(const juce::String& filePath, FileContentCallback callback)
 {
     auto provider = getCurrentProvider();
-    if (!provider) { if (callback) callback(false, "", "No provider"); return; }
-    if (needsAuthentication()) { if (callback) callback(false, "", "Authentication required"); return; }
+    if (!provider) { if (callback) callback(false, "", "No provider selected"); return; }
+
+    if (currentState.authStatus != AuthStatus::Authenticated)
+    {
+        if (callback) callback(false, "", "Authentication required");
+        return;
+    }
+
     provider->downloadFileByPath(filePath, [callback](bool success, juce::MemoryBlock data, juce::String errorMessage)
     {
         if (success) { if (callback) callback(true, juce::String::createStringFromData(data.getData(), (int)data.getSize()), ""); }
@@ -226,3 +268,4 @@ void R2CloudManager::loadFile(const juce::String& filePath, FileContentCallback 
     });
 }
 }
+

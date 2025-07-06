@@ -56,19 +56,23 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-    void setupUI();
+    // This is the new central method for updating the UI based on the manager's state.
+    void updateUiForState(const r2juce::R2CloudManager::AppState& state);
+
     void loadFromFile();
     void saveToFile();
-    void showMessage(const juce::String& title, const juce::String& message);
+    void loadSettings(); // Declaration for loading settings from PropertiesFile
     void saveSettings(); // Save settings to PropertiesFile
-
-    void handleAuthStatusChanged(r2juce::R2CloudManager::AuthStatus status);
-    void handleServiceChanged(r2juce::R2CloudManager::ServiceType service);
-    // Modified: fileContentをjuce::MemoryBlockで受け取る
+    void showMessage(const juce::String& title, const juce::String& message);
     void handleFileDroppedInArea(const juce::String& filePath, const juce::MemoryBlock& fileContent);
+
+    // UI management
+    void showAuthUI();
+    void hideAuthUI();
 
     std::unique_ptr<r2juce::R2CloudManager> cloudManager;
     std::unique_ptr<juce::PropertiesFile> settingsFile; // For saving application settings
+    std::unique_ptr<r2juce::R2CloudAuthComponent> authComponent; // Auth UI is now owned by MainComponent
 
     // Keys for saving and loading settings
     static inline const juce::Identifier lastSelectedServiceKey    { "lastSelectedService" };
@@ -117,7 +121,6 @@ private:
          * @param filePath The full path of the dropped file.
          * @param fileContent The content of the dropped file as a MemoryBlock.
          */
-        // Modified: fileContentをjuce::MemoryBlockで渡す
         std::function<void(const juce::String& filePath, const juce::MemoryBlock& fileContent)> onFileDropped;
 
     private:
@@ -139,6 +142,7 @@ private:
     std::unique_ptr<r2juce::R2TextEditor> textEditorPath;
     std::unique_ptr<juce::Label> labelData;
     std::unique_ptr<DropArea> dropArea;
+    std::unique_ptr<juce::Label> labelStatus;
 
 
     //==============================================================================

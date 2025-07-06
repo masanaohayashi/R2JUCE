@@ -513,7 +513,7 @@ void R2CloudAuthComponent::pollForAccessToken()
     }
     
     makeHttpRequest(endpoint, postData,
-        [this](bool success, juce::String response, int statusCode)
+        [this](bool success, juce::String response, int)
         {
             juce::MessageManager::callAsync([this, success, response]()
             {
@@ -704,8 +704,18 @@ bool R2CloudAuthComponent::keyPressed(const juce::KeyPress& key)
 void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::String& postData,
                                           std::function<void(bool, juce::String, int)> callback)
 {
-    juce::Thread::launch([url, postData, callback]()
+    // Capture a SafePointer to this component to prevent use-after-free
+    juce::Component::SafePointer<R2CloudAuthComponent> safeThis (this);
+
+    juce::Thread::launch([safeThis, url, postData, callback]()
     {
+        // First check if the component is still valid before doing any work
+        if (safeThis == nullptr)
+        {
+            DBG("R2CloudAuthComponent was deleted before HTTP request thread started.");
+            return;
+        }
+
         try
         {
             juce::URL requestUrl(url);
@@ -743,35 +753,46 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
                 DBG("Status Code: " + juce::String(statusCode));
                 DBG("Response: " + response);
 
-                juce::MessageManager::callAsync([callback, response, statusCode, success]()
+                // Check again if the component is still valid before calling back to the message thread
+                if (safeThis == nullptr)
                 {
-                    if (callback)
+                    DBG("R2CloudAuthComponent was deleted while HTTP request was in progress.");
+                    return;
+                }
+
+                juce::MessageManager::callAsync([safeThis, callback, response, statusCode, success]()
+                {
+                    // Final check on the message thread before executing the callback
+                    if (safeThis != nullptr && callback)
                         callback(success, response, statusCode);
                 });
             }
             else
             {
                 DBG("=== HTTP Connection Failed ===");
-                juce::MessageManager::callAsync([callback]()
+                if (safeThis == nullptr) return;
+                juce::MessageManager::callAsync([safeThis, callback]()
                 {
-                    if (callback)
+                    if (safeThis != nullptr && callback)
                         callback(false, "Failed to connect to server", 0);
                 });
             }
         }
         catch (const std::exception& e)
         {
-            juce::MessageManager::callAsync([callback, e]()
+            if (safeThis == nullptr) return;
+            juce::MessageManager::callAsync([safeThis, callback, e]()
             {
-                if (callback)
+                if (safeThis != nullptr && callback)
                     callback(false, "HTTP request exception: " + juce::String(e.what()), 0);
             });
         }
         catch (...)
         {
-            juce::MessageManager::callAsync([callback]()
+            if (safeThis == nullptr) return;
+            juce::MessageManager::callAsync([safeThis, callback]()
             {
-                if (callback)
+                if (safeThis != nullptr && callback)
                     callback(false, "Unknown HTTP request error", 0);
             });
         }
@@ -781,64 +802,3 @@ void R2CloudAuthComponent::makeHttpRequest(const juce::String& url, const juce::
 }   //  namespace r2juce
 //[/MiscUserCode]
 
-
-//==============================================================================
-#if 0
-/*  -- Projucer information section --
-
-    This is where the Projucer stores the metadata that describe this GUI layout, so
-    make changes in here at your peril!
-
-BEGIN_JUCER_METADATA
-
-<JUCER_COMPONENT documentType="Component" className="R2CloudAuthComponent" componentName=""
-                 parentClasses="public juce::Component, public juce::Timer" constructorParams=""
-                 variableInitialisers="" snapPixels="8" snapActive="1" snapShown="1"
-                 overlayOpacity="0.330" fixedSize="1" initialWidth="568" initialHeight="320">
-  <BACKGROUND backgroundColour="ff323e44"/>
-  <LABEL name="" id="95463433c749ef8" memberName="labelTitle" virtualName=""
-         explicitFocusOrder="0" pos="0Cc 8 32M 32" edTextCol="ff000000"
-         edBkgCol="0" labelText="Title" editableSingleClick="0" editableDoubleClick="0"
-         focusDiscardsChanges="0" fontname="Default font" fontsize="22.0"
-         kerning="0.0" bold="1" italic="0" justification="36" typefaceStyle="Bold"/>
-  <LABEL name="" id="e34e1b93f56c2849" memberName="labelInstruction" virtualName=""
-         explicitFocusOrder="0" pos="0Cc 40 32M 56" edTextCol="ff000000"
-         edBkgCol="0" labelText="1. Click URL or go to the URL below&#10;2. Enter the code&#10;3. Complete authentication"
-         editableSingleClick="0" editableDoubleClick="0" focusDiscardsChanges="0"
-         fontname="Default font" fontsize="15.0" kerning="0.0" bold="0"
-         italic="0" justification="36"/>
-  <LABEL name="" id="88e2d4137011f05b" memberName="labelCodeDisplay" virtualName=""
-         explicitFocusOrder="0" pos="0Cc 168 536 32" edTextCol="ff000000"
-         edBkgCol="0" labelText="XXX-XXX-XXX" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="32.0" kerning="0.0" bold="0" italic="0" justification="36"/>
-  <HYPERLINKBUTTON name="" id="3ff1b1e361014b63" memberName="buttonURL" virtualName=""
-                   explicitFocusOrder="0" pos="0Cc 104 32M 24" tooltip="http://www.juce.com"
-                   buttonText="https://www.xxx.com" connectedEdges="0" needsCallback="0"
-                   radioGroupId="0" url="http://www.juce.com"/>
-  <TEXTBUTTON name="" id="4c5029f7e0459d47" memberName="buttonCancel" virtualName=""
-              explicitFocusOrder="0" pos="0Cc 280 128 24" buttonText="Cancel"
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
-  <TEXTBUTTON name="" id="b784255939e91b89" memberName="buttonCopyUrl" virtualName=""
-              explicitFocusOrder="0" pos="0Cc 136 128 24" buttonText="Copy URL"
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
-  <TEXTBUTTON name="" id="c06ddf2a594e77d7" memberName="buttonCopyCode" virtualName=""
-              explicitFocusOrder="0" pos="0Cc 208 128 24" buttonText="Copy Code"
-              connectedEdges="0" needsCallback="1" radioGroupId="0"/>
-  <LABEL name="" id="b6ec3558c7c0f3d" memberName="labelStatus" virtualName=""
-         explicitFocusOrder="0" pos="16 240 64 24" edTextCol="ff000000"
-         edBkgCol="0" labelText="Status" editableSingleClick="0" editableDoubleClick="0"
-         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
-         kerning="0.0" bold="0" italic="0" justification="33"/>
-  <GENERICCOMPONENT name="" id="2452a8ab4cd2a84c" memberName="progressBar" virtualName=""
-                    explicitFocusOrder="0" pos="16Rr 240 96M 24" class="juce::ProgressBar"
-                    params="progressValue"/>
-</JUCER_COMPONENT>
-
-END_JUCER_METADATA
-*/
-#endif
-
-
-//[EndFile] You can add extra defines here...
-//[/EndFile]

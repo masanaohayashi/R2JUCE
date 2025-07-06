@@ -172,3 +172,4 @@ private:
 //[EndFile] You can add extra defines here...
 }   //  namespace r2juce
 //[/EndFile]
+

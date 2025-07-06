@@ -27,111 +27,78 @@ public:
     
     /** @brief Represents the current authentication status for the selected service. */
     enum class AuthStatus { NotAuthenticated, Authenticating, Authenticated, Error };
+
+    /** @brief A structure representing the entire state of the application UI. */
+    struct AppState
+    {
+        ServiceType selectedService = ServiceType::Local;
+        AuthStatus authStatus = AuthStatus::NotAuthenticated;
+        juce::String statusLabelText;
+        bool isSignOutButtonEnabled = false;
+        bool areFileButtonsEnabled = false;
+        bool isComboBoxEnabled = true;
+        bool needsAuthUi = false;
+    };
     
-    /** @brief Sets the OAuth 2.0 credentials for Google Drive.
-        @param clientId     The Google API client ID.
-        @param clientSecret The Google API client secret.
-    */
+    /** @brief Sets the OAuth 2.0 credentials for Google Drive. */
     void setGoogleCredentials(const juce::String& clientId, const juce::String& clientSecret);
 
-    /** @brief Sets the OAuth 2.0 credentials for Microsoft OneDrive.
-        @param clientId     The OneDrive application (client) ID.
-        @param clientSecret The OneDrive client secret.
-    */
+    /** @brief Sets the OAuth 2.0 credentials for Microsoft OneDrive. */
     void setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret);
     
-    /** @brief Selects the active cloud storage service.
-        @param serviceType The service to activate.
-    */
-    void selectService(ServiceType serviceType);
+    /** @brief Called by the UI when the user selects a service. */
+    void userSelectedService(ServiceType serviceType);
     
-    /** @brief Gets the currently selected service type.
-        @return The current ServiceType.
-    */
-    ServiceType getCurrentService() const { return currentServiceType; }
+    /** @brief Called by the UI when the user clicks the Sign Out button. */
+    void userSignedOut();
+
+    /** @brief Called by the UI when the user cancels the authentication flow. */
+    void userCancelledAuthentication();
+
+    /** @brief Called by the UI when the authentication flow completes. */
+    void authenticationFinished(bool success, const juce::String& errorMessage, const juce::String& accessToken, const juce::String& refreshToken);
     
-    /** @brief Gets the current authentication status.
-        @return The current AuthStatus.
-    */
-    AuthStatus getAuthStatus() const;
-    
-    /** @brief Defines a callback function for asynchronous file operations that do not return content.
-        @param success      True if the operation was successful.
-        @param errorMessage An error message if the operation failed.
-    */
+    /** @brief Defines a callback function for asynchronous file operations that do not return content. */
     using FileOperationCallback = std::function<void(bool success, juce::String errorMessage)>;
     
-    /** @brief Defines a callback function for asynchronous file loading operations.
-        @param success      True if the operation was successful.
-        @param content      The content of the loaded file.
-        @param errorMessage An error message if the operation failed.
-    */
+    /** @brief Defines a callback function for asynchronous file loading operations. */
     using FileContentCallback = std::function<void(bool success, juce::String content, juce::String errorMessage)>;
     
-    /** @brief Saves content to a file in the currently selected cloud service.
-        @param filePath     The path (or identifier) of the file in the cloud storage.
-        @param data         The binary content to save as a MemoryBlock.
-        @param callback     An optional callback to be invoked upon completion.
-    */
-    // Modified: contentをjuce::MemoryBlockで受け取る
+    /** @brief Saves content to a file in the currently selected cloud service. */
     void saveFile(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback = nullptr);
 
-    /** @brief Loads the content of a file from the currently selected cloud service.
-        @param filePath     The path (or identifier) of the file in the cloud storage.
-        @param callback     A callback to be invoked with the file content upon completion.
-    */
+    /** @brief Loads the content of a file from the currently selected cloud service. */
     void loadFile(const juce::String& filePath, FileContentCallback callback);
-
-    /** @brief Checks if the current service requires authentication.
-        @return True if the user is not authenticated for the current service, false otherwise.
-    */
-    bool needsAuthentication() const;
     
-    /** @brief Displays the authentication UI for the current service if needed.
-        @param parentComponent The component that will host the authentication UI.
-    */
-    void showAuthenticationUI(juce::Component* parentComponent);
+    /** @brief Returns the initial state of the application. */
+    const AppState& getInitialState() const;
 
-    /** @brief Hides and destroys the authentication UI component. */
-    void hideAuthenticationUI();
-    
-    /** @brief Signs out from the current service and clears authentication tokens. */
-    void signOut();
-    
-    /** @brief A callback that is triggered when the authentication status changes.
-        @param newStatus The new AuthStatus.
-    */
-    std::function<void(AuthStatus)> onAuthStatusChanged;
+    /** @brief Returns the current state of the application. */
+    const AppState& getCurrentState() const;
 
-    /** @brief A callback that is triggered when the selected service changes.
-        @param serviceType The newly selected ServiceType.
-    */
-    std::function<void(ServiceType)> onServiceChanged;
+    /** @brief A callback that is triggered whenever the application state changes. */
+    std::function<void(const AppState&)> onStateChanged;
 
 private:
-    ServiceType currentServiceType = ServiceType::Local;
-    AuthStatus currentAuthStatus = AuthStatus::NotAuthenticated;
+    void initializeProviders();
+    void startAuthenticationFlow();
+    void refreshStateAndNotify();
     
+    static std::shared_ptr<R2CloudStorageProvider> createProvider(ServiceType type);
+
+    AppState currentState;
+    ServiceType previousServiceBeforeAuth = ServiceType::Local;
+
     std::shared_ptr<R2CloudStorageProvider> localProvider;
     std::shared_ptr<R2CloudStorageProvider> googleDriveProvider;
     std::shared_ptr<R2CloudStorageProvider> oneDriveProvider;
-    
-    std::unique_ptr<R2CloudAuthComponent> authComponent;
-    juce::Component* parentForAuth = nullptr;
     
     juce::String googleClientId, googleClientSecret;
     juce::String oneDriveClientId, oneDriveClientSecret;
     
     std::shared_ptr<R2CloudStorageProvider> getCurrentProvider();
-    std::shared_ptr<const R2CloudStorageProvider> getCurrentProvider() const;
-    void initializeProviders();
-    void handleAuthenticationComplete(bool success, const juce::String& errorMessage, const juce::String& accessToken, const juce::String& refreshToken);
-    void updateAuthStatus();
-    void setAuthStatus(AuthStatus newStatus);
-    void startDeviceFlowAuthentication(juce::Component* parent);
-    
-    static std::shared_ptr<R2CloudStorageProvider> createProvider(ServiceType type);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(R2CloudManager)
 };
 }
+
