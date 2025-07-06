@@ -127,9 +127,6 @@ void R2OneDriveProvider::refreshAccessToken(AuthCallback callback)
 
     juce::Thread::launch([selfWeak, callback, clientIdCopy, refreshTokenCopy] {
         if (auto selfShared = selfWeak.lock()) {
-            // ★★★ 修正 ★★★
-            // デスクトップアプリのようなPublic Clientの場合、client_secretは不要なことが多い。
-            // これを送信すると401エラーの原因となることがあるため、リクエストから削除する。
             juce::String postDataString = "client_id=" + juce::URL::addEscapeChars(clientIdCopy, true)
                                         + "&scope=" + juce::URL::addEscapeChars("files.ReadWrite offline_access", true)
                                         + "&refresh_token=" + juce::URL::addEscapeChars(refreshTokenCopy, true)
@@ -158,19 +155,24 @@ void R2OneDriveProvider::refreshAccessToken(AuthCallback callback)
                 
                 if (statusCode >= 200 && statusCode < 300 && jsonResponse.isObject())
                 {
-                    if (auto* obj = jsonResponse.getDynamicObject()) {
-                        if (obj->hasProperty("access_token")) {
-                            juce::MessageManager::callAsync([selfWeak, obj, callback]() {
-                                if (auto providerPtr = dynamic_cast<R2OneDriveProvider*>(selfWeak.lock().get())) {
+                    // *** FIX ***
+                    // To avoid a dangling pointer, capture the reference-counted 'juce::var' object 'jsonResponse'
+                    // by value in the lambda, not the raw pointer 'obj'.
+                    if (jsonResponse.getDynamicObject()->hasProperty("access_token")) {
+                        juce::MessageManager::callAsync([selfWeak, jsonResponse, callback]() {
+                            if (auto providerPtr = dynamic_cast<R2OneDriveProvider*>(selfWeak.lock().get())) {
+                                // Then, safely get the pointer on the main thread.
+                                if (auto* validObj = jsonResponse.getDynamicObject())
+                                {
                                     providerPtr->setTokens(
-                                        obj->getProperty("access_token").toString(),
-                                        obj->getProperty("refresh_token").toString()
+                                        validObj->getProperty("access_token").toString(),
+                                        validObj->getProperty("refresh_token").toString()
                                     );
                                     if (callback) callback(true, "");
                                 }
-                            });
-                            return;
-                        }
+                            }
+                        });
+                        return;
                     }
                 }
                 
@@ -347,9 +349,6 @@ bool R2OneDriveProvider::loadTokens()
         tokenExpiry = juce::Time(static_cast<juce::int64>(obj->getProperty("token_expiry")));
         
         if (refreshToken.isNotEmpty()) {
-            // ★★★ 修正 ★★★
-            // リフレッシュトークンが存在する場合、UIのロックを防ぐため、プロバイダは自身を「認証済み」として報告する。
-            // 実際のアクセストークンの有効期限チェックと更新は、APIリクエスト時に makeAPIRequest 内で透過的に行われる。
             currentStatus = Status::Authenticated;
             DBG("R2OneDriveProvider::loadTokens() - Refresh token exists. Status set to Authenticated to enable seamless refresh.");
             return true;
