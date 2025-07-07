@@ -15,6 +15,7 @@ BEGIN
   BEGIN
     BLOCK "040904E4"
     BEGIN
+      VALUE "LegalCopyright",  "(c) 2025 STUDIO-R\0"
       VALUE "FileDescription",  "CloudDoc\0"
       VALUE "FileVersion",  "1.0.0\0"
       VALUE "ProductName",  "CloudDoc\0"

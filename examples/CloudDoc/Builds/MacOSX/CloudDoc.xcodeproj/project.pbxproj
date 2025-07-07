@@ -11,10 +11,11 @@
 			isa = PBXAggregateTarget;
 			buildConfigurationList = 8282EB3F73CEAC962BCBF3FA;
 			buildPhases = (
+				5E53BF6BA26EE2F96BCB767C,
 			);
 			dependencies = (
 				AFF846E8F1BDA81527C16D80,
-				FA1AF7B13B5B35C2E024F3E4,
+				90BA3E476E09BD8CC4695EC6,
 				3116D38E25E9D0BDFA18E10A,
 				0B62BAE242A65E875C611957,
 				38FAB78F20D4C840A5E59A5B,
@@ -35,6 +36,7 @@
 		248449B03F84BD5FD741D49E /* WebKit.framework */ = {isa = PBXBuildFile; fileRef = 8CBBCE8602736A34752C0913; };
 		24E4AD16F2209FAC6FB96793 /* include_juce_audio_formats.mm */ = {isa = PBXBuildFile; fileRef = 342644E258B7D736B9DF55EF; };
 		27F5B30B37BFFE9D7920CC16 /* include_juce_audio_plugin_client_VST3.mm */ = {isa = PBXBuildFile; fileRef = B00D8D50CB63DB5EC9343C06; };
+		2BC0434DDAAE60D0C2F29760 /* include_juce_audio_plugin_client_AUv3.mm */ = {isa = PBXBuildFile; fileRef = 8ECDC0ECE3F53B9F4D4BF693; };
 		324EB44693390BECAE17456C /* QuartzCore.framework */ = {isa = PBXBuildFile; fileRef = 4B08B799FC4C67EE4478D10B; };
 		32523297E1D2D6A2EF2A08D4 /* include_juce_audio_basics.mm */ = {isa = PBXBuildFile; fileRef = 996B8F5BDDCB0F4FF2F132F0; };
 		32C4A5F20461C1277EDAF76F /* include_juce_gui_extra.mm */ = {isa = PBXBuildFile; fileRef = 534B865CAB7418A4D0B18AE1; };
@@ -47,14 +49,12 @@
 		4E352D920225E9A462E834C5 /* include_juce_core_CompilationTime.cpp */ = {isa = PBXBuildFile; fileRef = 25AE1043299B604C79913BAC; };
 		4E72339B0DE36945FF9D7F97 /* CloudDocAudioProcessorEditor.cpp */ = {isa = PBXBuildFile; fileRef = 31C629FF824D1897A22D0317; };
 		4FAEBC61BC39EFB9267F5554 /* Security.framework */ = {isa = PBXBuildFile; fileRef = FE07257E5A5A9E7B09137079; };
-		56293AC230266A6D1675DB15 /* include_juce_audio_plugin_client_AU_2.mm */ = {isa = PBXBuildFile; fileRef = 80D8E0995FBB478978BB4097; };
 		61CF569FB6A67434DE5E3317 /* Accelerate.framework */ = {isa = PBXBuildFile; fileRef = F363A366619A9B2ABD173AA6; };
 		63AA868C5AF657D0B7780A0F /* include_juce_graphics.mm */ = {isa = PBXBuildFile; fileRef = CE5814E04A899D12BF31738B; };
-		673140B9A04628CA6B446FC1 /* AU */ = {isa = PBXBuildFile; fileRef = BBA6228C674F2651CB4F862F; };
+		67B3936A0F61AFF82371E433 /* AUv3 AppExtension */ = {isa = PBXBuildFile; fileRef = F3652C3CFA257256775BAB24; };
 		6AB7A30BFF3D86595BBACFB6 /* MainComponent.cpp */ = {isa = PBXBuildFile; fileRef = DD91E461B606083217FA4073; };
 		6D15637C75B2B77A23419190 /* include_R2JUCE.cpp */ = {isa = PBXBuildFile; fileRef = 2E9E25296EF615FFE1BF47E3; };
 		70FAADD7FD1A8239830AFA6C /* include_juce_graphics_Harfbuzz.cpp */ = {isa = PBXBuildFile; fileRef = 65FA9DB21CE60ED2BFD165A9; };
-		773F1EBF06E003578E2A171D /* include_juce_audio_plugin_client_AU_1.mm */ = {isa = PBXBuildFile; fileRef = DF0C202FC716525A9E3622B9; };
 		85B16CBA22A96F98F8D8FE31 /* Metal.framework */ = {isa = PBXBuildFile; fileRef = E2B91D8701C6D95A6E92141A; settings = { ATTRIBUTES = (Weak, ); }; };
 		888F1A890525B05D5CAB0F72 /* CloudDocAudioProcessor.cpp */ = {isa = PBXBuildFile; fileRef = 6ADF141E4CC03BB40BF4699E; };
 		93301A176A4A74BD47ED3565 /* CoreMIDI.framework */ = {isa = PBXBuildFile; fileRef = 3F95E03B4E97A1245C2A4C94; };
@@ -67,6 +67,7 @@
 		A5E29F20BE1747BB33AC1D14 /* AudioToolbox.framework */ = {isa = PBXBuildFile; fileRef = 3396D5BC937AFE7578366211; };
 		A6A71DFFDB9A079928B31553 /* CoreAudioKit.framework */ = {isa = PBXBuildFile; fileRef = 2597F4CC3F61454FA10D487A; };
 		AAFC25B6ED82FE10010A66B6 /* VST3 */ = {isa = PBXBuildFile; fileRef = 96F8151E067A4F4C2EBAD1ED; };
+		AF7931E2A1875596A31ED828 /* AVFoundation.framework */ = {isa = PBXBuildFile; fileRef = E04FA01AD319A01E55CB91C5; };
 		B41E49BBB3FD828FBC647039 /* include_juce_audio_devices.mm */ = {isa = PBXBuildFile; fileRef = C5FAD986DC75EF9DDD3F42CE; };
 		CF4395C6AC39FCAF115B18E3 /* VST3 Manifest Helper */ = {isa = PBXBuildFile; fileRef = 9D74A895851088E6957F6FB2; };
 		D61A5A183688D0F839A96A1B /* include_juce_data_structures.mm */ = {isa = PBXBuildFile; fileRef = F0F2F7EDD23D677C70CA5D43; };
@@ -74,12 +75,25 @@
 		F6AD8B2075FB136836DA674A /* juce_VST3ManifestHelper.mm */ = {isa = PBXBuildFile; fileRef = 208E67E3D2842B8BF0041995; settings = { COMPILER_FLAGS = "-fobjc-arc -w -DJUCE_SKIP_PRECOMPILED_HEADER"; }; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		B406FE52CEDAE7B0F660C7E1 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				67B3936A0F61AFF82371E433,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		02823163D0923085A20607B0 /* juce_audio_processors */ /* juce_audio_processors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_processors; path = /Users/ring2/JUCE/modules/juce_audio_processors; sourceTree = "<absolute>"; };
 		03BC6FD9E777250E4E58CD79 /* Shared Code */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libCloudDoc.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		07D0CCD60A02A8E6790B5506 /* Shared_Code.entitlements */ /* Shared_Code.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Shared_Code.entitlements; path = Shared_Code.entitlements; sourceTree = SOURCE_ROOT; };
 		0AFF071D92AEB69420060B8F /* juce_audio_devices */ /* juce_audio_devices */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_devices; path = /Users/ring2/JUCE/modules/juce_audio_devices; sourceTree = "<absolute>"; };
-		0EC72362FA2534D386465F41 /* AU.entitlements */ /* AU.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = AU.entitlements; path = AU.entitlements; sourceTree = SOURCE_ROOT; };
 		15429034BB3267FB328DC35F /* juce_audio_basics */ /* juce_audio_basics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_basics; path = /Users/ring2/JUCE/modules/juce_audio_basics; sourceTree = "<absolute>"; };
 		208E67E3D2842B8BF0041995 /* juce_VST3ManifestHelper.mm */ /* juce_VST3ManifestHelper.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = juce_VST3ManifestHelper.mm; path = /Users/ring2/JUCE/modules/juce_audio_plugin_client/VST3/juce_VST3ManifestHelper.mm; sourceTree = "<absolute>"; };
 		230FA98C6777F4260B66F57D /* Credentials.h */ /* Credentials.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Credentials.h; path = ../../Source/Credentials.h; sourceTree = SOURCE_ROOT; };
@@ -107,18 +121,20 @@
 		651E53EF7D6947C8A316CDF0 /* juce_data_structures */ /* juce_data_structures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_data_structures; path = /Users/ring2/JUCE/modules/juce_data_structures; sourceTree = "<absolute>"; };
 		65FA9DB21CE60ED2BFD165A9 /* include_juce_graphics_Harfbuzz.cpp */ /* include_juce_graphics_Harfbuzz.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_graphics_Harfbuzz.cpp; path = ../../JuceLibraryCode/include_juce_graphics_Harfbuzz.cpp; sourceTree = SOURCE_ROOT; };
 		671CE46E4013D04E8184ADE7 /* CloudDocAudioProcessor.h */ /* CloudDocAudioProcessor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CloudDocAudioProcessor.h; path = ../../Source/CloudDocAudioProcessor.h; sourceTree = SOURCE_ROOT; };
+		681F79350F0BA0687185C15A /* AUv3_AppExtension.entitlements */ /* AUv3_AppExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = AUv3_AppExtension.entitlements; path = AUv3_AppExtension.entitlements; sourceTree = SOURCE_ROOT; };
+		69D65CA262B6BF2DF125C1B1 /* Info-AUv3_AppExtension.plist */ /* Info-AUv3_AppExtension.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-AUv3_AppExtension.plist"; path = "Info-AUv3_AppExtension.plist"; sourceTree = SOURCE_ROOT; };
 		6ADF141E4CC03BB40BF4699E /* CloudDocAudioProcessor.cpp */ /* CloudDocAudioProcessor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CloudDocAudioProcessor.cpp; path = ../../Source/CloudDocAudioProcessor.cpp; sourceTree = SOURCE_ROOT; };
 		6E026EF31EAD41F9E2AE0A9F /* IOKit.framework */ /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		70908FCDC53FB2033DF7F817 /* juce_audio_formats */ /* juce_audio_formats */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_formats; path = /Users/ring2/JUCE/modules/juce_audio_formats; sourceTree = "<absolute>"; };
 		73D003383425E39A37B43290 /* DiscRecording.framework */ /* DiscRecording.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiscRecording.framework; path = System/Library/Frameworks/DiscRecording.framework; sourceTree = SDKROOT; };
 		763D373A1DD21DA4BED89E24 /* include_juce_audio_plugin_client_Standalone.cpp */ /* include_juce_audio_plugin_client_Standalone.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_plugin_client_Standalone.cpp; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_Standalone.cpp; sourceTree = SOURCE_ROOT; };
 		7B3AF2C70B3FE1EB69C690A1 /* CloudDocAudioProcessorEditor.h */ /* CloudDocAudioProcessorEditor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = CloudDocAudioProcessorEditor.h; path = ../../Source/CloudDocAudioProcessorEditor.h; sourceTree = SOURCE_ROOT; };
-		80D8E0995FBB478978BB4097 /* include_juce_audio_plugin_client_AU_2.mm */ /* include_juce_audio_plugin_client_AU_2.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_plugin_client_AU_2.mm; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_AU_2.mm; sourceTree = SOURCE_ROOT; };
 		80F18DB81BDC1848339FD0AB /* include_juce_audio_processors_lv2_libs.cpp */ /* include_juce_audio_processors_lv2_libs.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_processors_lv2_libs.cpp; path = ../../JuceLibraryCode/include_juce_audio_processors_lv2_libs.cpp; sourceTree = SOURCE_ROOT; };
 		827E0014EAD8BC329D2574ED /* include_juce_audio_processors.mm */ /* include_juce_audio_processors.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_processors.mm; path = ../../JuceLibraryCode/include_juce_audio_processors.mm; sourceTree = SOURCE_ROOT; };
 		8A912E4F627DE37C21B0B924 /* MetalKit.framework */ /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		8C046679A1E2BC1B6A6D667E /* include_juce_audio_plugin_client_ARA.cpp */ /* include_juce_audio_plugin_client_ARA.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_plugin_client_ARA.cpp; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_ARA.cpp; sourceTree = SOURCE_ROOT; };
 		8CBBCE8602736A34752C0913 /* WebKit.framework */ /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		8ECDC0ECE3F53B9F4D4BF693 /* include_juce_audio_plugin_client_AUv3.mm */ /* include_juce_audio_plugin_client_AUv3.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_plugin_client_AUv3.mm; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_AUv3.mm; sourceTree = SOURCE_ROOT; };
 		9558D570E31F0E4D7A264115 /* CoreAudio.framework */ /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		9637B87323AAC417EC3DCB93 /* Foundation.framework */ /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		96948CC597F81CDE15F7FAFC /* Cocoa.framework */ /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -131,8 +147,6 @@
 		B00D8D50CB63DB5EC9343C06 /* include_juce_audio_plugin_client_VST3.mm */ /* include_juce_audio_plugin_client_VST3.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_plugin_client_VST3.mm; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_VST3.mm; sourceTree = SOURCE_ROOT; };
 		B4C509F33552335CE15301C1 /* include_juce_events.mm */ /* include_juce_events.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_events.mm; path = ../../JuceLibraryCode/include_juce_events.mm; sourceTree = SOURCE_ROOT; };
 		B7410F6E3E44003BE15B2B81 /* Info-Standalone_Plugin.plist */ /* Info-Standalone_Plugin.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-Standalone_Plugin.plist"; path = "Info-Standalone_Plugin.plist"; sourceTree = SOURCE_ROOT; };
-		BBA6228C674F2651CB4F862F /* AU */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CloudDoc.component; sourceTree = BUILT_PRODUCTS_DIR; };
-		C3E88DD41C64F247F3416971 /* Info-AU.plist */ /* Info-AU.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-AU.plist"; path = "Info-AU.plist"; sourceTree = SOURCE_ROOT; };
 		C5FAD986DC75EF9DDD3F42CE /* include_juce_audio_devices.mm */ /* include_juce_audio_devices.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_devices.mm; path = ../../JuceLibraryCode/include_juce_audio_devices.mm; sourceTree = SOURCE_ROOT; };
 		C625C23511ED5439CD6F56AD /* juce_core */ /* juce_core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_core; path = /Users/ring2/JUCE/modules/juce_core; sourceTree = "<absolute>"; };
 		CD5BBDD134249DE086C7A250 /* juce_graphics */ /* juce_graphics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_graphics; path = /Users/ring2/JUCE/modules/juce_graphics; sourceTree = "<absolute>"; };
@@ -142,39 +156,18 @@
 		DD91E461B606083217FA4073 /* MainComponent.cpp */ /* MainComponent.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = MainComponent.cpp; path = ../../Source/MainComponent.cpp; sourceTree = SOURCE_ROOT; };
 		DDFD7EFBBFB929DC602A557B /* juce_audio_utils */ /* juce_audio_utils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_utils; path = /Users/ring2/JUCE/modules/juce_audio_utils; sourceTree = "<absolute>"; };
 		DE5652209C014CADE7111091 /* Info-VST3.plist */ /* Info-VST3.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-VST3.plist"; path = "Info-VST3.plist"; sourceTree = SOURCE_ROOT; };
-		DF0C202FC716525A9E3622B9 /* include_juce_audio_plugin_client_AU_1.mm */ /* include_juce_audio_plugin_client_AU_1.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_plugin_client_AU_1.mm; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_AU_1.mm; sourceTree = SOURCE_ROOT; };
 		E03D0D58D5E28168E3224D91 /* All.entitlements */ /* All.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = All.entitlements; path = All.entitlements; sourceTree = SOURCE_ROOT; };
+		E04FA01AD319A01E55CB91C5 /* AVFoundation.framework */ /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		E2B91D8701C6D95A6E92141A /* Metal.framework */ /* Metal.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Metal.framework; path = System/Library/Frameworks/Metal.framework; sourceTree = SDKROOT; };
 		EC07A478A2F0DC3832F05B35 /* Standalone_Plugin.entitlements */ /* Standalone_Plugin.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Standalone_Plugin.entitlements; path = Standalone_Plugin.entitlements; sourceTree = SOURCE_ROOT; };
 		F0F2F7EDD23D677C70CA5D43 /* include_juce_data_structures.mm */ /* include_juce_data_structures.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_data_structures.mm; path = ../../JuceLibraryCode/include_juce_data_structures.mm; sourceTree = SOURCE_ROOT; };
 		F363A366619A9B2ABD173AA6 /* Accelerate.framework */ /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		F3652C3CFA257256775BAB24 /* AUv3 AppExtension */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CloudDoc.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		FDC0931D0DD95F8E1D515467 /* MainComponent.h */ /* MainComponent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MainComponent.h; path = ../../Source/MainComponent.h; sourceTree = SOURCE_ROOT; };
 		FE07257E5A5A9E7B09137079 /* Security.framework */ /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		208C815A36020C8BD53F9744 = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				9622532F8A7A3B78D1EC59A8,
-				61CF569FB6A67434DE5E3317,
-				A5E29F20BE1747BB33AC1D14,
-				9D89AB034771056534ACE024,
-				3D85ECB1ED091E099641C697,
-				A6A71DFFDB9A079928B31553,
-				93301A176A4A74BD47ED3565,
-				48BEF8FF019FE41265B6486E,
-				20A7003995AB362EC0968D0A,
-				47964CC42B07E9E0623A9740,
-				324EB44693390BECAE17456C,
-				4FAEBC61BC39EFB9267F5554,
-				248449B03F84BD5FD741D49E,
-				85B16CBA22A96F98F8D8FE31,
-				1D95709774E7F60BD5B3A9CC,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		502757A90D6716EEB2FCA718 = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -238,6 +231,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C96EA3138CDE097A93552EC8 = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9622532F8A7A3B78D1EC59A8,
+				61CF569FB6A67434DE5E3317,
+				A5E29F20BE1747BB33AC1D14,
+				AF7931E2A1875596A31ED828,
+				9D89AB034771056534ACE024,
+				3D85ECB1ED091E099641C697,
+				A6A71DFFDB9A079928B31553,
+				93301A176A4A74BD47ED3565,
+				48BEF8FF019FE41265B6486E,
+				20A7003995AB362EC0968D0A,
+				47964CC42B07E9E0623A9740,
+				324EB44693390BECAE17456C,
+				4FAEBC61BC39EFB9267F5554,
+				248449B03F84BD5FD741D49E,
+				85B16CBA22A96F98F8D8FE31,
+				1D95709774E7F60BD5B3A9CC,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -268,8 +284,7 @@
 				C5FAD986DC75EF9DDD3F42CE,
 				342644E258B7D736B9DF55EF,
 				8C046679A1E2BC1B6A6D667E,
-				DF0C202FC716525A9E3622B9,
-				80D8E0995FBB478978BB4097,
+				8ECDC0ECE3F53B9F4D4BF693,
 				763D373A1DD21DA4BED89E24,
 				B00D8D50CB63DB5EC9343C06,
 				827E0014EAD8BC329D2574ED,
@@ -298,6 +313,7 @@
 				96B3E056C726C0634DFB379D,
 				F363A366619A9B2ABD173AA6,
 				3396D5BC937AFE7578366211,
+				E04FA01AD319A01E55CB91C5,
 				96948CC597F81CDE15F7FAFC,
 				9558D570E31F0E4D7A264115,
 				2597F4CC3F61454FA10D487A,
@@ -318,7 +334,7 @@
 			isa = PBXGroup;
 			children = (
 				DE5652209C014CADE7111091,
-				C3E88DD41C64F247F3416971,
+				69D65CA262B6BF2DF125C1B1,
 				B7410F6E3E44003BE15B2B81,
 				5CA720FD734BC3311272410A,
 				D77730BCD58E84C59231EF50,
@@ -365,7 +381,7 @@
 			isa = PBXGroup;
 			children = (
 				96F8151E067A4F4C2EBAD1ED,
-				BBA6228C674F2651CB4F862F,
+				F3652C3CFA257256775BAB24,
 				58452321C926DD45230EDA8D,
 				03BC6FD9E777250E4E58CD79,
 				9D74A895851088E6957F6FB2,
@@ -380,6 +396,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1BBA7270C4C50B59CB96B8EA;
 			buildPhases = (
+				876AD27A3B55990054FACC31,
 				29B907396693CB463E712EEC,
 				62FB6CDF8361D726D141F862,
 			);
@@ -396,11 +413,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 41FF94CF21EA1E9B2685DCBD;
 			buildPhases = (
+				993AECE9E9C3351CD22C00D8,
 				A1BDE88584DA476EC7F8E781,
 				3F30248C388A3EED6B3DDA60,
 				B887BEBDFE4EEA9BA1186337,
-				993AECE9E9C3351CD22C00D8,
 				AD4130CD770BA80FF5B16AD5,
+				04C6D294702C050061B3B972,
 			);
 			buildRules = (
 			);
@@ -417,24 +435,47 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 42F359FFBB4CEA8F6667F530;
 			buildPhases = (
+				8A19686EE0CC5F09D847BFAB,
 				45988874C755561BBC1959C5,
 				78C390DC4D6B2A53B7502841,
 				502757A90D6716EEB2FCA718,
+				B406FE52CEDAE7B0F660C7E1,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				B9FAE9F25167BF7473636432,
+				31DCB7DEED385C945B6D8275,
 			);
 			name = "CloudDoc - Standalone Plugin";
 			productName = CloudDoc;
 			productReference = 58452321C926DD45230EDA8D;
 			productType = "com.apple.product-type.application";
 		};
+		BB03D633BEC938576F2D2B34 /* CloudDoc - AUv3 AppExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 32ABD9A38B2A6802F4E9270B;
+			buildPhases = (
+				E144B3334AEAB023ADF0B046,
+				3937D15C6502805D021A736C,
+				80BE79626BC3408BE25ED16C,
+				C96EA3138CDE097A93552EC8,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				95F6B3D13DDB75E24BA960FE,
+			);
+			name = "CloudDoc - AUv3 AppExtension";
+			productName = CloudDoc;
+			productReference = F3652C3CFA257256775BAB24;
+			productType = "com.apple.product-type.app-extension";
+		};
 		D60A5613792350995CDB0996 /* CloudDoc - Shared Code */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = E50227785E06C86FDBE2AF4F;
 			buildPhases = (
+				FDD4475C37DFCFC4FDBC8B1B,
 				379272FDC72FCF366E67FEEE,
 			);
 			buildRules = (
@@ -445,25 +486,6 @@
 			productName = CloudDoc;
 			productReference = 03BC6FD9E777250E4E58CD79;
 			productType = "com.apple.product-type.library.static";
-		};
-		E4D3654BA74D62D56E10FF14 /* CloudDoc - AU */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = DFB3A6B54D009C25EA92F71D;
-			buildPhases = (
-				362A1DCAB0DAA7BD6C12433F,
-				056A10A9910533EC414A5F49,
-				208C815A36020C8BD53F9744,
-				AAE8352FA681153CBD417197,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				5997D17331A1004B7F83006D,
-			);
-			name = "CloudDoc - AU";
-			productName = CloudDoc;
-			productReference = BBA6228C674F2651CB4F862F;
-			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
 
@@ -563,7 +585,7 @@
 							};
 						};
 					};
-					D60A5613792350995CDB0996 = {
+					BB03D633BEC938576F2D2B34 = {
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 0;
@@ -585,7 +607,7 @@
 							};
 						};
 					};
-					E4D3654BA74D62D56E10FF14 = {
+					D60A5613792350995CDB0996 = {
 						SystemCapabilities = {
 							com.apple.ApplicationGroups.iOS = {
 								enabled = 0;
@@ -622,7 +644,7 @@
 			targets = (
 				357F79A9B30E620C1C7AC62B,
 				42DDB1DEA923A1CE1679C48D,
-				E4D3654BA74D62D56E10FF14,
+				BB03D633BEC938576F2D2B34,
 				ADEA4781765F8F478DC0A748,
 				D60A5613792350995CDB0996,
 				0F0B6511667176DEFB075F4A,
@@ -631,7 +653,7 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		362A1DCAB0DAA7BD6C12433F = {
+		3937D15C6502805D021A736C = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -658,29 +680,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		993AECE9E9C3351CD22C00D8 /* Update manifest */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Update manifest";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n\necho Running codesign --verbose=4 --force --sign - \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\"\ncodesign --verbose=4 --force --sign - \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\"\n\necho Running \\\"${CONFIGURATION_BUILD_DIR}/juce_vst3_helper\\\" -create -version \\\"1.0.0\\\" -path \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" -output \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}/Contents/Resources/moduleinfo.json\\\"\n\"${CONFIGURATION_BUILD_DIR}/juce_vst3_helper\" -create -version \"1.0.0\" -path \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\" -output \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}/Contents/Resources/moduleinfo.json\"\n";
-		};
-		AAE8352FA681153CBD417197 /* Plugin Copy Step */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Plugin Copy Step";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n\nif [[ \"${CONFIGURATION}\" == \"Debug\" ]]; then\n  destinationPlugin=\"${HOME}/Library/Audio/Plug-Ins/Components//$(basename \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\")\"\n  echo Running rm -rf \\\"${destinationPlugin}\\\"\n  rm -rf \"${destinationPlugin}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" \\\"${destinationPlugin}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \"${destinationPlugin}\"\n\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY-}\" ]]; then\n    if [[ -n \"${CODE_SIGN_ENTITLEMENTS-}\" ]]; then\n      entitlementsArg=(--entitlements \"${CODE_SIGN_ENTITLEMENTS}\")\n    fi\n\n    echo Signing Identity: \\\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\\\"\n    echo Running codesign --verbose=4 --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY}\\\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \\\"${HOME}/Library/Audio/Plug-Ins/Components//${FULL_PRODUCT_NAME}\\\"\n    codesign --verbose=4 --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \"${HOME}/Library/Audio/Plug-Ins/Components//${FULL_PRODUCT_NAME}\"\n  fi\nfi\n\nif [[ \"${CONFIGURATION}\" == \"Release\" ]]; then\n  destinationPlugin=\"${HOME}/Library/Audio/Plug-Ins/Components//$(basename \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\")\"\n  echo Running rm -rf \\\"${destinationPlugin}\\\"\n  rm -rf \"${destinationPlugin}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" \\\"${destinationPlugin}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \"${destinationPlugin}\"\n\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY-}\" ]]; then\n    if [[ -n \"${CODE_SIGN_ENTITLEMENTS-}\" ]]; then\n      entitlementsArg=(--entitlements \"${CODE_SIGN_ENTITLEMENTS}\")\n    fi\n\n    echo Signing Identity: \\\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\\\"\n    echo Running codesign --verbose=4 --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY}\\\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \\\"${HOME}/Library/Audio/Plug-Ins/Components//${FULL_PRODUCT_NAME}\\\"\n    codesign --verbose=4 --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \"${HOME}/Library/Audio/Plug-Ins/Components//${FULL_PRODUCT_NAME}\"\n  fi\nfi\n";
-		};
-		AD4130CD770BA80FF5B16AD5 /* Plugin Copy Step */ = {
+		04C6D294702C050061B3B972 /* Plugin Copy Step */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -691,18 +691,86 @@
 			shellPath = /bin/sh;
 			shellScript = "set -euo pipefail\n\nif [[ \"${CONFIGURATION}\" == \"Debug\" ]]; then\n  destinationPlugin=\"${HOME}/Library/Audio/Plug-Ins/VST3//$(basename \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\")\"\n  echo Running rm -rf \\\"${destinationPlugin}\\\"\n  rm -rf \"${destinationPlugin}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" \\\"${destinationPlugin}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \"${destinationPlugin}\"\n\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY-}\" ]]; then\n    if [[ -n \"${CODE_SIGN_ENTITLEMENTS-}\" ]]; then\n      entitlementsArg=(--entitlements \"${CODE_SIGN_ENTITLEMENTS}\")\n    fi\n\n    echo Signing Identity: \\\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\\\"\n    echo Running codesign --verbose=4 --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY}\\\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \\\"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\\\"\n    codesign --verbose=4 --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\"\n  fi\nfi\n\nif [[ \"${CONFIGURATION}\" == \"Release\" ]]; then\n  destinationPlugin=\"${HOME}/Library/Audio/Plug-Ins/VST3//$(basename \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\")\"\n  echo Running rm -rf \\\"${destinationPlugin}\\\"\n  rm -rf \"${destinationPlugin}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" \\\"${destinationPlugin}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \"${destinationPlugin}\"\n\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY-}\" ]]; then\n    if [[ -n \"${CODE_SIGN_ENTITLEMENTS-}\" ]]; then\n      entitlementsArg=(--entitlements \"${CODE_SIGN_ENTITLEMENTS}\")\n    fi\n\n    echo Signing Identity: \\\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\\\"\n    echo Running codesign --verbose=4 --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY}\\\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \\\"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\\\"\n    codesign --verbose=4 --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\"\n  fi\nfi\n";
 		};
+		5E53BF6BA26EE2F96BCB767C /* Pre-build script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Pre-build script";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
+		};
+		876AD27A3B55990054FACC31 /* Pre-build script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Pre-build script";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
+		};
+		8A19686EE0CC5F09D847BFAB /* Pre-build script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Pre-build script";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
+		};
+		993AECE9E9C3351CD22C00D8 /* Pre-build script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Pre-build script";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
+		};
+		AD4130CD770BA80FF5B16AD5 /* Update manifest */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Update manifest";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\n\necho Running codesign --verbose=4 --force --sign - \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\"\ncodesign --verbose=4 --force --sign - \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\"\n\necho Running \\\"${CONFIGURATION_BUILD_DIR}/juce_vst3_helper\\\" -create -version \\\"1.0.0\\\" -path \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" -output \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}/Contents/Resources/moduleinfo.json\\\"\n\"${CONFIGURATION_BUILD_DIR}/juce_vst3_helper\" -create -version \"1.0.0\" -path \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\" -output \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}/Contents/Resources/moduleinfo.json\"\n";
+		};
+		E144B3334AEAB023ADF0B046 /* Pre-build script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Pre-build script";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
+		};
+		FDD4475C37DFCFC4FDBC8B1B /* Pre-build script */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			name = "Pre-build script";
+			alwaysOutOfDate = 1;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		056A10A9910533EC414A5F49 = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				773F1EBF06E003578E2A171D,
-				56293AC230266A6D1675DB15,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		29B907396693CB463E712EEC = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -755,6 +823,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		80BE79626BC3408BE25ED16C = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2BC0434DDAAE60D0C2F29760,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -766,17 +842,25 @@
 			isa = PBXTargetDependency;
 			target = ADEA4781765F8F478DC0A748;
 		};
+		31DCB7DEED385C945B6D8275 = {
+			isa = PBXTargetDependency;
+			target = BB03D633BEC938576F2D2B34;
+		};
 		38FAB78F20D4C840A5E59A5B = {
 			isa = PBXTargetDependency;
 			target = 0F0B6511667176DEFB075F4A;
 		};
-		5997D17331A1004B7F83006D = {
+		90BA3E476E09BD8CC4695EC6 = {
 			isa = PBXTargetDependency;
-			target = D60A5613792350995CDB0996;
+			target = BB03D633BEC938576F2D2B34;
 		};
 		94F38D06E447166EA21B105A = {
 			isa = PBXTargetDependency;
 			target = 0F0B6511667176DEFB075F4A;
+		};
+		95F6B3D13DDB75E24BA960FE = {
+			isa = PBXTargetDependency;
+			target = D60A5613792350995CDB0996;
 		};
 		ACD1C5F410FBF0465AF4C875 = {
 			isa = PBXTargetDependency;
@@ -790,10 +874,6 @@
 			isa = PBXTargetDependency;
 			target = D60A5613792350995CDB0996;
 		};
-		FA1AF7B13B5B35C2E024F3E4 = {
-			isa = PBXTargetDependency;
-			target = E4D3654BA74D62D56E10FF14;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -802,6 +882,125 @@
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		0EBA7C49B98D266C8F30CED7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_ENTITLEMENTS = "AUv3_AppExtension.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				DEAD_CODE_STRIPPING = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				EXCLUDED_ARCHS = "";
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_NDEBUG=1",
+					"NDEBUG=1",
+					"JUCE_DISPLAY_SPLASH_SCREEN=1",
+					"JUCE_USE_DARK_SPLASH_SCREEN=1",
+					"JUCE_PROJUCER_VERSION=0x7000c",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_MODULE_AVAILABLE_R2JUCE=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1",
+					"JUCE_USE_WIN_WEBVIEW2=1",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=1",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=0",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"CloudDoc\\\"",
+					"JucePlugin_Desc=\\\"CloudDoc\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=0",
+					"JucePlugin_ProducesMidiOutput=0",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=CloudDocAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
+					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757267",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.yourcompany.CloudDoc.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.yourcompany.CloudDoc.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCE_RASPI_SIMULATE=0",
+					"JUCE_RASPI_SIMULATE_WIDTH=800",
+					"JUCE_RASPI_SIMULATE_HEIGHT=480",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/ring2/JUCE/modules",
+					"$(SRCROOT)/../../../../modules",
+					"/Users/ring2/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-AUv3_AppExtension.plist;
+				INFOPLIST_PREPROCESS = NO;
+				LLVM_LTO = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_LDFLAGS = "-lCloudDoc";
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc.clouddocAUv3;
+				PRODUCT_NAME = "CloudDoc";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
 			};
 			name = Release;
 		};
@@ -845,8 +1044,8 @@
 					"JUCE_USE_WIN_WEBVIEW2=1",
 					"JucePlugin_Build_VST=0",
 					"JucePlugin_Build_VST3=1",
-					"JucePlugin_Build_AU=1",
-					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=1",
 					"JucePlugin_Build_AAX=0",
 					"JucePlugin_Build_Standalone=1",
 					"JucePlugin_Build_Unity=0",
@@ -855,12 +1054,12 @@
 					"JucePlugin_Enable_ARA=0",
 					"JucePlugin_Name=\\\"CloudDoc\\\"",
 					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
 					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
 					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
@@ -869,23 +1068,23 @@
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
 					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
 					"JucePlugin_AUSubType=JucePlugin_PluginCode",
 					"JucePlugin_AUExportPrefix=CloudDocAU",
 					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
 					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
 					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
 					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
 					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
+					"JucePlugin_AAXCategory=2048",
 					"JucePlugin_AAXDisableBypass=0",
 					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
+					"JucePlugin_IAAType=0x61757267",
 					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
 					"JucePlugin_VSTNumMidiInputs=16",
 					"JucePlugin_VSTNumMidiOutputs=16",
 					"JucePlugin_ARAContentTypes=0",
@@ -914,7 +1113,7 @@
 				INSTALL_PATH = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc;
 				PRODUCT_NAME = "CloudDoc";
 				SKIP_INSTALL = YES;
 				USE_HEADERMAP = NO;
@@ -972,12 +1171,12 @@
 					"JucePlugin_Enable_ARA=0",
 					"JucePlugin_Name=\\\"CloudDoc\\\"",
 					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
 					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
 					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
@@ -986,23 +1185,23 @@
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
 					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
 					"JucePlugin_AUSubType=JucePlugin_PluginCode",
 					"JucePlugin_AUExportPrefix=CloudDocAU",
 					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
 					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
 					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
 					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
 					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
+					"JucePlugin_AAXCategory=2048",
 					"JucePlugin_AAXDisableBypass=0",
 					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
+					"JucePlugin_IAAType=0x61757267",
 					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
 					"JucePlugin_VSTNumMidiInputs=16",
 					"JucePlugin_VSTNumMidiOutputs=16",
 					"JucePlugin_ARAContentTypes=0",
@@ -1036,7 +1235,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
 				OTHER_LDFLAGS = "-bundle -lCloudDoc";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc;
 				PRODUCT_NAME = "CloudDoc";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
@@ -1092,12 +1291,12 @@
 					"JucePlugin_Enable_ARA=0",
 					"JucePlugin_Name=\\\"CloudDoc\\\"",
 					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
 					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
 					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
@@ -1106,23 +1305,23 @@
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
 					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
 					"JucePlugin_AUSubType=JucePlugin_PluginCode",
 					"JucePlugin_AUExportPrefix=CloudDocAU",
 					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
 					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
 					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
 					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
 					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
+					"JucePlugin_AAXCategory=2048",
 					"JucePlugin_AAXDisableBypass=0",
 					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
+					"JucePlugin_IAAType=0x61757267",
 					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
 					"JucePlugin_VSTNumMidiInputs=16",
 					"JucePlugin_VSTNumMidiOutputs=16",
 					"JucePlugin_ARAContentTypes=0",
@@ -1151,7 +1350,7 @@
 				INFOPLIST_PREPROCESS = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc;
 				PRODUCT_NAME = "juce_vst3_helper";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
@@ -1165,129 +1364,6 @@
 				SDKROOT = macosx;
 			};
 			name = Debug;
-		};
-		4E4629300158C8725AEC9C57 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_ENTITLEMENTS = "AU.entitlements";
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
-				DEAD_CODE_STRIPPING = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
-				EXCLUDED_ARCHS = "";
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_NDEBUG=1",
-					"NDEBUG=1",
-					"JUCE_DISPLAY_SPLASH_SCREEN=1",
-					"JUCE_USE_DARK_SPLASH_SCREEN=1",
-					"JUCE_PROJUCER_VERSION=0x7000c",
-					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
-					"JUCE_MODULE_AVAILABLE_juce_core=1",
-					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
-					"JUCE_MODULE_AVAILABLE_juce_events=1",
-					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
-					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
-					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
-					"JUCE_MODULE_AVAILABLE_R2JUCE=1",
-					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
-					"JUCE_VST3_CAN_REPLACE_VST2=0",
-					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
-					"JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1",
-					"JUCE_USE_WIN_WEBVIEW2=1",
-					"JucePlugin_Build_VST=0",
-					"JucePlugin_Build_VST3=0",
-					"JucePlugin_Build_AU=1",
-					"JucePlugin_Build_AUv3=0",
-					"JucePlugin_Build_AAX=0",
-					"JucePlugin_Build_Standalone=0",
-					"JucePlugin_Build_Unity=0",
-					"JucePlugin_Build_LV2=0",
-					"JucePlugin_Enable_IAA=0",
-					"JucePlugin_Enable_ARA=0",
-					"JucePlugin_Name=\\\"CloudDoc\\\"",
-					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
-					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
-					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
-					"JucePlugin_WantsMidiInput=0",
-					"JucePlugin_ProducesMidiOutput=0",
-					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
-					"JucePlugin_Version=1.0.0",
-					"JucePlugin_VersionCode=0x10000",
-					"JucePlugin_VersionString=\\\"1.0.0\\\"",
-					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
-					"JucePlugin_AUSubType=JucePlugin_PluginCode",
-					"JucePlugin_AUExportPrefix=CloudDocAU",
-					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
-					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
-					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
-					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
-					"JucePlugin_AAXDisableBypass=0",
-					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
-					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
-					"JucePlugin_VSTNumMidiInputs=16",
-					"JucePlugin_VSTNumMidiOutputs=16",
-					"JucePlugin_ARAContentTypes=0",
-					"JucePlugin_ARATransformationFlags=0",
-					"JucePlugin_ARAFactoryID=\\\"com.yourcompany.CloudDoc.factory\\\"",
-					"JucePlugin_ARADocumentArchiveID=\\\"com.yourcompany.CloudDoc.aradocumentarchive.1.0.0\\\"",
-					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
-					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
-					"JUCE_RASPI_SIMULATE=0",
-					"JUCE_RASPI_SIMULATE_WIDTH=800",
-					"JUCE_RASPI_SIMULATE_HEIGHT=480",
-					"JUCER_XCODE_MAC_F6D2F4CF=1",
-					"JUCE_APP_VERSION=1.0.0",
-					"JUCE_APP_VERSION_HEX=0x10000",
-				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GENERATE_PKGINFO_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
-					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/ring2/JUCE/modules",
-					"$(SRCROOT)/../../../../modules",
-					"/Users/ring2/JUCE/modules/juce_audio_plugin_client/AU",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = Info-AU.plist;
-				INFOPLIST_PREPROCESS = NO;
-				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/Components/";
-				LIBRARY_STYLE = Bundle;
-				LLVM_LTO = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
-				OTHER_LDFLAGS = "-bundle -lCloudDoc";
-				OTHER_REZFLAGS = "-d ppc_$ppc -d i386_$i386 -d ppc64_$ppc64 -d x86_64_$x86_64 -d arm64_$arm64 -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I \"$(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/AUBase\" -I \"$(DEVELOPER_DIR)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AudioUnit.framework/Headers\"";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
-				PRODUCT_NAME = "CloudDoc";
-				USE_HEADERMAP = NO;
-				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
-				WRAPPER_EXTENSION = component;
-			};
-			name = Release;
 		};
 		6CE272C0C7A5C7F60DE92C37 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1339,12 +1415,12 @@
 					"JucePlugin_Enable_ARA=0",
 					"JucePlugin_Name=\\\"CloudDoc\\\"",
 					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
 					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
 					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
@@ -1353,23 +1429,23 @@
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
 					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
 					"JucePlugin_AUSubType=JucePlugin_PluginCode",
 					"JucePlugin_AUExportPrefix=CloudDocAU",
 					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
 					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
 					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
 					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
 					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
+					"JucePlugin_AAXCategory=2048",
 					"JucePlugin_AAXDisableBypass=0",
 					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
+					"JucePlugin_IAAType=0x61757267",
 					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
 					"JucePlugin_VSTNumMidiInputs=16",
 					"JucePlugin_VSTNumMidiOutputs=16",
 					"JucePlugin_ARAContentTypes=0",
@@ -1400,12 +1476,130 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
 				OTHER_LDFLAGS = "-lCloudDoc";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc;
 				PRODUCT_NAME = "CloudDoc";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
 			};
 			name = Release;
+		};
+		6FB4CA2C73FBA822F1E2F8DC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_LINK_OBJC_RUNTIME = NO;
+				CODE_SIGN_ENTITLEMENTS = "AUv3_AppExtension.entitlements";
+				COMBINE_HIDPI_IMAGES = YES;
+				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
+				COPY_PHASE_STRIP = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
+				EXCLUDED_ARCHS = "";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"_DEBUG=1",
+					"DEBUG=1",
+					"JUCE_DISPLAY_SPLASH_SCREEN=1",
+					"JUCE_USE_DARK_SPLASH_SCREEN=1",
+					"JUCE_PROJUCER_VERSION=0x7000c",
+					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
+					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
+					"JUCE_MODULE_AVAILABLE_juce_core=1",
+					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
+					"JUCE_MODULE_AVAILABLE_juce_events=1",
+					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
+					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
+					"JUCE_MODULE_AVAILABLE_R2JUCE=1",
+					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
+					"JUCE_VST3_CAN_REPLACE_VST2=0",
+					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
+					"JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1",
+					"JUCE_USE_WIN_WEBVIEW2=1",
+					"JucePlugin_Build_VST=0",
+					"JucePlugin_Build_VST3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=1",
+					"JucePlugin_Build_AAX=0",
+					"JucePlugin_Build_Standalone=0",
+					"JucePlugin_Build_Unity=0",
+					"JucePlugin_Build_LV2=0",
+					"JucePlugin_Enable_IAA=0",
+					"JucePlugin_Enable_ARA=0",
+					"JucePlugin_Name=\\\"CloudDoc\\\"",
+					"JucePlugin_Desc=\\\"CloudDoc\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
+					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
+					"JucePlugin_ManufacturerEmail=\\\"\\\"",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
+					"JucePlugin_WantsMidiInput=0",
+					"JucePlugin_ProducesMidiOutput=0",
+					"JucePlugin_IsMidiEffect=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_Version=1.0.0",
+					"JucePlugin_VersionCode=0x10000",
+					"JucePlugin_VersionString=\\\"1.0.0\\\"",
+					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
+					"JucePlugin_AUSubType=JucePlugin_PluginCode",
+					"JucePlugin_AUExportPrefix=CloudDocAU",
+					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
+					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
+					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
+					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
+					"JucePlugin_AAXCategory=2048",
+					"JucePlugin_AAXDisableBypass=0",
+					"JucePlugin_AAXDisableMultiMono=0",
+					"JucePlugin_IAAType=0x61757267",
+					"JucePlugin_IAASubType=JucePlugin_PluginCode",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
+					"JucePlugin_VSTNumMidiInputs=16",
+					"JucePlugin_VSTNumMidiOutputs=16",
+					"JucePlugin_ARAContentTypes=0",
+					"JucePlugin_ARATransformationFlags=0",
+					"JucePlugin_ARAFactoryID=\\\"com.yourcompany.CloudDoc.factory\\\"",
+					"JucePlugin_ARADocumentArchiveID=\\\"com.yourcompany.CloudDoc.aradocumentarchive.1.0.0\\\"",
+					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
+					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
+					"JUCE_RASPI_SIMULATE=0",
+					"JUCE_RASPI_SIMULATE_WIDTH=800",
+					"JUCE_RASPI_SIMULATE_HEIGHT=480",
+					"JUCER_XCODE_MAC_F6D2F4CF=1",
+					"JUCE_APP_VERSION=1.0.0",
+					"JUCE_APP_VERSION_HEX=0x10000",
+				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				HEADER_SEARCH_PATHS = (
+					"/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
+					"$(SRCROOT)/../../JuceLibraryCode",
+					"/Users/ring2/JUCE/modules",
+					"$(SRCROOT)/../../../../modules",
+					"/Users/ring2/JUCE/modules/juce_audio_plugin_client/AU",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = Info-AUv3_AppExtension.plist;
+				INFOPLIST_PREPROCESS = NO;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
+				OTHER_LDFLAGS = "-lCloudDoc";
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc.clouddocAUv3;
+				PRODUCT_NAME = "CloudDoc";
+				USE_HEADERMAP = NO;
+				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
+			};
+			name = Debug;
 		};
 		73157C0036285FA271F75632 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -1455,12 +1649,12 @@
 					"JucePlugin_Enable_ARA=0",
 					"JucePlugin_Name=\\\"CloudDoc\\\"",
 					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
 					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
 					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
@@ -1469,23 +1663,23 @@
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
 					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
 					"JucePlugin_AUSubType=JucePlugin_PluginCode",
 					"JucePlugin_AUExportPrefix=CloudDocAU",
 					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
 					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
 					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
 					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
 					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
+					"JucePlugin_AAXCategory=2048",
 					"JucePlugin_AAXDisableBypass=0",
 					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
+					"JucePlugin_IAAType=0x61757267",
 					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
 					"JucePlugin_VSTNumMidiInputs=16",
 					"JucePlugin_VSTNumMidiOutputs=16",
 					"JucePlugin_ARAContentTypes=0",
@@ -1515,7 +1709,7 @@
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc;
 				PRODUCT_NAME = "juce_vst3_helper";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
@@ -1572,12 +1766,12 @@
 					"JucePlugin_Enable_ARA=0",
 					"JucePlugin_Name=\\\"CloudDoc\\\"",
 					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
 					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
 					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
@@ -1586,23 +1780,23 @@
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
 					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
 					"JucePlugin_AUSubType=JucePlugin_PluginCode",
 					"JucePlugin_AUExportPrefix=CloudDocAU",
 					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
 					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
 					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
 					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
 					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
+					"JucePlugin_AAXCategory=2048",
 					"JucePlugin_AAXDisableBypass=0",
 					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
+					"JucePlugin_IAAType=0x61757267",
 					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
 					"JucePlugin_VSTNumMidiInputs=16",
 					"JucePlugin_VSTNumMidiOutputs=16",
 					"JucePlugin_ARAContentTypes=0",
@@ -1635,7 +1829,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
 				OTHER_LDFLAGS = "-bundle -lCloudDoc";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc;
 				PRODUCT_NAME = "CloudDoc";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
@@ -1780,8 +1974,8 @@
 					"JUCE_USE_WIN_WEBVIEW2=1",
 					"JucePlugin_Build_VST=0",
 					"JucePlugin_Build_VST3=1",
-					"JucePlugin_Build_AU=1",
-					"JucePlugin_Build_AUv3=0",
+					"JucePlugin_Build_AU=0",
+					"JucePlugin_Build_AUv3=1",
 					"JucePlugin_Build_AAX=0",
 					"JucePlugin_Build_Standalone=1",
 					"JucePlugin_Build_Unity=0",
@@ -1790,12 +1984,12 @@
 					"JucePlugin_Enable_ARA=0",
 					"JucePlugin_Name=\\\"CloudDoc\\\"",
 					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
 					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
 					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
@@ -1804,23 +1998,23 @@
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
 					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
 					"JucePlugin_AUSubType=JucePlugin_PluginCode",
 					"JucePlugin_AUExportPrefix=CloudDocAU",
 					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
 					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
 					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
 					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
 					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
+					"JucePlugin_AAXCategory=2048",
 					"JucePlugin_AAXDisableBypass=0",
 					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
+					"JucePlugin_IAAType=0x61757267",
 					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
 					"JucePlugin_VSTNumMidiInputs=16",
 					"JucePlugin_VSTNumMidiOutputs=16",
 					"JucePlugin_ARAContentTypes=0",
@@ -1850,135 +2044,13 @@
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc;
 				PRODUCT_NAME = "CloudDoc";
 				SKIP_INSTALL = YES;
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
 			};
 			name = Release;
-		};
-		EE810279D010D880F169E57D /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CLANG_CXX_LANGUAGE_STANDARD = "c++17";
-				CLANG_CXX_LIBRARY = "libc++";
-				CLANG_LINK_OBJC_RUNTIME = NO;
-				CODE_SIGN_ENTITLEMENTS = "AU.entitlements";
-				COMBINE_HIDPI_IMAGES = YES;
-				CONFIGURATION_BUILD_DIR = "$(PROJECT_DIR)/build/$(CONFIGURATION)";
-				COPY_PHASE_STRIP = NO;
-				ENABLE_HARDENED_RUNTIME = YES;
-				EXCLUDED_ARCHS = "";
-				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"_DEBUG=1",
-					"DEBUG=1",
-					"JUCE_DISPLAY_SPLASH_SCREEN=1",
-					"JUCE_USE_DARK_SPLASH_SCREEN=1",
-					"JUCE_PROJUCER_VERSION=0x7000c",
-					"JUCE_MODULE_AVAILABLE_juce_audio_basics=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_devices=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_formats=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_plugin_client=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_processors=1",
-					"JUCE_MODULE_AVAILABLE_juce_audio_utils=1",
-					"JUCE_MODULE_AVAILABLE_juce_core=1",
-					"JUCE_MODULE_AVAILABLE_juce_data_structures=1",
-					"JUCE_MODULE_AVAILABLE_juce_events=1",
-					"JUCE_MODULE_AVAILABLE_juce_graphics=1",
-					"JUCE_MODULE_AVAILABLE_juce_gui_basics=1",
-					"JUCE_MODULE_AVAILABLE_juce_gui_extra=1",
-					"JUCE_MODULE_AVAILABLE_R2JUCE=1",
-					"JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED=1",
-					"JUCE_VST3_CAN_REPLACE_VST2=0",
-					"JUCE_STRICT_REFCOUNTEDPOINTER=1",
-					"JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1",
-					"JUCE_USE_WIN_WEBVIEW2=1",
-					"JucePlugin_Build_VST=0",
-					"JucePlugin_Build_VST3=0",
-					"JucePlugin_Build_AU=1",
-					"JucePlugin_Build_AUv3=0",
-					"JucePlugin_Build_AAX=0",
-					"JucePlugin_Build_Standalone=0",
-					"JucePlugin_Build_Unity=0",
-					"JucePlugin_Build_LV2=0",
-					"JucePlugin_Enable_IAA=0",
-					"JucePlugin_Enable_ARA=0",
-					"JucePlugin_Name=\\\"CloudDoc\\\"",
-					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
-					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
-					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
-					"JucePlugin_WantsMidiInput=0",
-					"JucePlugin_ProducesMidiOutput=0",
-					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
-					"JucePlugin_Version=1.0.0",
-					"JucePlugin_VersionCode=0x10000",
-					"JucePlugin_VersionString=\\\"1.0.0\\\"",
-					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
-					"JucePlugin_AUSubType=JucePlugin_PluginCode",
-					"JucePlugin_AUExportPrefix=CloudDocAU",
-					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
-					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
-					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
-					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
-					"JucePlugin_AAXDisableBypass=0",
-					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
-					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
-					"JucePlugin_VSTNumMidiInputs=16",
-					"JucePlugin_VSTNumMidiOutputs=16",
-					"JucePlugin_ARAContentTypes=0",
-					"JucePlugin_ARATransformationFlags=0",
-					"JucePlugin_ARAFactoryID=\\\"com.yourcompany.CloudDoc.factory\\\"",
-					"JucePlugin_ARADocumentArchiveID=\\\"com.yourcompany.CloudDoc.aradocumentarchive.1.0.0\\\"",
-					"JucePlugin_ARACompatibleArchiveIDs=\\\"\\\"",
-					"JUCE_STANDALONE_APPLICATION=JucePlugin_Build_Standalone",
-					"JUCE_RASPI_SIMULATE=0",
-					"JUCE_RASPI_SIMULATE_WIDTH=800",
-					"JUCE_RASPI_SIMULATE_HEIGHT=480",
-					"JUCER_XCODE_MAC_F6D2F4CF=1",
-					"JUCE_APP_VERSION=1.0.0",
-					"JUCE_APP_VERSION_HEX=0x10000",
-				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
-				GENERATE_PKGINFO_FILE = YES;
-				HEADER_SEARCH_PATHS = (
-					"/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK",
-					"$(SRCROOT)/../../JuceLibraryCode",
-					"/Users/ring2/JUCE/modules",
-					"$(SRCROOT)/../../../../modules",
-					"/Users/ring2/JUCE/modules/juce_audio_plugin_client/AU",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = Info-AU.plist;
-				INFOPLIST_PREPROCESS = NO;
-				INSTALL_PATH = "$(HOME)/Library/Audio/Plug-Ins/Components/";
-				LIBRARY_STYLE = Bundle;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
-				OTHER_LDFLAGS = "-bundle -lCloudDoc";
-				OTHER_REZFLAGS = "-d ppc_$ppc -d i386_$i386 -d ppc64_$ppc64 -d x86_64_$x86_64 -d arm64_$arm64 -I /System/Library/Frameworks/CoreServices.framework/Frameworks/CarbonCore.framework/Versions/A/Headers -I \"$(DEVELOPER_DIR)/Extras/CoreAudio/AudioUnits/AUPublic/AUBase\" -I \"$(DEVELOPER_DIR)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk/System/Library/Frameworks/AudioUnit.framework/Headers\"";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
-				PRODUCT_NAME = "CloudDoc";
-				USE_HEADERMAP = NO;
-				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
-				WRAPPER_EXTENSION = component;
-			};
-			name = Debug;
 		};
 		F773940B6AE83D61A99CD346 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -2030,12 +2102,12 @@
 					"JucePlugin_Enable_ARA=0",
 					"JucePlugin_Name=\\\"CloudDoc\\\"",
 					"JucePlugin_Desc=\\\"CloudDoc\\\"",
-					"JucePlugin_Manufacturer=\\\"yourcompany\\\"",
+					"JucePlugin_Manufacturer=\\\"STUDIO-R\\\"",
 					"JucePlugin_ManufacturerWebsite=\\\"www.yourcompany.com\\\"",
 					"JucePlugin_ManufacturerEmail=\\\"\\\"",
-					"JucePlugin_ManufacturerCode=0x4d616e75",
-					"JucePlugin_PluginCode=0x517a626a",
-					"JucePlugin_IsSynth=0",
+					"JucePlugin_ManufacturerCode=0x52696e32",
+					"JucePlugin_PluginCode=0x52326364",
+					"JucePlugin_IsSynth=1",
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
@@ -2044,23 +2116,23 @@
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
 					"JucePlugin_VSTUniqueID=JucePlugin_PluginCode",
-					"JucePlugin_VSTCategory=kPlugCategEffect",
-					"JucePlugin_Vst3Category=\\\"Fx\\\"",
-					"JucePlugin_AUMainType=\\'aufx\\'",
+					"JucePlugin_VSTCategory=kPlugCategSynth",
+					"JucePlugin_Vst3Category=\\\"Instrument|Synth\\\"",
+					"JucePlugin_AUMainType=\\'aumu\\'",
 					"JucePlugin_AUSubType=JucePlugin_PluginCode",
 					"JucePlugin_AUExportPrefix=CloudDocAU",
 					"JucePlugin_AUExportPrefixQuoted=\\\"CloudDocAU\\\"",
 					"JucePlugin_AUManufacturerCode=JucePlugin_ManufacturerCode",
-					"JucePlugin_CFBundleIdentifier=com.yourcompany.CloudDoc",
+					"JucePlugin_CFBundleIdentifier=tokyo.studio-r.r2juce.examples.clouddoc",
 					"JucePlugin_AAXIdentifier=com.yourcompany.CloudDoc",
 					"JucePlugin_AAXManufacturerCode=JucePlugin_ManufacturerCode",
 					"JucePlugin_AAXProductId=JucePlugin_PluginCode",
-					"JucePlugin_AAXCategory=0",
+					"JucePlugin_AAXCategory=2048",
 					"JucePlugin_AAXDisableBypass=0",
 					"JucePlugin_AAXDisableMultiMono=0",
-					"JucePlugin_IAAType=0x61757278",
+					"JucePlugin_IAAType=0x61757267",
 					"JucePlugin_IAASubType=JucePlugin_PluginCode",
-					"JucePlugin_IAAName=\\\"yourcompany:\\ CloudDoc\\\"",
+					"JucePlugin_IAAName=\\\"STUDIO-R:\\ CloudDoc\\\"",
 					"JucePlugin_VSTNumMidiInputs=16",
 					"JucePlugin_VSTNumMidiOutputs=16",
 					"JucePlugin_ARAContentTypes=0",
@@ -2090,7 +2162,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_HEADER_SEARCH_PATHS = "/Users/ring2/JUCE/modules/juce_audio_processors/format_types/VST3_SDK $(SRCROOT)/../../JuceLibraryCode /Users/ring2/JUCE/modules $(SRCROOT)/../../../../modules /Users/ring2/JUCE/modules/juce_audio_plugin_client/AU";
 				OTHER_LDFLAGS = "-lCloudDoc";
-				PRODUCT_BUNDLE_IDENTIFIER = com.yourcompany.CloudDoc;
+				PRODUCT_BUNDLE_IDENTIFIER = tokyo.studio-r.r2juce.examples.clouddoc;
 				PRODUCT_NAME = "CloudDoc";
 				USE_HEADERMAP = NO;
 				VALID_ARCHS = "i386 x86_64 arm64 arm64e";
@@ -2105,6 +2177,15 @@
 			buildConfigurations = (
 				24A422CFD62A3D69CFBB66DF,
 				73157C0036285FA271F75632,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		32ABD9A38B2A6802F4E9270B = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6FB4CA2C73FBA822F1E2F8DC,
+				0EBA7C49B98D266C8F30CED7,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -2141,15 +2222,6 @@
 			buildConfigurations = (
 				905B7249FAC0B5FD8FCFFC4B,
 				9283791BE6ACF136C684FAF6,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
-		DFB3A6B54D009C25EA92F71D = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				EE810279D010D880F169E57D,
-				4E4629300158C8725AEC9C57,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
