@@ -35,7 +35,8 @@ CloudDocAudioProcessorEditor::CloudDocAudioProcessorEditor (CloudDocAudioProcess
 
 
     //[UserPreSize]
-    mainComponent.reset(new MainComponent);
+    juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
+    mainComponent.reset(new MainComponent(audioProcessor));
     addAndMakeVisible(mainComponent.get());
     //[/UserPreSize]
 
@@ -61,7 +62,7 @@ CloudDocAudioProcessorEditor::~CloudDocAudioProcessorEditor()
     {
         // Remove from parent before destroying to prevent access after deletion
         removeChildComponent(mainComponent.get());
-        
+
         // Clear the component pointer
         mainComponent = nullptr;
     }

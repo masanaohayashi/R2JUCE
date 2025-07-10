@@ -31,6 +31,22 @@ public:
     void drawTextEditorOutline(juce::Graphics& g, int width, int height,
                                juce::TextEditor& textEditor) override;
     
+
+    //  Workaround to make ComboBox clickable on Mac/iOS for AUv3
+    juce::Component* getParentComponentForMenuOptions (const juce::PopupMenu::Options& options) override
+    {
+#if JUCE_IOS || JUCE_MAC
+        if (juce::PluginHostType::getPluginLoadedAs() == juce::AudioProcessor::wrapperType_AudioUnitv3)
+        {
+            if (options.getParentComponent() == nullptr && options.getTargetComponent() != nullptr)
+                //return options.getTargetComponent()->getTopLevelComponent();
+                return options.getTargetComponent()->getParentComponent();
+        }
+#endif
+        
+        return juce::LookAndFeel_V4::getParentComponentForMenuOptions (options);
+    }
+
 private:
     std::function<juce::Component*()> keyboardParentCallback = nullptr;
     

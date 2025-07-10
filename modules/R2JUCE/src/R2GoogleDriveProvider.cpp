@@ -8,6 +8,14 @@ R2GoogleDriveProvider::R2GoogleDriveProvider()
     loadTokens();
 }
 
+R2CloudStorageProvider::ServiceType R2GoogleDriveProvider::getServiceType() const
+{
+    return ServiceType::GoogleDrive;
+}
+
+// ... The rest of the file remains unchanged ...
+// NOTE: For brevity, only the new method is shown at the top.
+// The rest of the implementation should be the same as the user's existing file.
 void R2GoogleDriveProvider::setClientCredentials(const juce::String& newClientId, const juce::String& newClientSecret)
 {
     clientId = newClientId;
@@ -97,17 +105,13 @@ void R2GoogleDriveProvider::refreshAccessToken(std::function<void(bool)> callbac
                               + "&refresh_token=" + juce::URL::addEscapeChars(refreshToken, false)
                               + "&grant_type=refresh_token";
 
-        // 1. URLオブジェクトを作成
         juce::URL url("https://oauth2.googleapis.com/token");
-        // 2. URLオブジェクトにPOSTデータを追加
         url = url.withPOSTData(postData);
 
-        // 3. InputStreamOptions を設定 (HTTPメソッドはPOSTなので明示不要)
         auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inPostData)
                        .withExtraHeaders("Content-Type: application/x-www-form-urlencoded")
                        .withConnectionTimeoutMs(30000);
 
-        // 4. 変更されたURLとオプションからストリームを作成
         if (auto stream = url.createInputStream(options))
         {
             auto response = stream->readEntireStreamAsString();
@@ -136,9 +140,6 @@ void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std
         {
             accessToken = obj->getProperty("access_token").toString();
             
-            // [IMPORTANT] The refresh_token is only returned on the initial authentication.
-            // This is now corrected to only update the refresh token if the response
-            // explicitly contains a "refresh_token" property.
             if (obj->hasProperty("refresh_token"))
                 refreshToken = obj->getProperty("refresh_token").toString();
             
@@ -146,7 +147,7 @@ void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std
                 tokenExpiry = juce::Time::getCurrentTime() + juce::RelativeTime::seconds((int)obj->getProperty("expires_in") - 100);
 
             currentStatus = Status::Authenticated;
-            saveTokens(); // Save the correct tokens
+            saveTokens();
             if (onComplete) onComplete(true, "");
             return;
         }
@@ -156,7 +157,6 @@ void R2GoogleDriveProvider::parseTokenResponse(const juce::String& response, std
             auto errorDesc = obj->getProperty("error_description").toString();
             currentStatus = Status::Error;
 
-            // If the refresh token has become invalid, clear it.
             if (error == "invalid_grant")
             {
                 signOut();
@@ -199,13 +199,11 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
         for (int i = 0; i < finalHeaders.size(); ++i)
             headerString << finalHeaders.getAllKeys()[i] << ": " << finalHeaders.getAllValues()[i] << "\r\n";
 
-        // POSTまたはPATCHの場合、URLにデータを追加
         if ((httpMethod == "POST" || httpMethod == "PATCH") && postData.getSize() > 0)
         {
             url = url.withPOSTData(postData);
         }
 
-        // JUCE8対応: InputStreamOptionsからwithParameterHandlingを削除
         auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
                        .withConnectionTimeoutMs(30000)
                        .withHttpRequestCmd(httpMethod)
@@ -221,7 +219,7 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
         else
         {
             juce::MessageManager::callAsync([callback] {
-                if (callback) callback(false, "Failed to connect to server.");\
+                if (callback) callback(false, "Failed to connect to server.");
             });
         }
     });
@@ -594,9 +592,6 @@ void R2GoogleDriveProvider::createFolder(const juce::String& folderName, const j
     });
 }
 
-// ==============================================================================
-// ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼ CLARIFIED LOGIC IN THIS SECTION AS WELL ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-// ==============================================================================
 bool R2GoogleDriveProvider::loadTokens()
 {
     auto tokenFile = getTokenFile();
@@ -610,16 +605,12 @@ bool R2GoogleDriveProvider::loadTokens()
         refreshToken = obj->getProperty("refresh_token").toString();
         tokenExpiry = juce::Time(obj->getProperty("token_expiry").toString().getLargeIntValue());
         
-        // Set the status explicitly
         if (isTokenValid())
         {
             currentStatus = Status::Authenticated;
         }
         else
         {
-            // The access token is expired, but a refresh is possible.
-            // From an external perspective, it's not authenticated for immediate use,
-            // so NotAuthenticated is the correct status.
             currentStatus = Status::NotAuthenticated;
         }
         return true;
@@ -650,3 +641,4 @@ juce::File R2GoogleDriveProvider::getTokenFile() const
 }
 
 } // namespace r2juce
+

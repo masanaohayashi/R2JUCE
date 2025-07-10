@@ -28,7 +28,8 @@
 //[/MiscUserDefs]
 
 //==============================================================================
-MainComponent::MainComponent ()
+MainComponent::MainComponent (CloudDocAudioProcessor& p)
+    : audioProcessor(p), cloudManager(p.getCloudManager())
 {
     //[Constructor_pre] You can add your own custom stuff here..
     //[/Constructor_pre]
@@ -51,8 +52,9 @@ MainComponent::MainComponent ()
     comboService->setTextWhenNothingSelected (juce::String());
     comboService->setTextWhenNoChoicesAvailable (TRANS ("(no choices)"));
     comboService->addItem (TRANS ("Local only"), 1);
-    comboService->addItem (TRANS ("Google Drive"), 2);
-    comboService->addItem (TRANS ("OneDrive"), 3);
+    comboService->addItem (TRANS ("iCloud"), 2);
+    comboService->addItem (TRANS ("Google Drive"), 3);
+    comboService->addItem (TRANS ("OneDrive"), 4);
     comboService->addListener (this);
 
     comboService->setBounds (112, 16, 200, 24);
@@ -156,40 +158,33 @@ MainComponent::MainComponent ()
 
 
     //[UserPreSize]
+    #if !(JUCE_MAC || JUCE_IOS)
+        comboService->setItemEnabled(2, false); // Disable iCloud
+    #endif
+
     setWantsKeyboardFocus(true);
 
     // Manager setup
-    cloudManager = std::make_unique<r2juce::R2CloudManager>();
-    cloudManager->setGoogleCredentials(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
-    cloudManager->setOneDriveCredentials(ONEDRIVE_CLIENT_ID, ONEDRIVE_CLIENT_SECRET);
-
     // Connect to the manager's state changes
-    cloudManager->onStateChanged = [this](const r2juce::R2CloudManager::AppState& newState) {
+    cloudManager.onStateChanged = [this](const r2juce::R2CloudManager::AppState& newState) {
         juce::MessageManager::callAsync([this, newState]() {
             updateUiForState(newState);
         });
     };
 
-    // Initialize PropertiesFile for settings
-    juce::File settingsDir = juce::File::getSpecialLocation (juce::File::userApplicationDataDirectory)
-                                 .getChildFile ("CloudDoc");
-
-    if (!settingsDir.exists())
-        settingsDir.createDirectory();
-
-    juce::File settingsFileLocation = settingsDir.getChildFile ("settings.xml");
-
-    settingsFile.reset (new juce::PropertiesFile (settingsFileLocation,
-                                                   juce::PropertiesFile::Options {}));
-
     // Set initial UI state from manager
-    updateUiForState(cloudManager->getInitialState());
+    textEditorPath->setText(audioProcessor.getInitialPath(), juce::dontSendNotification);
+    textEditorFilename->setText(audioProcessor.getInitialFilename(), juce::dontSendNotification);
+    comboService->setSelectedId(audioProcessor.getInitialServiceId(), juce::dontSendNotification);
 
-    // Defer loading of last session state until after the component is fully initialized
+    updateUiForState(cloudManager.getInitialState());
+
+    // Defer triggering the service selection logic
     juce::Timer::callAfterDelay(1, [this] {
-        loadSettings();
+        // Manually trigger the state update for the initially selected service.
+        comboBoxChanged(comboService.get());
     });
-
+    
     // Initialize DropArea
     dropArea->onFileDropped = [this](const juce::String& filePath, const juce::MemoryBlock& fileContent) {
         handleFileDroppedInArea(filePath, fileContent);
@@ -212,9 +207,13 @@ MainComponent::~MainComponent()
         progressAlert->close();
         progressAlert = nullptr;
     }
-    saveSettings(); // Save settings on application exit
-    if (cloudManager)
-        cloudManager->onStateChanged = nullptr;
+
+    // Save current UI state back to the processor before closing.
+    audioProcessor.setCurrentPath(textEditorPath->getText().trim());
+    audioProcessor.setCurrentFilename(textEditorFilename->getText().trim());
+    audioProcessor.setCurrentServiceId(comboService->getSelectedId());
+
+    cloudManager.onStateChanged = nullptr;
     //[/Destructor_pre]
 
     labelCloudService = nullptr;
@@ -279,13 +278,14 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
 
         switch (selectedId)
         {
-            case 2: serviceToSelect = r2juce::R2CloudManager::ServiceType::GoogleDrive; break;
-            case 3: serviceToSelect = r2juce::R2CloudManager::ServiceType::OneDrive; break;
-            case 1:
+            case 1: serviceToSelect = r2juce::R2CloudManager::ServiceType::Local; break;
+            case 2: serviceToSelect = r2juce::R2CloudManager::ServiceType::iCloudDrive; break;
+            case 3: serviceToSelect = r2juce::R2CloudManager::ServiceType::GoogleDrive; break;
+            case 4: serviceToSelect = r2juce::R2CloudManager::ServiceType::OneDrive; break;
             default: serviceToSelect = r2juce::R2CloudManager::ServiceType::Local; break;
         }
 
-        cloudManager->userSelectedService(serviceToSelect);
+        cloudManager.userSelectedService(serviceToSelect);
         //[/UserComboBoxCode_comboService]
     }
 
@@ -313,7 +313,7 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
     else if (buttonThatWasClicked == textButtonSignOut.get())
     {
         //[UserButtonCode_textButtonSignOut] -- add your button handler code here..
-        cloudManager->userSignedOut();
+        cloudManager.userSignedOut();
         //[/UserButtonCode_textButtonSignOut]
     }
 
@@ -330,10 +330,10 @@ void MainComponent::updateUiForState(const r2juce::R2CloudManager::AppState& sta
     int serviceId = 1;
     switch (state.selectedService)
     {
-        case r2juce::R2CloudManager::ServiceType::GoogleDrive: serviceId = 2; break;
-        case r2juce::R2CloudManager::ServiceType::OneDrive:   serviceId = 3; break;
-        case r2juce::R2CloudManager::ServiceType::Local:
-        default: serviceId = 1; break;
+        case r2juce::R2CloudManager::ServiceType::Local: serviceId = 1; break;
+        case r2juce::R2CloudManager::ServiceType::iCloudDrive: serviceId = 2; break;
+        case r2juce::R2CloudManager::ServiceType::GoogleDrive: serviceId = 3; break;
+        case r2juce::R2CloudManager::ServiceType::OneDrive:   serviceId = 4; break;
     }
     if (comboService->getSelectedId() != serviceId)
         comboService->setSelectedId(serviceId, juce::dontSendNotification);
@@ -376,7 +376,7 @@ void MainComponent::showAuthUI()
 
     authComponent = std::make_unique<r2juce::R2CloudAuthComponent>();
 
-    auto currentState = cloudManager->getCurrentState();
+    auto currentState = cloudManager.getCurrentState();
     if (currentState.selectedService == r2juce::R2CloudManager::ServiceType::GoogleDrive)
     {
         authComponent->setServiceType(r2juce::R2CloudAuthComponent::ServiceType::GoogleDrive);
@@ -389,11 +389,11 @@ void MainComponent::showAuthUI()
     }
 
     authComponent->onAuthenticationComplete = [this](bool success, const juce::String& msg, const juce::String& access, const juce::String& refresh) {
-        cloudManager->authenticationFinished(success, msg, access, refresh);
+        cloudManager.authenticationFinished(success, msg, access, refresh);
     };
 
     authComponent->onAuthenticationCancelled = [this]() {
-        cloudManager->userCancelledAuthentication();
+        cloudManager.userCancelledAuthentication();
     };
 
     addAndMakeVisible(*authComponent);
@@ -433,7 +433,7 @@ void MainComponent::loadFromFile()
         fullPath = filename;
     }
 
-    saveSettings();
+    audioProcessor.saveSettings();
 
     progressAlert = r2juce::R2AlertComponent::forProgress(
         this,
@@ -446,13 +446,13 @@ void MainComponent::loadFromFile()
                 // NOTE: Cloud operation cancellation is not implemented in this version.
                 // The dialog will close itself. We just nullify the pointer.
                 progressAlert = nullptr;
-                updateUiForState(cloudManager->getCurrentState());
+                updateUiForState(cloudManager.getCurrentState());
             }
         });
 
-    updateUiForState(cloudManager->getCurrentState());
+    updateUiForState(cloudManager.getCurrentState());
 
-    cloudManager->loadFile(fullPath, [this, filename](bool success, juce::String content, juce::String errorMessage)
+    cloudManager.loadFile(fullPath, [this, filename](bool success, juce::String content, juce::String errorMessage)
     {
         if (progressAlert != nullptr)
         {
@@ -470,7 +470,7 @@ void MainComponent::loadFromFile()
             showMessage("Error", "Failed to load file: " + errorMessage);
         }
 
-        updateUiForState(cloudManager->getCurrentState());
+        updateUiForState(cloudManager.getCurrentState());
     });
 }
 
@@ -501,7 +501,7 @@ void MainComponent::saveToFile()
     }
 
     auto content = textEditorData->getText();
-    saveSettings();
+    audioProcessor.saveSettings();
 
     juce::MemoryBlock data(content.toRawUTF8(), content.getNumBytesAsUTF8());
 
@@ -514,13 +514,13 @@ void MainComponent::saveToFile()
             if (buttonIndex == 1) // Cancel
             {
                 progressAlert = nullptr;
-                updateUiForState(cloudManager->getCurrentState());
+                updateUiForState(cloudManager.getCurrentState());
             }
         });
 
-    updateUiForState(cloudManager->getCurrentState());
+    updateUiForState(cloudManager.getCurrentState());
 
-    cloudManager->saveFile(fullPath, data, [this, filename](bool success, juce::String errorMessage)
+    cloudManager.saveFile(fullPath, data, [this, filename](bool success, juce::String errorMessage)
     {
         if (progressAlert != nullptr)
         {
@@ -533,36 +533,8 @@ void MainComponent::saveToFile()
         else
             showMessage("Error", "File save failed: " + errorMessage);
 
-        updateUiForState(cloudManager->getCurrentState());
+        updateUiForState(cloudManager.getCurrentState());
     });
-}
-
-void MainComponent::loadSettings()
-{
-    if (settingsFile == nullptr) return;
-
-    juce::String lastPath = settingsFile->getValue(lastFilePathKey, "");
-    juce::String lastFilename = settingsFile->getValue(lastFileNameKey, "my_document.txt");
-    int lastServiceId = settingsFile->getIntValue(lastSelectedServiceKey, 1);
-
-    textEditorPath->setText(lastPath, juce::dontSendNotification);
-    textEditorFilename->setText(lastFilename, juce::dontSendNotification);
-
-    if (comboService->getSelectedId() != lastServiceId)
-    {
-        comboService->setSelectedId(lastServiceId, juce::sendNotification);
-    }
-}
-
-void MainComponent::saveSettings()
-{
-    if (settingsFile != nullptr)
-    {
-        settingsFile->setValue(lastFilePathKey, textEditorPath->getText().trim());
-        settingsFile->setValue(lastFileNameKey, textEditorFilename->getText().trim());
-        settingsFile->setValue(lastSelectedServiceKey, comboService->getSelectedId());
-        settingsFile->saveIfNeeded();
-    }
 }
 
 void MainComponent::showMessage(const juce::String& title, const juce::String& message)
@@ -603,7 +575,7 @@ void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const 
         uploadPath << droppedFile.getFileName();
     }
 
-    saveSettings();
+    audioProcessor.saveSettings();
 
     progressAlert = r2juce::R2AlertComponent::forProgress(
         this,
@@ -614,13 +586,13 @@ void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const 
             if (buttonIndex == 1) // Cancel
             {
                 progressAlert = nullptr;
-                updateUiForState(cloudManager->getCurrentState());
+                updateUiForState(cloudManager.getCurrentState());
             }
         });
 
-    updateUiForState(cloudManager->getCurrentState());
+    updateUiForState(cloudManager.getCurrentState());
 
-    cloudManager->saveFile(uploadPath, fileContentData,
+    cloudManager.saveFile(uploadPath, fileContentData,
                            [this, uploadPath](bool success, juce::String errorMessage)
     {
         if (progressAlert != nullptr)
@@ -634,7 +606,7 @@ void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const 
         else
             showMessage("Error", "File upload failed: " + errorMessage);
 
-        updateUiForState(cloudManager->getCurrentState());
+        updateUiForState(cloudManager.getCurrentState());
     });
 }
 
@@ -691,7 +663,8 @@ void MainComponent::DropArea::fileDragExit(const juce::StringArray&)
 BEGIN_JUCER_METADATA
 
 <JUCER_COMPONENT documentType="Component" className="MainComponent" componentName=""
-                 parentClasses="public juce::Component" constructorParams="" variableInitialisers=""
+                 parentClasses="public juce::Component" constructorParams="CloudDocAudioProcessor&amp; p"
+                 variableInitialisers="audioProcessor(p), cloudManager(p.getCloudManager())"
                  snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330"
                  fixedSize="1" initialWidth="568" initialHeight="320">
   <BACKGROUND backgroundColour="ff323e44"/>
@@ -702,7 +675,7 @@ BEGIN_JUCER_METADATA
          fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
   <COMBOBOX name="" id="1901ecb05f23698f" memberName="comboService" virtualName=""
             explicitFocusOrder="0" pos="112 16 200 24" editable="0" layout="33"
-            items="Local only&#10;Google Drive&#10;OneDrive" textWhenNonSelected=""
+            items="Local only&#10;iCloud&#10;Google Drive&#10;OneDrive" textWhenNonSelected=""
             textWhenNoItems="(no choices)"/>
   <TEXTEDITOR name="" id="70766b9c8981f401" memberName="textEditorData" virtualName="r2juce::R2TextEditor"
               explicitFocusOrder="0" pos="-8Cc 112 192M 56" bkgcol="ff000000"

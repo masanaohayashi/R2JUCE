@@ -5,7 +5,10 @@
     "description": "A custom module for JUCE.",
     "website": "https://studio-r.tokyo/",
     "license": "MIT",
-    "dependencies": [],
+    "dependencies": [
+        "juce_gui_basics",
+        "juce_audio_devices"
+    ],
     "minimumCppStandard": 17,
     "JUCECompatible": "8.0.6"
 }

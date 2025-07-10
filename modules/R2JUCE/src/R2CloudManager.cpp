@@ -1,24 +1,48 @@
 #include "R2CloudManager.h"
+#include "R2CloudAuthComponent.h"
 #include "R2LocalStorageProvider.h"
 #include "R2GoogleDriveProvider.h"
 #include "R2OneDriveProvider.h"
-#include "R2CloudAuthComponent.h"
+
+#if JUCE_MAC || JUCE_IOS
+#include "R2IcloudDriveProvider.h"
+#endif
 
 namespace r2juce {
 
 R2CloudManager::R2CloudManager()
 {
-    initializeProviders();
-    refreshStateAndNotify();
+    // Constructor
 }
 
-R2CloudManager::~R2CloudManager() { onStateChanged = nullptr; }
+R2CloudManager::~R2CloudManager()
+{
+    onStateChanged = nullptr;
+}
 
 void R2CloudManager::initializeProviders()
 {
-    localProvider = createProvider(ServiceType::Local);
-    googleDriveProvider = createProvider(ServiceType::GoogleDrive);
-    oneDriveProvider = createProvider(ServiceType::OneDrive);
+    localProvider = std::make_shared<R2LocalStorageProvider>();
+    googleDriveProvider = std::make_shared<R2GoogleDriveProvider>();
+    oneDriveProvider = std::make_shared<R2OneDriveProvider>();
+#if JUCE_MAC || JUCE_IOS
+    // Create with default constructor
+    iCloudDriveProvider = std::make_shared<R2IcloudDriveProvider>();
+    // Set the container ID if it was provided before initialization
+    if (iCloudContainerId.isNotEmpty())
+        if (auto* p = dynamic_cast<R2IcloudDriveProvider*>(iCloudDriveProvider.get()))
+            p->setContainerId(iCloudContainerId);
+#endif
+
+    if (googleClientId.isNotEmpty())
+        if (auto* p = dynamic_cast<R2GoogleDriveProvider*>(googleDriveProvider.get()))
+            p->setClientCredentials(googleClientId, googleClientSecret);
+            
+    if (oneDriveClientId.isNotEmpty())
+        if (auto* p = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get()))
+            p->setClientCredentials(oneDriveClientId, oneDriveClientSecret);
+
+    refreshStateAndNotify();
 }
 
 const R2CloudManager::AppState& R2CloudManager::getInitialState() const
@@ -31,39 +55,46 @@ const R2CloudManager::AppState& R2CloudManager::getCurrentState() const
     return currentState;
 }
 
-std::shared_ptr<R2CloudStorageProvider> R2CloudManager::createProvider(ServiceType type)
-{
-    switch (type)
-    {
-        case ServiceType::GoogleDrive: return std::make_shared<R2GoogleDriveProvider>();
-        case ServiceType::OneDrive: return std::make_shared<R2OneDriveProvider>();
-        case ServiceType::Local:
-        default: return std::make_shared<R2LocalStorageProvider>();
-    }
-}
-
 void R2CloudManager::setGoogleCredentials(const juce::String& clientId, const juce::String& clientSecret)
 {
     googleClientId = clientId;
     googleClientSecret = clientSecret;
-    if (auto* p = dynamic_cast<R2GoogleDriveProvider*>(googleDriveProvider.get())) p->setClientCredentials(clientId, clientSecret);
+    if (googleDriveProvider)
+        if (auto* p = dynamic_cast<R2GoogleDriveProvider*>(googleDriveProvider.get()))
+            p->setClientCredentials(clientId, clientSecret);
 }
 
 void R2CloudManager::setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret)
 {
     oneDriveClientId = clientId;
     oneDriveClientSecret = clientSecret;
-    if (auto* p = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get())) p->setClientCredentials(clientId, clientSecret);
+    if (oneDriveProvider)
+        if (auto* p = dynamic_cast<R2OneDriveProvider*>(oneDriveProvider.get()))
+            p->setClientCredentials(clientId, clientSecret);
 }
+
+#if JUCE_MAC || JUCE_IOS
+void R2CloudManager::setIcloudContainerId(const juce::String& containerId)
+{
+    iCloudContainerId = containerId;
+    // If the provider already exists, configure it.
+    if (iCloudDriveProvider)
+        if (auto* p = dynamic_cast<R2IcloudDriveProvider*>(iCloudDriveProvider.get()))
+            p->setContainerId(containerId);
+}
+#endif
 
 std::shared_ptr<R2CloudStorageProvider> R2CloudManager::getCurrentProvider()
 {
     switch (currentState.selectedService)
     {
         case ServiceType::GoogleDrive: return googleDriveProvider;
-        case ServiceType::OneDrive: return oneDriveProvider;
+        case ServiceType::OneDrive:   return oneDriveProvider;
+#if JUCE_MAC || JUCE_IOS
+        case ServiceType::iCloudDrive: return iCloudDriveProvider;
+#endif
         case ServiceType::Local:
-        default: return localProvider;
+        default:                      return localProvider;
     }
 }
 
@@ -98,9 +129,19 @@ void R2CloudManager::userSelectedService(ServiceType serviceType)
 void R2CloudManager::startAuthenticationFlow()
 {
     auto provider = getCurrentProvider();
-    if (!provider || dynamic_cast<R2LocalStorageProvider*>(provider.get()))
+    if (!provider)
     {
-        currentState.authStatus = AuthStatus::Authenticated;
+        currentState.authStatus = AuthStatus::Error;
+        refreshStateAndNotify();
+        return;
+    }
+
+    auto serviceType = provider->getServiceType();
+    if (serviceType == ServiceType::Local || serviceType == ServiceType::iCloudDrive)
+    {
+        currentState.authStatus = (provider->getAuthStatus() == R2CloudStorageProvider::Status::Authenticated)
+                                     ? AuthStatus::Authenticated
+                                     : AuthStatus::Error;
         refreshStateAndNotify();
         return;
     }
@@ -142,10 +183,10 @@ void R2CloudManager::authenticationFinished(bool success, const juce::String&, c
     currentState.needsAuthUi = false;
     if (success)
     {
-        if (auto* p = getCurrentProvider().get()) {
-            if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(p))
+        if (auto provider = getCurrentProvider()) {
+            if (auto* googleProv = dynamic_cast<R2GoogleDriveProvider*>(provider.get()))
                 googleProv->setTokens(accessToken, refreshToken);
-            else if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(p))
+            else if (auto* oneDriveProv = dynamic_cast<R2OneDriveProvider*>(provider.get()))
                 oneDriveProv->setTokens(accessToken, refreshToken);
         }
         currentState.authStatus = AuthStatus::Authenticated;
@@ -192,6 +233,8 @@ void R2CloudManager::refreshStateAndNotify()
             auto providerStatus = provider->getAuthStatus();
             if(providerStatus == R2CloudStorageProvider::Status::Authenticated)
                 currentState.authStatus = AuthStatus::Authenticated;
+            else if (providerStatus == R2CloudStorageProvider::Status::Error)
+                currentState.authStatus = AuthStatus::Error;
             else
                 currentState.authStatus = AuthStatus::NotAuthenticated;
         }
@@ -203,12 +246,27 @@ void R2CloudManager::refreshStateAndNotify()
                 currentState.isSignOutButtonEnabled = false;
                 currentState.areFileButtonsEnabled = true;
                 break;
+#if JUCE_MAC || JUCE_IOS
+            case ServiceType::iCloudDrive:
+                if (iCloudDriveProvider && iCloudDriveProvider->getAuthStatus() == R2CloudStorageProvider::Status::Authenticated)
+                {
+                    currentState.statusLabelText = "iCloud Drive (Available)";
+                    currentState.areFileButtonsEnabled = true;
+                }
+                else
+                {
+                    currentState.statusLabelText = "iCloud Drive (Not Available)";
+                    currentState.areFileButtonsEnabled = false;
+                }
+                currentState.isSignOutButtonEnabled = false;
+                break;
+#endif
             case ServiceType::GoogleDrive:
             case ServiceType::OneDrive:
                 currentState.isSignOutButtonEnabled = (currentState.authStatus == AuthStatus::Authenticated);
                 currentState.areFileButtonsEnabled = (currentState.authStatus == AuthStatus::Authenticated);
                 
-                juce::String serviceName = (currentState.selectedService == ServiceType::GoogleDrive) ? "Google Drive" : "OneDrive";
+                juce::String serviceName = provider->getDisplayName();
                 switch (currentState.authStatus)
                 {
                     case AuthStatus::Authenticated:
@@ -235,7 +293,6 @@ void R2CloudManager::refreshStateAndNotify()
         onStateChanged(currentState);
     }
 }
-
 
 void R2CloudManager::saveFile(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
 {
@@ -267,5 +324,6 @@ void R2CloudManager::loadFile(const juce::String& filePath, FileContentCallback 
         else { if (callback) callback(false, "", errorMessage); }
     });
 }
-}
+
+} // namespace r2juce
 

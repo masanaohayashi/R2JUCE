@@ -22,6 +22,7 @@
 //[Headers]     -- You can add your own extra header files here --
 #include <JuceHeader.h>
 #include <functional>
+#include "CloudDocAudioProcessor.h"
 //[/Headers]
 
 
@@ -40,7 +41,7 @@ class MainComponent  : public juce::Component,
 {
 public:
     //==============================================================================
-    MainComponent ();
+    MainComponent (CloudDocAudioProcessor& p);
     ~MainComponent() override;
 
     //==============================================================================
@@ -61,8 +62,7 @@ private:
 
     void loadFromFile();
     void saveToFile();
-    void loadSettings(); // Declaration for loading settings from PropertiesFile
-    void saveSettings(); // Save settings to PropertiesFile
+
     void showMessage(const juce::String& title, const juce::String& message);
     void handleFileDroppedInArea(const juce::String& filePath, const juce::MemoryBlock& fileContent);
 
@@ -70,16 +70,11 @@ private:
     void showAuthUI();
     void hideAuthUI();
 
-    std::unique_ptr<r2juce::R2CloudManager> cloudManager;
-    std::unique_ptr<juce::PropertiesFile> settingsFile; // For saving application settings
+    CloudDocAudioProcessor& audioProcessor;
+    r2juce::R2CloudManager& cloudManager;
+
     std::unique_ptr<r2juce::R2CloudAuthComponent> authComponent; // Auth UI is now owned by MainComponent
     r2juce::R2AlertComponent* progressAlert = nullptr;
-
-    // Keys for saving and loading settings
-    static inline const juce::Identifier lastSelectedServiceKey    { "lastSelectedService" };
-    static inline const juce::Identifier lastFilePathKey           { "lastFilePath" };
-    static inline const juce::Identifier lastFileNameKey           { "lastFileName" };
-
 
     class DropArea : public juce::Component,
                      public juce::FileDragAndDropTarget

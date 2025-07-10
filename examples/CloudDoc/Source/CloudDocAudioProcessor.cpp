@@ -8,6 +8,7 @@
 
 #include "CloudDocAudioProcessor.h"
 #include "CloudDocAudioProcessorEditor.h"
+#include "Credentials.h"
 
 //==============================================================================
 CloudDocAudioProcessor::CloudDocAudioProcessor()
@@ -22,10 +23,30 @@ CloudDocAudioProcessor::CloudDocAudioProcessor()
                        )
 #endif
 {
+    cloudManager = std::make_unique<r2juce::R2CloudManager>();
+    cloudManager->setGoogleCredentials(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
+    cloudManager->setOneDriveCredentials(ONEDRIVE_CLIENT_ID,
+                                           ONEDRIVE_CLIENT_SECRET);
+  #if JUCE_MAC || JUCE_IOS
+    cloudManager->setIcloudContainerId(ICLOUD_CONTAINER_ID);
+  #endif
+    // IMPORTANT: Initialize all providers after setting credentials.
+    cloudManager->initializeProviders();
+
+    // Initialize and load settings
+    juce::File settingsDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile("CloudDoc");
+    if (!settingsDir.exists())
+        settingsDir.createDirectory();
+
+    juce::File settingsFileLocation = settingsDir.getChildFile("settings.xml");
+    settingsFile.reset(new juce::PropertiesFile(settingsFileLocation, juce::PropertiesFile::Options{}));
+    
+    loadSettings();
 }
 
 CloudDocAudioProcessor::~CloudDocAudioProcessor()
 {
+    saveSettings();
 }
 
 //==============================================================================
@@ -181,6 +202,59 @@ void CloudDocAudioProcessor::setStateInformation (const void* data, int sizeInBy
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+}
+
+r2juce::R2CloudManager& CloudDocAudioProcessor::getCloudManager() {
+  return *cloudManager;
+}
+
+// Add these new method implementations to the file
+void CloudDocAudioProcessor::loadSettings()
+{
+    currentPath = settingsFile->getValue(lastFilePathKey, "STUDIO-R/CloudDoc");
+    currentFilename = settingsFile->getValue(lastFileNameKey, "data.txt");
+    currentServiceId = settingsFile->getIntValue(lastSelectedServiceKey, 1);
+}
+
+void CloudDocAudioProcessor::saveSettings()
+{
+    if (settingsFile != nullptr)
+    {
+        settingsFile->setValue(lastFilePathKey, currentPath);
+        settingsFile->setValue(lastFileNameKey, currentFilename);
+        settingsFile->setValue(lastSelectedServiceKey, currentServiceId);
+        settingsFile->saveIfNeeded();
+    }
+}
+
+const juce::String& CloudDocAudioProcessor::getInitialPath() const
+{
+    return currentPath;
+}
+
+const juce::String& CloudDocAudioProcessor::getInitialFilename() const
+{
+    return currentFilename;
+}
+
+int CloudDocAudioProcessor::getInitialServiceId() const
+{
+    return currentServiceId;
+}
+
+void CloudDocAudioProcessor::setCurrentPath(const juce::String& newPath)
+{
+    currentPath = newPath;
+}
+
+void CloudDocAudioProcessor::setCurrentFilename(const juce::String& newFilename)
+{
+    currentFilename = newFilename;
+}
+
+void CloudDocAudioProcessor::setCurrentServiceId(int newServiceId)
+{
+    currentServiceId = newServiceId;
 }
 
 //==============================================================================

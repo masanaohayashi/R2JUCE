@@ -1,3 +1,12 @@
+#ifdef R2JUCE_H_INCLUDED
+  /* This file is designed to be compiled as a single unit, so you should not include
+     it in any other file.
+  */
+  #error "Incorrect use of R2JUCE.cpp"
+#endif
+
+#include "R2JUCE.h"
+
 #include "src/R2LookAndFeel.cpp"
 #include "src/R2TextEditor.cpp"
 #include "src/R2Label.cpp"

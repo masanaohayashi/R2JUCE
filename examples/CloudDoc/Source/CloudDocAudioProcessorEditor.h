@@ -55,6 +55,7 @@ private:
     //[UserVariables]   -- You can add your own custom variables in this section.
     CloudDocAudioProcessor& audioProcessor;
     std::unique_ptr<MainComponent> mainComponent = nullptr;
+    r2juce::R2LookAndFeel lookAndFeel;
     //[/UserVariables]
 
     //==============================================================================

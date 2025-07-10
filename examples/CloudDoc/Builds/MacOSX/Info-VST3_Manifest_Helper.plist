@@ -3,18 +3,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist>
   <dict>
-    <key>NSUbiquitousContainers</key>
-    <dict>
-      <key>iCloud.tokyo.studio-r.r2juce.examples.clouddoc</key>
-      <dict>
-        <key>NSUbiquitousContainerIsDocumentScopePublic</key>
-        <true/>
-        <key>NSUbiquitousContainerSupportedFolderLevels</key>
-        <string>Any</string>
-        <key>NSUbiquitousContainerName</key>
-        <string>$(PRODUCT_NAME)</string>
-      </dict>
-    </dict>
     <key>CFBundleExecutable</key>
     <string>${EXECUTABLE_NAME}</string>
     <key>CFBundleIconFile</key>

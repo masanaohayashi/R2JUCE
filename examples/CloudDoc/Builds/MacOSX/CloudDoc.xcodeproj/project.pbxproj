@@ -11,7 +11,6 @@
 			isa = PBXAggregateTarget;
 			buildConfigurationList = 8282EB3F73CEAC962BCBF3FA;
 			buildPhases = (
-				5E53BF6BA26EE2F96BCB767C,
 			);
 			dependencies = (
 				AFF846E8F1BDA81527C16D80,
@@ -53,7 +52,6 @@
 		63AA868C5AF657D0B7780A0F /* include_juce_graphics.mm */ = {isa = PBXBuildFile; fileRef = CE5814E04A899D12BF31738B; };
 		67B3936A0F61AFF82371E433 /* AUv3 AppExtension */ = {isa = PBXBuildFile; fileRef = F3652C3CFA257256775BAB24; };
 		6AB7A30BFF3D86595BBACFB6 /* MainComponent.cpp */ = {isa = PBXBuildFile; fileRef = DD91E461B606083217FA4073; };
-		6D15637C75B2B77A23419190 /* include_R2JUCE.cpp */ = {isa = PBXBuildFile; fileRef = 2E9E25296EF615FFE1BF47E3; };
 		70FAADD7FD1A8239830AFA6C /* include_juce_graphics_Harfbuzz.cpp */ = {isa = PBXBuildFile; fileRef = 65FA9DB21CE60ED2BFD165A9; };
 		85B16CBA22A96F98F8D8FE31 /* Metal.framework */ = {isa = PBXBuildFile; fileRef = E2B91D8701C6D95A6E92141A; settings = { ATTRIBUTES = (Weak, ); }; };
 		888F1A890525B05D5CAB0F72 /* CloudDocAudioProcessor.cpp */ = {isa = PBXBuildFile; fileRef = 6ADF141E4CC03BB40BF4699E; };
@@ -73,6 +71,7 @@
 		D61A5A183688D0F839A96A1B /* include_juce_data_structures.mm */ = {isa = PBXBuildFile; fileRef = F0F2F7EDD23D677C70CA5D43; };
 		F1C2F75735F825C107884073 /* include_juce_audio_processors_ara.cpp */ = {isa = PBXBuildFile; fileRef = 43AB057889B59CE947A95A71; };
 		F6AD8B2075FB136836DA674A /* juce_VST3ManifestHelper.mm */ = {isa = PBXBuildFile; fileRef = 208E67E3D2842B8BF0041995; settings = { COMPILER_FLAGS = "-fobjc-arc -w -DJUCE_SKIP_PRECOMPILED_HEADER"; }; };
+		FDD8F0CB4F4E653BDE6771C6 /* include_R2JUCE.mm */ = {isa = PBXBuildFile; fileRef = 9BD2855BC5B909914B91F87A; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -100,7 +99,6 @@
 		2597F4CC3F61454FA10D487A /* CoreAudioKit.framework */ /* CoreAudioKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudioKit.framework; path = System/Library/Frameworks/CoreAudioKit.framework; sourceTree = SDKROOT; };
 		25AE1043299B604C79913BAC /* include_juce_core_CompilationTime.cpp */ /* include_juce_core_CompilationTime.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_core_CompilationTime.cpp; path = ../../JuceLibraryCode/include_juce_core_CompilationTime.cpp; sourceTree = SOURCE_ROOT; };
 		2860EB5824654D671E7B9F7F /* include_juce_core.mm */ /* include_juce_core.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_core.mm; path = ../../JuceLibraryCode/include_juce_core.mm; sourceTree = SOURCE_ROOT; };
-		2E9E25296EF615FFE1BF47E3 /* include_R2JUCE.cpp */ /* include_R2JUCE.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_R2JUCE.cpp; path = ../../JuceLibraryCode/include_R2JUCE.cpp; sourceTree = SOURCE_ROOT; };
 		31C629FF824D1897A22D0317 /* CloudDocAudioProcessorEditor.cpp */ /* CloudDocAudioProcessorEditor.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = CloudDocAudioProcessorEditor.cpp; path = ../../Source/CloudDocAudioProcessorEditor.cpp; sourceTree = SOURCE_ROOT; };
 		3396D5BC937AFE7578366211 /* AudioToolbox.framework */ /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		342644E258B7D736B9DF55EF /* include_juce_audio_formats.mm */ /* include_juce_audio_formats.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_formats.mm; path = ../../JuceLibraryCode/include_juce_audio_formats.mm; sourceTree = SOURCE_ROOT; };
@@ -141,6 +139,7 @@
 		96B3E056C726C0634DFB379D /* AudioUnit.framework */ /* AudioUnit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioUnit.framework; path = System/Library/Frameworks/AudioUnit.framework; sourceTree = SDKROOT; };
 		96F8151E067A4F4C2EBAD1ED /* VST3 */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CloudDoc.vst3; sourceTree = BUILT_PRODUCTS_DIR; };
 		996B8F5BDDCB0F4FF2F132F0 /* include_juce_audio_basics.mm */ /* include_juce_audio_basics.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_basics.mm; path = ../../JuceLibraryCode/include_juce_audio_basics.mm; sourceTree = SOURCE_ROOT; };
+		9BD2855BC5B909914B91F87A /* include_R2JUCE.mm */ /* include_R2JUCE.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_R2JUCE.mm; path = ../../JuceLibraryCode/include_R2JUCE.mm; sourceTree = SOURCE_ROOT; };
 		9D74A895851088E6957F6FB2 /* VST3 Manifest Helper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = juce_vst3_helper; sourceTree = BUILT_PRODUCTS_DIR; };
 		AB193C94D2BB77FD3701C8F8 /* R2JUCE */ /* R2JUCE */ = {isa = PBXFileReference; lastKnownFileType = folder; name = R2JUCE; path = ../../../../modules/R2JUCE; sourceTree = SOURCE_ROOT; };
 		ABBECA7A8C063F9BF82BBC62 /* juce_audio_plugin_client */ /* juce_audio_plugin_client */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_plugin_client; path = /Users/ring2/JUCE/modules/juce_audio_plugin_client; sourceTree = "<absolute>"; };
@@ -300,7 +299,7 @@
 				387C32A7758A6950F36E0725,
 				5D20BE9110221641A813A95D,
 				534B865CAB7418A4D0B18AE1,
-				2E9E25296EF615FFE1BF47E3,
+				9BD2855BC5B909914B91F87A,
 				5543AD44B3E8757E17E9D3A3,
 				D7074E4DF6F94049186B05FA,
 			);
@@ -396,7 +395,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1BBA7270C4C50B59CB96B8EA;
 			buildPhases = (
-				876AD27A3B55990054FACC31,
 				29B907396693CB463E712EEC,
 				62FB6CDF8361D726D141F862,
 			);
@@ -413,12 +411,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 41FF94CF21EA1E9B2685DCBD;
 			buildPhases = (
-				993AECE9E9C3351CD22C00D8,
 				A1BDE88584DA476EC7F8E781,
 				3F30248C388A3EED6B3DDA60,
 				B887BEBDFE4EEA9BA1186337,
+				993AECE9E9C3351CD22C00D8,
 				AD4130CD770BA80FF5B16AD5,
-				04C6D294702C050061B3B972,
 			);
 			buildRules = (
 			);
@@ -435,7 +432,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 42F359FFBB4CEA8F6667F530;
 			buildPhases = (
-				8A19686EE0CC5F09D847BFAB,
 				45988874C755561BBC1959C5,
 				78C390DC4D6B2A53B7502841,
 				502757A90D6716EEB2FCA718,
@@ -456,7 +452,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 32ABD9A38B2A6802F4E9270B;
 			buildPhases = (
-				E144B3334AEAB023ADF0B046,
 				3937D15C6502805D021A736C,
 				80BE79626BC3408BE25ED16C,
 				C96EA3138CDE097A93552EC8,
@@ -475,7 +470,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = E50227785E06C86FDBE2AF4F;
 			buildPhases = (
-				FDD4475C37DFCFC4FDBC8B1B,
 				379272FDC72FCF366E67FEEE,
 			);
 			buildRules = (
@@ -680,62 +674,7 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		04C6D294702C050061B3B972 /* Plugin Copy Step */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Plugin Copy Step";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n\nif [[ \"${CONFIGURATION}\" == \"Debug\" ]]; then\n  destinationPlugin=\"${HOME}/Library/Audio/Plug-Ins/VST3//$(basename \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\")\"\n  echo Running rm -rf \\\"${destinationPlugin}\\\"\n  rm -rf \"${destinationPlugin}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" \\\"${destinationPlugin}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \"${destinationPlugin}\"\n\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY-}\" ]]; then\n    if [[ -n \"${CODE_SIGN_ENTITLEMENTS-}\" ]]; then\n      entitlementsArg=(--entitlements \"${CODE_SIGN_ENTITLEMENTS}\")\n    fi\n\n    echo Signing Identity: \\\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\\\"\n    echo Running codesign --verbose=4 --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY}\\\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \\\"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\\\"\n    codesign --verbose=4 --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\"\n  fi\nfi\n\nif [[ \"${CONFIGURATION}\" == \"Release\" ]]; then\n  destinationPlugin=\"${HOME}/Library/Audio/Plug-Ins/VST3//$(basename \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\")\"\n  echo Running rm -rf \\\"${destinationPlugin}\\\"\n  rm -rf \"${destinationPlugin}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" \\\"${destinationPlugin}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \"${destinationPlugin}\"\n\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY-}\" ]]; then\n    if [[ -n \"${CODE_SIGN_ENTITLEMENTS-}\" ]]; then\n      entitlementsArg=(--entitlements \"${CODE_SIGN_ENTITLEMENTS}\")\n    fi\n\n    echo Signing Identity: \\\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\\\"\n    echo Running codesign --verbose=4 --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY}\\\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \\\"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\\\"\n    codesign --verbose=4 --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\"\n  fi\nfi\n";
-		};
-		5E53BF6BA26EE2F96BCB767C /* Pre-build script */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Pre-build script";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
-		};
-		876AD27A3B55990054FACC31 /* Pre-build script */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Pre-build script";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
-		};
-		8A19686EE0CC5F09D847BFAB /* Pre-build script */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Pre-build script";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
-		};
-		993AECE9E9C3351CD22C00D8 /* Pre-build script */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Pre-build script";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
-		};
-		AD4130CD770BA80FF5B16AD5 /* Update manifest */ = {
+		993AECE9E9C3351CD22C00D8 /* Update manifest */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -746,27 +685,16 @@
 			shellPath = /bin/sh;
 			shellScript = "set -euo pipefail\n\necho Running codesign --verbose=4 --force --sign - \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\"\ncodesign --verbose=4 --force --sign - \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\"\n\necho Running \\\"${CONFIGURATION_BUILD_DIR}/juce_vst3_helper\\\" -create -version \\\"1.0.0\\\" -path \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" -output \\\"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}/Contents/Resources/moduleinfo.json\\\"\n\"${CONFIGURATION_BUILD_DIR}/juce_vst3_helper\" -create -version \"1.0.0\" -path \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}\" -output \"${CONFIGURATION_BUILD_DIR}/${FULL_PRODUCT_NAME}/Contents/Resources/moduleinfo.json\"\n";
 		};
-		E144B3334AEAB023ADF0B046 /* Pre-build script */ = {
+		AD4130CD770BA80FF5B16AD5 /* Plugin Copy Step */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
-			name = "Pre-build script";
+			name = "Plugin Copy Step";
 			alwaysOutOfDate = 1;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
-		};
-		FDD4475C37DFCFC4FDBC8B1B /* Pre-build script */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			name = "Pre-build script";
-			alwaysOutOfDate = 1;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\n\n# 対象となるエンタイトルメントファイルのリスト\n# これらのファイル名はProjucerが勝手に決めているのでそれを使う\nENTITLEMENTS_FILES=(\n    \"$PROJECT_DIR/AUv3_AppExtension.entitlements\"\n    \"$PROJECT_DIR/Standalone_Plugin.entitlements\"\n)\n\n# チェックするキーと追加する値\nKEY_TO_CHECK=\"com.apple.security.application-groups\"\nAPP_GROUP=\"group.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_KEY=\"com.apple.developer.icloud-container-identifiers\"\niCLOUD_CONTAINER=\"iCloud.tokyo.studio-r.r2juce.examples.clouddoc\"\niCLOUD_SERVICES_KEY=\"com.apple.developer.icloud-services\"\niCLOUD_SERVICES_VALUE=\"CloudDocuments\"\n\n# 各エンタイトルメントファイルを処理\nfor ENTITLEMENTS_FILE in \"${ENTITLEMENTS_FILES[@]}\"; do\n    echo \"Processing ${ENTITLEMENTS_FILE}...\"\n\n    # ファイルが存在しない場合はエラーを出力してスキップ\n    if [ ! -f \"$ENTITLEMENTS_FILE\" ]; then\n        echo \"Error: Entitlements file not found: $ENTITLEMENTS_FILE\"\n        continue\n    fi\n\n    # iCloudの設定がない場合、iCloudコンテナ設定を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud container to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # iCloudサービスの設定がない場合、CloudDocumentsを追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${iCLOUD_SERVICES_KEY}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY} array\" \"$ENTITLEMENTS_FILE\"\n        /usr/libexec/PlistBuddy -c \"Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add iCloud service to $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    # キーが存在しない場合、新しい配列を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" &>/dev/null; then\n        echo \"Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK} array\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    fi\n\n    # 配列内に値が存在しない場合、値を追加\n    if ! /usr/libexec/PlistBuddy -c \"Print ${KEY_TO_CHECK}\" \"$ENTITLEMENTS_FILE\" | grep -q \"$APP_GROUP\"; then\n        echo \"Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n        /usr/libexec/PlistBuddy -c \"Add ${KEY_TO_CHECK}: string $APP_GROUP\" \"$ENTITLEMENTS_FILE\"\n        if [ $? -ne 0 ]; then\n            echo \"Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE\"\n            continue\n        fi\n    else\n        echo \"${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}\"\n    fi\n\n    echo \"Successfully updated ${ENTITLEMENTS_FILE}!\"\ndone\n\necho \"All entitlements files processed successfully!\"\n";
+			shellScript = "set -euo pipefail\n\nif [[ \"${CONFIGURATION}\" == \"Debug\" ]]; then\n  destinationPlugin=\"${HOME}/Library/Audio/Plug-Ins/VST3//$(basename \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\")\"\n  echo Running rm -rf \\\"${destinationPlugin}\\\"\n  rm -rf \"${destinationPlugin}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" \\\"${destinationPlugin}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \"${destinationPlugin}\"\n\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY-}\" ]]; then\n    if [[ -n \"${CODE_SIGN_ENTITLEMENTS-}\" ]]; then\n      entitlementsArg=(--entitlements \"${CODE_SIGN_ENTITLEMENTS}\")\n    fi\n\n    echo Signing Identity: \\\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\\\"\n    echo Running codesign --verbose=4 --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY}\\\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \\\"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\\\"\n    codesign --verbose=4 --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\"\n  fi\nfi\n\nif [[ \"${CONFIGURATION}\" == \"Release\" ]]; then\n  destinationPlugin=\"${HOME}/Library/Audio/Plug-Ins/VST3//$(basename \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\")\"\n  echo Running rm -rf \\\"${destinationPlugin}\\\"\n  rm -rf \"${destinationPlugin}\"\n  echo Running ditto \\\"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\\\" \\\"${destinationPlugin}\\\"\n  ditto \"${TARGET_BUILD_DIR}/${FULL_PRODUCT_NAME}\" \"${destinationPlugin}\"\n\n  if [[ -n \"${EXPANDED_CODE_SIGN_IDENTITY-}\" ]]; then\n    if [[ -n \"${CODE_SIGN_ENTITLEMENTS-}\" ]]; then\n      entitlementsArg=(--entitlements \"${CODE_SIGN_ENTITLEMENTS}\")\n    fi\n\n    echo Signing Identity: \\\"${EXPANDED_CODE_SIGN_IDENTITY_NAME}\\\"\n    echo Running codesign --verbose=4 --force --sign \\\"${EXPANDED_CODE_SIGN_IDENTITY}\\\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \\\"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\\\"\n    codesign --verbose=4 --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" ${entitlementsArg[*]-} ${OTHER_CODE_SIGN_FLAGS-} \"${HOME}/Library/Audio/Plug-Ins/VST3//${FULL_PRODUCT_NAME}\"\n  fi\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -803,7 +731,7 @@
 				04EE66D72F00A18AB8272A77,
 				4130605BD0F4BD762C9275DC,
 				32C4A5F20461C1277EDAF76F,
-				6D15637C75B2B77A23419190,
+				FDD8F0CB4F4E653BDE6771C6,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -945,7 +873,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -1063,7 +991,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -1180,7 +1108,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -1300,7 +1228,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -1424,7 +1352,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -1543,7 +1471,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -1658,7 +1586,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -1775,7 +1703,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -1993,7 +1921,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",
@@ -2111,7 +2039,7 @@
 					"JucePlugin_WantsMidiInput=0",
 					"JucePlugin_ProducesMidiOutput=0",
 					"JucePlugin_IsMidiEffect=0",
-					"JucePlugin_EditorRequiresKeyboardFocus=0",
+					"JucePlugin_EditorRequiresKeyboardFocus=1",
 					"JucePlugin_Version=1.0.0",
 					"JucePlugin_VersionCode=0x10000",
 					"JucePlugin_VersionString=\\\"1.0.0\\\"",

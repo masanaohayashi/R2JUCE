@@ -23,6 +23,121 @@
 #define ONEDRIVE_CLIENT_ID "YOUR_ONEDRIVE_CLIENT_ID"
 #define ONEDRIVE_CLIENT_SECRET "YOUR_ONEDRIVE_CLIENT_SECRET"
 
+// Apple iCloud Drive Container ID
+// This is the identifier for your app's iCloud container.
+#define ICLOUD_CONTAINER_ID "iCloud.com.yourcompany.yourapp"
+
+
+
+/*
+How to enable iCloud on macOS and iOS
+
+1) Paste this into Custom PList for macOS and iOS exporter
+<plist>
+  <dict>
+    <key>NSUbiquitousContainers</key>
+    <dict>
+        <key>iCloud.com.yourcompany.yourapp</key>
+        <dict>
+            <key>NSUbiquitousContainerIsDocumentScopePublic</key>
+            <true/>
+            <key>NSUbiquitousContainerSupportedFolderLevels</key>
+            <string>Any</string>
+            <key>NSUbiquitousContainerName</key>
+            <string>$(PRODUCT_NAME)</string>
+        </dict>
+    </dict>
+  </dict>
+</plist>
+
+
+2) Paste this into App Group ID for iOS exporter
+group.com.yourcompany.yourapp
+ 
+3) Paste this into Pre-Build Shell Script for macOS exporter
+
+#!/bin/bash
+
+# 対象となるエンタイトルメントファイルのリスト
+# これらのファイル名はProjucerが勝手に決めているのでそれを使う
+ENTITLEMENTS_FILES=(
+    "$PROJECT_DIR/AUv3_AppExtension.entitlements"
+    "$PROJECT_DIR/Standalone_Plugin.entitlements"
+)
+
+# チェックするキーと追加する値
+KEY_TO_CHECK="com.apple.security.application-groups"
+APP_GROUP="group.com.yourcompany.yourapp"
+iCLOUD_KEY="com.apple.developer.icloud-container-identifiers"
+iCLOUD_CONTAINER="iCloud.com.yourcompany.yourapp"
+iCLOUD_SERVICES_KEY="com.apple.developer.icloud-services"
+iCLOUD_SERVICES_VALUE="CloudDocuments"
+
+# 各エンタイトルメントファイルを処理
+for ENTITLEMENTS_FILE in "${ENTITLEMENTS_FILES[@]}"; do
+    echo "Processing ${ENTITLEMENTS_FILE}..."
+
+    # ファイルが存在しない場合はエラーを出力してスキップ
+    if [ ! -f "$ENTITLEMENTS_FILE" ]; then
+        echo "Error: Entitlements file not found: $ENTITLEMENTS_FILE"
+        continue
+    fi
+
+    # iCloudの設定がない場合、iCloudコンテナ設定を追加
+    if ! /usr/libexec/PlistBuddy -c "Print ${iCLOUD_KEY}" "$ENTITLEMENTS_FILE" &>/dev/null; then
+        echo "Adding iCloud container ${iCLOUD_CONTAINER} to ${ENTITLEMENTS_FILE}"
+        /usr/libexec/PlistBuddy -c "Add ${iCLOUD_KEY} array" "$ENTITLEMENTS_FILE"
+        /usr/libexec/PlistBuddy -c "Add ${iCLOUD_KEY}:0 string ${iCLOUD_CONTAINER}" "$ENTITLEMENTS_FILE"
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to add iCloud container to $ENTITLEMENTS_FILE"
+            continue
+        fi
+    else
+        echo "iCloud container ${iCLOUD_CONTAINER} already exists in ${iCLOUD_KEY} in ${ENTITLEMENTS_FILE}"
+    fi
+
+    # iCloudサービスの設定がない場合、CloudDocumentsを追加
+    if ! /usr/libexec/PlistBuddy -c "Print ${iCLOUD_SERVICES_KEY}" "$ENTITLEMENTS_FILE" &>/dev/null; then
+        echo "Adding iCloud service ${iCLOUD_SERVICES_VALUE} to ${ENTITLEMENTS_FILE}"
+        /usr/libexec/PlistBuddy -c "Add ${iCLOUD_SERVICES_KEY} array" "$ENTITLEMENTS_FILE"
+        /usr/libexec/PlistBuddy -c "Add ${iCLOUD_SERVICES_KEY}:0 string ${iCLOUD_SERVICES_VALUE}" "$ENTITLEMENTS_FILE"
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to add iCloud service to $ENTITLEMENTS_FILE"
+            continue
+        fi
+    else
+        echo "iCloud service ${iCLOUD_SERVICES_VALUE} already exists in ${iCLOUD_SERVICES_KEY} in ${ENTITLEMENTS_FILE}"
+    fi
+
+    # キーが存在しない場合、新しい配列を追加
+    if ! /usr/libexec/PlistBuddy -c "Print ${KEY_TO_CHECK}" "$ENTITLEMENTS_FILE" &>/dev/null; then
+        echo "Adding ${KEY_TO_CHECK} as a new array to ${ENTITLEMENTS_FILE}"
+        /usr/libexec/PlistBuddy -c "Add ${KEY_TO_CHECK} array" "$ENTITLEMENTS_FILE"
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to add ${KEY_TO_CHECK} as an array in $ENTITLEMENTS_FILE"
+            continue
+        fi
+    fi
+
+    # 配列内に値が存在しない場合、値を追加
+    if ! /usr/libexec/PlistBuddy -c "Print ${KEY_TO_CHECK}" "$ENTITLEMENTS_FILE" | grep -q "$APP_GROUP"; then
+        echo "Adding ${APP_GROUP} to ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}"
+        /usr/libexec/PlistBuddy -c "Add ${KEY_TO_CHECK}: string $APP_GROUP" "$ENTITLEMENTS_FILE"
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to add ${APP_GROUP} to ${KEY_TO_CHECK} in $ENTITLEMENTS_FILE"
+            continue
+        fi
+    else
+        echo "${APP_GROUP} already exists in ${KEY_TO_CHECK} in ${ENTITLEMENTS_FILE}"
+    fi
+
+    echo "Successfully updated ${ENTITLEMENTS_FILE}!"
+done
+
+echo "All entitlements files processed successfully!"
+*/
+
+
 /*
 === GOOGLE DRIVE SETUP ===
 

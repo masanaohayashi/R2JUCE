@@ -53,7 +53,40 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    /**
+     * @brief Gets the cloud manager instance.
+     * @return A reference to the R2CloudManager.
+     */
+    r2juce::R2CloudManager& getCloudManager();
+
+    // Settings state getters used by the UI
+    const juce::String& getInitialPath() const;
+    const juce::String& getInitialFilename() const;
+    int getInitialServiceId() const;
+
+    // Settings state setters called from the UI
+    void setCurrentPath(const juce::String& newPath);
+    void setCurrentFilename(const juce::String& newFilename);
+    void setCurrentServiceId(int newServiceId);
+
+    void loadSettings();
+    void saveSettings();
+
 private:
+    std::unique_ptr<r2juce::R2CloudManager> cloudManager;
+
+    std::unique_ptr<juce::PropertiesFile> settingsFile;
+
+    // State variables for settings
+    juce::String currentPath;
+    juce::String currentFilename;
+    int currentServiceId;
+
+    // Keys for saving and loading settings
+    static inline const juce::Identifier lastSelectedServiceKey{"lastSelectedService"};
+    static inline const juce::Identifier lastFilePathKey{"lastFilePath"};
+    static inline const juce::Identifier lastFileNameKey{"lastFileName"};
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (CloudDocAudioProcessor)
 };
