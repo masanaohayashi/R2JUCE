@@ -2,7 +2,8 @@
 
 namespace r2juce {
 
-R2GoogleDriveProvider::R2GoogleDriveProvider()
+R2GoogleDriveProvider::R2GoogleDriveProvider(const juce::String& newClientId, const juce::String& newClientSecret)
+    : clientId(newClientId), clientSecret(newClientSecret)
 {
     currentStatus = Status::NotAuthenticated;
     loadTokens();
@@ -11,15 +12,6 @@ R2GoogleDriveProvider::R2GoogleDriveProvider()
 R2CloudStorageProvider::ServiceType R2GoogleDriveProvider::getServiceType() const
 {
     return ServiceType::GoogleDrive;
-}
-
-// ... The rest of the file remains unchanged ...
-// NOTE: For brevity, only the new method is shown at the top.
-// The rest of the implementation should be the same as the user's existing file.
-void R2GoogleDriveProvider::setClientCredentials(const juce::String& newClientId, const juce::String& newClientSecret)
-{
-    clientId = newClientId;
-    clientSecret = newClientSecret;
 }
 
 void R2GoogleDriveProvider::setTokens(const juce::String& newAccessToken, const juce::String& newRefreshToken)

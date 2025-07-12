@@ -7,7 +7,12 @@ namespace r2juce {
 class R2GoogleDriveProvider : public R2CloudStorageProvider
 {
 public:
-    R2GoogleDriveProvider();
+    /**
+     * @brief Constructs a Google Drive provider with the necessary client credentials.
+     * @param clientId The OAuth 2.0 Client ID from the Google API Console.
+     * @param clientSecret The OAuth 2.0 Client Secret.
+     */
+    R2GoogleDriveProvider(const juce::String& clientId, const juce::String& clientSecret);
     ~R2GoogleDriveProvider() override = default;
 
     //==============================================================================
@@ -15,7 +20,7 @@ public:
     void signOut() override;
     Status getAuthStatus() const override;
     juce::String getDisplayName() const override;
-    ServiceType getServiceType() const override; // This is the required override
+    ServiceType getServiceType() const override;
 
     void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) override;
     void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) override;
@@ -27,7 +32,11 @@ public:
     void createFolder(const juce::String& folderName, const juce::String& parentId, FileOperationCallback callback) override;
 
     //==============================================================================
-    void setClientCredentials(const juce::String& clientId, const juce::String& clientSecret);
+    /**
+     * @brief Sets the access and refresh tokens after a successful authentication.
+     * @param newAccessToken The new access token.
+     * @param newRefreshToken The new refresh token (can be empty if not updated).
+     */
     void setTokens(const juce::String& newAccessToken, const juce::String& newRefreshToken);
 
 private:

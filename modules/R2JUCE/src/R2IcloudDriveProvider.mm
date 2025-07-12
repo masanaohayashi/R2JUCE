@@ -1,4 +1,4 @@
-//#if JUCE_MAC || JUCE_IOS
+// #if JUCE_MAC || JUCE_IOS
 
 #import <Foundation/Foundation.h>
 #include "R2IcloudDriveProvider.h"
@@ -192,28 +192,27 @@ private:
 // R2IcloudDriveProvider implementation
 //==============================================================================
 
-R2IcloudDriveProvider::R2IcloudDriveProvider() {}
-R2IcloudDriveProvider::~R2IcloudDriveProvider() = default;
-
-void R2IcloudDriveProvider::setContainerId(const juce::String& containerId)
+R2IcloudDriveProvider::R2IcloudDriveProvider(const juce::String& containerId)
 {
     pimpl = std::make_unique<IcloudImpl>(containerId);
 }
 
-void R2IcloudDriveProvider::authenticate(AuthCallback c) { if (pimpl) pimpl->authenticate(c); else if (c) c(false, "Container ID not set"); }
+R2IcloudDriveProvider::~R2IcloudDriveProvider() = default;
+
+void R2IcloudDriveProvider::authenticate(AuthCallback c) { if (pimpl) pimpl->authenticate(c); else if (c) c(false, "pimpl not initialized"); }
 void R2IcloudDriveProvider::signOut() { if (pimpl) pimpl->signOut(); }
 R2CloudStorageProvider::Status R2IcloudDriveProvider::getAuthStatus() const { return pimpl ? pimpl->getStatus() : Status::NotAuthenticated; }
 juce::String R2IcloudDriveProvider::getDisplayName() const { return pimpl ? pimpl->getDisplayName() : "iCloud Drive (Uninitialized)"; }
 R2CloudStorageProvider::ServiceType R2IcloudDriveProvider::getServiceType() const { return ServiceType::iCloudDrive; }
-void R2IcloudDriveProvider::uploadFileByPath(const juce::String& f, const juce::MemoryBlock& d, FileOperationCallback c) { if (pimpl) pimpl->uploadFileByPath(f, d, c); else if (c) c(false, "Container ID not set"); }
-void R2IcloudDriveProvider::downloadFileByPath(const juce::String& f, DownloadCallback c) { if (pimpl) pimpl->downloadFileByPath(f, c); else if (c) c(false, {}, "Container ID not set"); }
-void R2IcloudDriveProvider::listFiles(const juce::String& f, FileListCallback c) { if (pimpl) pimpl->listFiles(f, c); else if (c) c(false, {}, "Container ID not set"); }
-void R2IcloudDriveProvider::uploadFile(const juce::String& f, const juce::MemoryBlock& d, const juce::String& p, FileOperationCallback c) { if (pimpl) pimpl->uploadFile(f, d, p, c); else if (c) c(false, "Container ID not set"); }
-void R2IcloudDriveProvider::downloadFile(const juce::String& f, DownloadCallback c) { if (pimpl) pimpl->downloadFile(f, c); else if (c) c(false, {}, "Container ID not set"); }
-void R2IcloudDriveProvider::deleteFile(const juce::String& f, FileOperationCallback c) { if (pimpl) pimpl->deleteFile(f, c); else if (c) c(false, "Container ID not set"); }
-void R2IcloudDriveProvider::createFolder(const juce::String& f, const juce::String& p, FileOperationCallback c) { if (pimpl) pimpl->createFolder(f, p, c); else if (c) c(false, "Container ID not set"); }
+void R2IcloudDriveProvider::uploadFileByPath(const juce::String& f, const juce::MemoryBlock& d, FileOperationCallback c) { if (pimpl) pimpl->uploadFileByPath(f, d, c); else if (c) c(false, "pimpl not initialized"); }
+void R2IcloudDriveProvider::downloadFileByPath(const juce::String& f, DownloadCallback c) { if (pimpl) pimpl->downloadFileByPath(f, c); else if (c) c(false, {}, "pimpl not initialized"); }
+void R2IcloudDriveProvider::listFiles(const juce::String& f, FileListCallback c) { if (pimpl) pimpl->listFiles(f, c); else if (c) c(false, {}, "pimpl not initialized"); }
+void R2IcloudDriveProvider::uploadFile(const juce::String& f, const juce::MemoryBlock& d, const juce::String& p, FileOperationCallback c) { if (pimpl) pimpl->uploadFile(f, d, p, c); else if (c) c(false, "pimpl not initialized"); }
+void R2IcloudDriveProvider::downloadFile(const juce::String& f, DownloadCallback c) { if (pimpl) pimpl->downloadFile(f, c); else if (c) c(false, {}, "pimpl not initialized"); }
+void R2IcloudDriveProvider::deleteFile(const juce::String& f, FileOperationCallback c) { if (pimpl) pimpl->deleteFile(f, c); else if (c) c(false, "pimpl not initialized"); }
+void R2IcloudDriveProvider::createFolder(const juce::String& f, const juce::String& p, FileOperationCallback c) { if (pimpl) pimpl->createFolder(f, p, c); else if (c) c(false, "pimpl not initialized"); }
 
 } // namespace r2juce
 
-//#endif // JUCE_MAC || JUCE_IOS
+// #endif // JUCE_MAC || JUCE_IOS
 

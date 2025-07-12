@@ -7,7 +7,12 @@ namespace r2juce {
 class R2OneDriveProvider : public R2CloudStorageProvider
 {
 public:
-    R2OneDriveProvider();
+    /**
+     * @brief Constructs an OneDrive provider with the necessary client credentials.
+     * @param clientId The Application (client) ID from the Azure portal.
+     * @param clientSecret The client secret value.
+     */
+    R2OneDriveProvider(const juce::String& clientId, const juce::String& clientSecret);
     ~R2OneDriveProvider() override = default;
     
     //==============================================================================
@@ -15,7 +20,7 @@ public:
     void signOut() override;
     Status getAuthStatus() const override;
     juce::String getDisplayName() const override;
-    ServiceType getServiceType() const override; // This is the required override
+    ServiceType getServiceType() const override;
     
     void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) override;
     void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) override;
@@ -27,7 +32,6 @@ public:
     void createFolder(const juce::String& folderName, const juce::String& parentId, FileOperationCallback callback) override;
     
     //==============================================================================
-    void setClientCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void setTokens(const juce::String& accessToken, const juce::String& refreshToken);
 
 private:

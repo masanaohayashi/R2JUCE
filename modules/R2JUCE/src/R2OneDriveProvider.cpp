@@ -20,7 +20,8 @@ namespace
     }
 }
 
-R2OneDriveProvider::R2OneDriveProvider()
+R2OneDriveProvider::R2OneDriveProvider(const juce::String& cid, const juce::String& csecret)
+    : clientId(cid), clientSecret(csecret)
 {
     currentStatus = Status::NotAuthenticated;
     loadTokens();
@@ -29,16 +30,6 @@ R2OneDriveProvider::R2OneDriveProvider()
 R2CloudStorageProvider::ServiceType R2OneDriveProvider::getServiceType() const
 {
     return ServiceType::OneDrive;
-}
-
-// ... The rest of the file remains unchanged ...
-// NOTE: For brevity, only the new method is shown at the top.
-// The rest of the implementation should be the same as the user's existing file.
-
-void R2OneDriveProvider::setClientCredentials(const juce::String& cid, const juce::String& csecret)
-{
-    clientId = cid;
-    clientSecret = csecret;
 }
 
 void R2OneDriveProvider::authenticate(AuthCallback callback)
