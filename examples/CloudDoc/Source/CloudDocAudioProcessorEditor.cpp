@@ -35,9 +35,9 @@ CloudDocAudioProcessorEditor::CloudDocAudioProcessorEditor (CloudDocAudioProcess
 
 
     //[UserPreSize]
-    juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
     mainComponent.reset(new MainComponent(audioProcessor));
     addAndMakeVisible(mainComponent.get());
+    juce::LookAndFeel::setDefaultLookAndFeel(&lookAndFeel);
     //[/UserPreSize]
 
     setSize (800, 480);
@@ -47,10 +47,10 @@ CloudDocAudioProcessorEditor::CloudDocAudioProcessorEditor (CloudDocAudioProcess
 #if JUCE_IOS || JUCE_ANDROID || JUCE_RASPI
     //  For mobile devices with fullscreen, set editor size as desktop size.
     auto r = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay()->userArea;
-    setSize (r.getWidth(), r.getHeight());
+    setSize(r.getWidth(), r.getHeight());
 #elif JUCE_RASPI_SIMULATE
     //  When simulating Raspberry Pi, use defined size in Projucer.
-    setSize (JUCE_RASPI_SIMULATE_WIDTH, JUCE_RASPI_SIMULATE_HEIGHT);
+    setSize(JUCE_RASPI_SIMULATE_WIDTH, JUCE_RASPI_SIMULATE_HEIGHT);
 #endif
     //[/Constructor]
 }
@@ -58,8 +58,7 @@ CloudDocAudioProcessorEditor::CloudDocAudioProcessorEditor (CloudDocAudioProcess
 CloudDocAudioProcessorEditor::~CloudDocAudioProcessorEditor()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
-    if (mainComponent != nullptr)
-    {
+    if (mainComponent != nullptr) {
         // Remove from parent before destroying to prevent access after deletion
         removeChildComponent(mainComponent.get());
 
@@ -92,8 +91,7 @@ void CloudDocAudioProcessorEditor::resized()
     //[/UserPreResize]
 
     //[UserResized] Add your own custom resize handling here..
-    if (mainComponent != nullptr)
-    {
+    if (mainComponent != nullptr) {
         int editorWidth = getWidth();
         int editorHeight = getHeight();
 
@@ -105,23 +103,22 @@ void CloudDocAudioProcessorEditor::resized()
 
         float scaleX, scaleY, offsetX, offsetY;
 
-        if (componentAspectRatio > editorAspectRatio)
-        {
+        if (componentAspectRatio > editorAspectRatio) {
             scaleX = scaleY = (float)editorWidth / (float)componentOriginalWidth;
             offsetX = 0;
             offsetY = (editorHeight - componentOriginalHeight * scaleY) * 0.5f;
         }
-        else
-        {
+        else {
             scaleX = scaleY = (float)editorHeight / (float)componentOriginalHeight;
             offsetX = (editorWidth - componentOriginalWidth * scaleX) * 0.5f;
             offsetY = 0;
         }
 
-        mainComponent->setBounds(0, 0, componentOriginalWidth, componentOriginalHeight);
+        mainComponent->setBounds(0, 0, componentOriginalWidth,
+                             componentOriginalHeight);
 
         juce::AffineTransform transform = juce::AffineTransform::scale(scaleX, scaleY)
-                                                                .translated(offsetX, offsetY);
+            .translated(offsetX, offsetY);
         mainComponent->setTransform(transform);
     }
     //[/UserResized]

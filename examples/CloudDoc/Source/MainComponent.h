@@ -22,7 +22,6 @@
 //[Headers]     -- You can add your own extra header files here --
 #include <JuceHeader.h>
 #include <functional>
-#include "CloudDocAudioProcessor.h"
 //[/Headers]
 
 
@@ -57,71 +56,79 @@ public:
 
 private:
     //[UserVariables]   -- You can add your own custom variables in this section.
-    // This is the new central method for updating the UI based on the manager's state.
-    void updateUiForState(const r2juce::R2CloudManager::AppState& state);
+  // This is the new central method for updating the UI based on the manager's
+  // state.
+  void updateUiForState(const r2juce::R2CloudManager::AppState& state);
 
-    void loadFromFile();
-    void saveToFile();
+  void loadFromFile(bool showMessages = true);
+  void saveToFile();
+  void showMessage(const juce::String& title, const juce::String& message);
+  void handleFileDroppedInArea(const juce::String& filePath,
+                               const juce::MemoryBlock& fileContent);
 
-    void showMessage(const juce::String& title, const juce::String& message);
-    void handleFileDroppedInArea(const juce::String& filePath, const juce::MemoryBlock& fileContent);
+  // UI management
+  void showAuthUI();
+  void hideAuthUI();
 
-    // UI management
-    void showAuthUI();
-    void hideAuthUI();
+  // Reference to the processor that owns this component
+  CloudDocAudioProcessor& audioProcessor;
 
-    CloudDocAudioProcessor& audioProcessor;
-    r2juce::R2CloudManager& cloudManager;
+  // Reference to the cloud manager owned by the AudioProcessor.
+  r2juce::R2CloudManager& cloudManager;
 
-    std::unique_ptr<r2juce::R2CloudAuthComponent> authComponent; // Auth UI is now owned by MainComponent
-    r2juce::R2AlertComponent* progressAlert = nullptr;
+  std::unique_ptr<r2juce::R2CloudAuthComponent>
+      authComponent;  // Auth UI is now owned by MainComponent
+  r2juce::R2AlertComponent* progressAlert = nullptr;
 
-    class DropArea : public juce::Component,
-                     public juce::FileDragAndDropTarget
-    {
-    public:
-        /**
-         * @brief Constructs a DropArea.
-         */
-        DropArea() : isHighlighted (false) {}
+  bool initialLoadAttempted = false;
 
-        void paint (juce::Graphics& g) override {
-            int x = (getWidth() / 2) - (72 / 2), y = (getHeight() / 2) - (24 / 2), width = 72, height = 24;
-            juce::String text (TRANS ("File"));
-            juce::Colour fillColour = juce::Colours::white;
-            g.setColour (fillColour);
-            g.setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
-            g.drawText (text, x, y, width, height, juce::Justification::centred, true);
+  class DropArea : public juce::Component,
+                   public juce::FileDragAndDropTarget {
+   public:
+    /**
+     * @brief Constructs a DropArea.
+     */
+    DropArea() : isHighlighted(false) {}
 
-            juce::Colour strokeColour = juce::Colours::white;
-            g.setColour (strokeColour);
-            g.drawRect (0, 0, getWidth(), getHeight(), 1);
+    void paint(juce::Graphics& g) override {
+      int x = (getWidth() / 2) - (72 / 2), y = (getHeight() / 2) - (24 / 2),
+          width = 72, height = 24;
+      juce::String text(TRANS("File"));
+      juce::Colour fillColour = juce::Colours::white;
+      g.setColour(fillColour);
+      g.setFont(juce::Font(juce::FontOptions(15.00f, juce::Font::plain)));
+      g.drawText(text, x, y, width, height, juce::Justification::centred, true);
 
-            // Draw highlight if active
-            if (isHighlighted)
-            {
-                g.setColour (juce::Colours::cyan.withAlpha (0.5f));
-                g.fillRect (getLocalBounds());
-            }
-        }
+      juce::Colour strokeColour = juce::Colours::white;
+      g.setColour(strokeColour);
+      g.drawRect(0, 0, getWidth(), getHeight(), 1);
 
-        //======================================================================
-        // juce::FileDragAndDropTarget overrides
-        bool isInterestedInFileDrag(const juce::StringArray& files) override;
-        void fileDragEnter(const juce::StringArray& files, int x, int y) override;
-        void fileDragMove(const juce::StringArray& files, int x, int y) override;
-        void filesDropped(const juce::StringArray& files, int x, int y) override;
-        void fileDragExit(const juce::StringArray& files) override;
+      // Draw highlight if active
+      if (isHighlighted) {
+        g.setColour(juce::Colours::cyan.withAlpha(0.5f));
+        g.fillRect(getLocalBounds());
+      }
+    }
 
-        /** @brief Callback for when a file is successfully dropped and read.
-         * @param filePath The full path of the dropped file.
-         * @param fileContent The content of the dropped file as a MemoryBlock.
-         */
-        std::function<void(const juce::String& filePath, const juce::MemoryBlock& fileContent)> onFileDropped;
+    //======================================================================
+    // juce::FileDragAndDropTarget overrides
+    bool isInterestedInFileDrag(const juce::StringArray& files) override;
+    void fileDragEnter(const juce::StringArray& files, int x, int y) override;
+    void fileDragMove(const juce::StringArray& files, int x, int y) override;
+    void filesDropped(const juce::StringArray& files, int x, int y) override;
+    void fileDragExit(const juce::StringArray& files) override;
 
-    private:
-        bool isHighlighted; // To manage visual feedback for drag and drop
-    };
+    /** @brief Callback for when a file is successfully dropped and read.
+     * @param filePath The full path of the dropped file.
+     * @param fileContent The content of the dropped file as a MemoryBlock.
+     */
+    std::function<void(const juce::String& filePath,
+                       const juce::MemoryBlock& fileContent)>
+        onFileDropped;
+
+   private:
+    bool isHighlighted;  // To manage visual feedback for drag and drop
+  };
 
     //[/UserVariables]
 

@@ -18,13 +18,14 @@
 */
 
 //[Headers] You can add your own extra header files here...
+#include "CloudDocAudioProcessor.h"
+#include "Credentials.h"
 //[/Headers]
 
 #include "MainComponent.h"
 
 
 //[MiscUserDefs] You can add your own user definitions and misc code here...
-#include "Credentials.h"
 //[/MiscUserDefs]
 
 //==============================================================================
@@ -158,35 +159,36 @@ MainComponent::MainComponent (CloudDocAudioProcessor& p)
 
 
     //[UserPreSize]
-    #if !(JUCE_MAC || JUCE_IOS)
-        comboService->setItemEnabled(2, false); // Disable iCloud
-    #endif
+#if JucePlugin_Build_AUv3 && !JUCE_STANDALONE_APPLICATION
+    // In an AUv3 plugin, only Local and iCloud are reliable.
+    // Disable other options that require unrestricted network access.
+    comboService->setItemEnabled(3, false);  // Disable Google Drive
+    comboService->setItemEnabled(4, false);  // Disable OneDrive
+#endif
 
     setWantsKeyboardFocus(true);
 
-    // Manager setup
     // Connect to the manager's state changes
-    cloudManager.onStateChanged = [this](const r2juce::R2CloudManager::AppState& newState) {
-        juce::MessageManager::callAsync([this, newState]() {
-            updateUiForState(newState);
-        });
+    cloudManager.onStateChanged =
+        [this](const r2juce::R2CloudManager::AppState& newState) {
+        juce::MessageManager::callAsync(
+            [this, newState]() { updateUiForState(newState); });
     };
 
-    // Set initial UI state from manager
-    textEditorPath->setText(audioProcessor.getInitialPath(), juce::dontSendNotification);
-    textEditorFilename->setText(audioProcessor.getInitialFilename(), juce::dontSendNotification);
-    comboService->setSelectedId(audioProcessor.getInitialServiceId(), juce::dontSendNotification);
+    // Set initial UI state from processor's settings
+    textEditorPath->setText(audioProcessor.getInitialPath(),
+                            juce::dontSendNotification);
+    textEditorFilename->setText(audioProcessor.getInitialFilename(),
+                                juce::dontSendNotification);
+    comboService->setSelectedId(audioProcessor.getInitialServiceId(),
+                                juce::dontSendNotification);
 
+    // Set initial UI state from manager, which will trigger the initial load
     updateUiForState(cloudManager.getInitialState());
 
-    // Defer triggering the service selection logic
-    juce::Timer::callAfterDelay(1, [this] {
-        // Manually trigger the state update for the initially selected service.
-        comboBoxChanged(comboService.get());
-    });
-    
     // Initialize DropArea
-    dropArea->onFileDropped = [this](const juce::String& filePath, const juce::MemoryBlock& fileContent) {
+    dropArea->onFileDropped = [this](const juce::String& filePath,
+                                     const juce::MemoryBlock& fileContent) {
         handleFileDroppedInArea(filePath, fileContent);
     };
 
@@ -202,12 +204,10 @@ MainComponent::MainComponent (CloudDocAudioProcessor& p)
 MainComponent::~MainComponent()
 {
     //[Destructor_pre]. You can add your own custom destruction code here..
-    if (progressAlert != nullptr)
-    {
+    if (progressAlert != nullptr) {
         progressAlert->close();
         progressAlert = nullptr;
     }
-
     // Save current UI state back to the processor before closing.
     audioProcessor.setCurrentPath(textEditorPath->getText().trim());
     audioProcessor.setCurrentFilename(textEditorFilename->getText().trim());
@@ -259,8 +259,7 @@ void MainComponent::resized()
     textEditorPath->setBounds (88, 48, getWidth() - 192, 24);
     labelStatus->setBounds (8, getHeight() - 24, getWidth() - 16, 24);
     //[UserResized] Add your own custom resize handling here..
-    if (authComponent != nullptr)
-        authComponent->setBounds(getLocalBounds());
+    if (authComponent != nullptr) authComponent->setBounds(getLocalBounds());
     //[/UserResized]
 }
 
@@ -276,13 +275,22 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
         auto selectedId = comboService->getSelectedId();
         r2juce::R2CloudManager::ServiceType serviceToSelect;
 
-        switch (selectedId)
-        {
-            case 1: serviceToSelect = r2juce::R2CloudManager::ServiceType::Local; break;
-            case 2: serviceToSelect = r2juce::R2CloudManager::ServiceType::iCloudDrive; break;
-            case 3: serviceToSelect = r2juce::R2CloudManager::ServiceType::GoogleDrive; break;
-            case 4: serviceToSelect = r2juce::R2CloudManager::ServiceType::OneDrive; break;
-            default: serviceToSelect = r2juce::R2CloudManager::ServiceType::Local; break;
+        switch (selectedId) {
+            case 1:
+                serviceToSelect = r2juce::R2CloudManager::ServiceType::Local;
+                break;
+            case 2:
+                serviceToSelect = r2juce::R2CloudManager::ServiceType::iCloudDrive;
+                break;
+            case 3:
+                serviceToSelect = r2juce::R2CloudManager::ServiceType::GoogleDrive;
+                break;
+            case 4:
+                serviceToSelect = r2juce::R2CloudManager::ServiceType::OneDrive;
+                break;
+            default:
+                serviceToSelect = r2juce::R2CloudManager::ServiceType::Local;
+                break;
         }
 
         cloudManager.userSelectedService(serviceToSelect);
@@ -324,71 +332,90 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
 
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
-void MainComponent::updateUiForState(const r2juce::R2CloudManager::AppState& state)
-{
+// other code here...
+void MainComponent::updateUiForState(
+    const r2juce::R2CloudManager::AppState& state) {
     // Set ComboBox selection without triggering a callback loop
     int serviceId = 1;
-    switch (state.selectedService)
-    {
-        case r2juce::R2CloudManager::ServiceType::Local: serviceId = 1; break;
-        case r2juce::R2CloudManager::ServiceType::iCloudDrive: serviceId = 2; break;
-        case r2juce::R2CloudManager::ServiceType::GoogleDrive: serviceId = 3; break;
-        case r2juce::R2CloudManager::ServiceType::OneDrive:   serviceId = 4; break;
+    switch (state.selectedService) {
+        case r2juce::R2CloudManager::ServiceType::Local:
+            serviceId = 1;
+            break;
+        case r2juce::R2CloudManager::ServiceType::iCloudDrive:
+            serviceId = 2;
+            break;
+        case r2juce::R2CloudManager::ServiceType::GoogleDrive:
+            serviceId = 3;
+            break;
+        case r2juce::R2CloudManager::ServiceType::OneDrive:
+            serviceId = 4;
+            break;
     }
     if (comboService->getSelectedId() != serviceId)
         comboService->setSelectedId(serviceId, juce::dontSendNotification);
 
     // Update the status label
-    if (labelStatus)
-    {
+    if (labelStatus) {
         labelStatus->setText(state.statusLabelText, juce::dontSendNotification);
         if (state.authStatus == r2juce::R2CloudManager::AuthStatus::Authenticated)
-            labelStatus->setColour(juce::Label::textColourId, juce::Colours::lightgreen);
+            labelStatus->setColour(juce::Label::textColourId,
+                                   juce::Colours::lightgreen);
         else if (state.authStatus == r2juce::R2CloudManager::AuthStatus::Error)
-            labelStatus->setColour(juce::Label::textColourId, juce::Colours::orangered);
+            labelStatus->setColour(juce::Label::textColourId,
+                                   juce::Colours::orangered);
         else
             labelStatus->setColour(juce::Label::textColourId, juce::Colours::white);
     }
 
     // Update button states
     const bool isOperationInProgress = (progressAlert != nullptr);
-    textButtonSignOut->setEnabled(state.isSignOutButtonEnabled && !isOperationInProgress);
-    textButtonLoad->setEnabled(state.areFileButtonsEnabled && !isOperationInProgress);
-    textButtonSave->setEnabled(state.areFileButtonsEnabled && !isOperationInProgress);
+    textButtonSignOut->setEnabled(state.isSignOutButtonEnabled &&
+                                  !isOperationInProgress);
+    textButtonLoad->setEnabled(state.areFileButtonsEnabled &&
+                               !isOperationInProgress);
+    textButtonSave->setEnabled(state.areFileButtonsEnabled &&
+                               !isOperationInProgress);
 
     // Update ComboBox state
     comboService->setEnabled(state.isComboBoxEnabled && !isOperationInProgress);
 
     // Manage Auth UI visibility
-    if (state.needsAuthUi && authComponent == nullptr)
-    {
+    if (state.needsAuthUi && authComponent == nullptr) {
         showAuthUI();
-    }
-    else if (!state.needsAuthUi && authComponent != nullptr)
-    {
+    } else if (!state.needsAuthUi && authComponent != nullptr) {
         hideAuthUI();
+    }
+
+    // Trigger initial file load when service becomes authenticated
+    if (state.authStatus == r2juce::R2CloudManager::AuthStatus::Authenticated &&
+        !initialLoadAttempted) {
+        initialLoadAttempted = true;
+        loadFromFile(false);  // Load file content without showing messages
     }
 }
 
-void MainComponent::showAuthUI()
-{
+void MainComponent::showAuthUI() {
     if (authComponent != nullptr) return;
 
     authComponent = std::make_unique<r2juce::R2CloudAuthComponent>();
 
     auto currentState = cloudManager.getCurrentState();
-    if (currentState.selectedService == r2juce::R2CloudManager::ServiceType::GoogleDrive)
-    {
-        authComponent->setServiceType(r2juce::R2CloudAuthComponent::ServiceType::GoogleDrive);
+    if (currentState.selectedService ==
+        r2juce::R2CloudManager::ServiceType::GoogleDrive) {
+        authComponent->setServiceType(
+            r2juce::R2CloudAuthComponent::ServiceType::GoogleDrive);
         authComponent->setGoogleCredentials(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET);
-    }
-    else if (currentState.selectedService == r2juce::R2CloudManager::ServiceType::OneDrive)
-    {
-        authComponent->setServiceType(r2juce::R2CloudAuthComponent::ServiceType::OneDrive);
-        authComponent->setOneDriveCredentials(ONEDRIVE_CLIENT_ID, ONEDRIVE_CLIENT_SECRET);
+    } else if (currentState.selectedService ==
+               r2juce::R2CloudManager::ServiceType::OneDrive) {
+        authComponent->setServiceType(
+            r2juce::R2CloudAuthComponent::ServiceType::OneDrive);
+        authComponent->setOneDriveCredentials(ONEDRIVE_CLIENT_ID,
+                                            ONEDRIVE_CLIENT_SECRET);
     }
 
-    authComponent->onAuthenticationComplete = [this](bool success, const juce::String& msg, const juce::String& access, const juce::String& refresh) {
+    authComponent->onAuthenticationComplete =
+        [this](bool success, const juce::String& msg, const juce::String& access,
+               const juce::String& refresh) {
         cloudManager.authenticationFinished(success, msg, access, refresh);
     };
 
@@ -401,129 +428,112 @@ void MainComponent::showAuthUI()
     authComponent->startAuthentication();
 }
 
-void MainComponent::hideAuthUI()
-{
-    authComponent.reset();
-}
+void MainComponent::hideAuthUI() { authComponent.reset(); }
 
-
-void MainComponent::loadFromFile()
-{
-    if (progressAlert != nullptr) return;
+void MainComponent::loadFromFile(bool showMessages) {
+    if (progressAlert != nullptr && showMessages) return;
 
     auto path = textEditorPath->getText().trim();
     auto filename = textEditorFilename->getText().trim();
 
-    if (filename.isEmpty())
-    {
-        showMessage("Error", "Please enter a filename");
+    if (filename.isEmpty()) {
+        if (showMessages) showMessage("Error", "Please enter a filename");
         return;
     }
 
     juce::String fullPath;
-    if (path.isNotEmpty())
-    {
+    if (path.isNotEmpty()) {
         if (path.endsWith("/") || path.endsWith("\\"))
             fullPath = path + filename;
         else
             fullPath = path + "/" + filename;
-    }
-    else
-    {
+    } else {
         fullPath = filename;
     }
 
-    audioProcessor.saveSettings();
-
-    progressAlert = r2juce::R2AlertComponent::forProgress(
-        this,
-        "Loading File",
-        "Loading '" + filename + "'...",
-        -1.0, // Indeterminate progress
-        [this](int buttonIndex) {
-            if (buttonIndex == 1) // Cancel
+    if (showMessages) {
+        progressAlert = r2juce::R2AlertComponent::forProgress(
+            this, "Loading File", "Loading '" + filename + "'...",
+            -1.0,  // Indeterminate progress
+            [this](int buttonIndex) {
+            if (buttonIndex == 1)  // Cancel
             {
-                // NOTE: Cloud operation cancellation is not implemented in this version.
-                // The dialog will close itself. We just nullify the pointer.
+                // NOTE: Cloud operation cancellation is not implemented in this
+                // version. The dialog will close itself. We just nullify the
+                // pointer.
                 progressAlert = nullptr;
                 updateUiForState(cloudManager.getCurrentState());
             }
         });
+        updateUiForState(cloudManager.getCurrentState());
+    }
 
-    updateUiForState(cloudManager.getCurrentState());
+    cloudManager.loadFile(
+        fullPath, [this, showMessages](bool success, juce::String content,
+                                       juce::String errorMessage) {
+        DBG("--- File Load Callback ---");
+        DBG("Success: " << (success ? "true" : "false"));
+        DBG("Content: " << content);
+        DBG("Error Message: " << errorMessage);
 
-    cloudManager.loadFile(fullPath, [this, filename](bool success, juce::String content, juce::String errorMessage)
-    {
-        if (progressAlert != nullptr)
-        {
+        if (progressAlert != nullptr) {
             progressAlert->close();
             progressAlert = nullptr;
         }
 
-        if (success)
-        {
+        if (success) {
             textEditorData->setText(content);
-            showMessage("Success", "File loaded successfully");
-        }
-        else
-        {
-            showMessage("Error", "Failed to load file: " + errorMessage);
+            if (showMessages) showMessage("Success", "File loaded successfully");
+        } else {
+            if (showMessages)
+                showMessage("Error", "Failed to load file: " + errorMessage);
         }
 
-        updateUiForState(cloudManager.getCurrentState());
+        if (showMessages) updateUiForState(cloudManager.getCurrentState());
     });
 }
 
-void MainComponent::saveToFile()
-{
+void MainComponent::saveToFile() {
     if (progressAlert != nullptr) return;
 
     auto path = textEditorPath->getText().trim();
     auto filename = textEditorFilename->getText().trim();
 
-    if (filename.isEmpty())
-    {
+    if (filename.isEmpty()) {
         showMessage("Error", "Please enter a filename");
         return;
     }
 
     juce::String fullPath;
-    if (path.isNotEmpty())
-    {
+    if (path.isNotEmpty()) {
         if (path.endsWith("/") || path.endsWith("\\"))
             fullPath = path + filename;
         else
             fullPath = path + "/" + filename;
-    }
-    else
-    {
+    } else {
         fullPath = filename;
     }
 
     auto content = textEditorData->getText();
-    audioProcessor.saveSettings();
 
     juce::MemoryBlock data(content.toRawUTF8(), content.getNumBytesAsUTF8());
 
     progressAlert = r2juce::R2AlertComponent::forProgress(
-        this,
-        "Saving File",
-        "Saving '" + filename + "'...",
-        -1.0, // Indeterminate progress
+        this, "Saving File", "Saving '" + filename + "'...",
+        -1.0,  // Indeterminate progress
         [this](int buttonIndex) {
-            if (buttonIndex == 1) // Cancel
-            {
-                progressAlert = nullptr;
-                updateUiForState(cloudManager.getCurrentState());
-            }
-        });
+        if (buttonIndex == 1)  // Cancel
+        {
+            progressAlert = nullptr;
+            updateUiForState(cloudManager.getCurrentState());
+        }
+    });
 
     updateUiForState(cloudManager.getCurrentState());
 
-    cloudManager.saveFile(fullPath, data, [this, filename](bool success, juce::String errorMessage)
-    {
-        if (progressAlert != nullptr)
-        {
+    cloudManager.saveFile(
+        fullPath, data, [this, filename](bool success, juce::String errorMessage) {
+        if (progressAlert != nullptr) {
             progressAlert->close();
             progressAlert = nullptr;
         }
@@ -537,72 +547,69 @@ void MainComponent::saveToFile()
     });
 }
 
-void MainComponent::showMessage(const juce::String& title, const juce::String& message)
-{
+void MainComponent::showMessage(const juce::String& title,
+                                const juce::String& message) {
     // This is a simple implementation. For a better CX, a non-blocking
     // toast notification would be preferable to a modal dialog.
     r2juce::R2AlertComponent::forOK(this, title, message);
 }
 
-void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const juce::MemoryBlock& fileContentData)
-{
+void MainComponent::handleFileDroppedInArea(
+    const juce::String& filePath, const juce::MemoryBlock& fileContentData) {
     if (progressAlert != nullptr) return;
 
-    juce::File droppedFile (filePath);
+    juce::File droppedFile(filePath);
 
-    if (droppedFile.isDirectory())
-    {
+    if (droppedFile.isDirectory()) {
         showMessage("Upload Error", "Folder uploads are not supported.");
         return;
     }
 
     const int maxFileSizeMB = 10;
-    if (droppedFile.getSize() > maxFileSizeMB * 1024 * 1024)
-    {
-        showMessage("Upload Error", "File size exceeds " + juce::String(maxFileSizeMB) + "MB limit.");
+    if (droppedFile.getSize() > maxFileSizeMB * 1024 * 1024) {
+        showMessage("Upload Error",
+                    "File size exceeds " + juce::String(maxFileSizeMB) +
+                    "MB limit.");
         return;
     }
-
-    textEditorFilename->setText(droppedFile.getFileName());
 
     juce::String uploadPath = textEditorPath->getText().trim();
     if (uploadPath.isEmpty())
         uploadPath = droppedFile.getFileName();
-    else
-    {
-        if (!uploadPath.endsWith("/") && !uploadPath.endsWith("\\"))
-            uploadPath << "/";
+    else {
+        if (!uploadPath.endsWith("/") && !uploadPath.endsWith("\\")) uploadPath << "/";
         uploadPath << droppedFile.getFileName();
     }
 
-    audioProcessor.saveSettings();
+    // Save current settings (like path) before uploading
+    audioProcessor.setCurrentPath(textEditorPath->getText().trim());
+    audioProcessor.setCurrentFilename(textEditorFilename->getText().trim());
+    audioProcessor.setCurrentServiceId(comboService->getSelectedId());
 
     progressAlert = r2juce::R2AlertComponent::forProgress(
-        this,
-        "Uploading File",
-        "Uploading '" + droppedFile.getFileName() + "'...",
-        -1.0, // Indeterminate progress
+        this, "Uploading File", "Uploading '" + droppedFile.getFileName() + "'...",
+        -1.0,  // Indeterminate progress
         [this](int buttonIndex) {
-            if (buttonIndex == 1) // Cancel
-            {
-                progressAlert = nullptr;
-                updateUiForState(cloudManager.getCurrentState());
-            }
-        });
+        if (buttonIndex == 1)  // Cancel
+        {
+            progressAlert = nullptr;
+            updateUiForState(cloudManager.getCurrentState());
+        }
+    });
 
     updateUiForState(cloudManager.getCurrentState());
 
-    cloudManager.saveFile(uploadPath, fileContentData,
-                           [this, uploadPath](bool success, juce::String errorMessage)
-    {
-        if (progressAlert != nullptr)
-        {
+    cloudManager.saveFile(
+        uploadPath, fileContentData,
+        [this, uploadPath](bool success, juce::String errorMessage) {
+        if (progressAlert != nullptr) {
             progressAlert->close();
             progressAlert = nullptr;
         }
 
         if (success)
-            showMessage("Success", "File uploaded successfully to: " + uploadPath);
+            showMessage("Success",
+                        "File uploaded successfully to: " + uploadPath);
         else
             showMessage("Error", "File upload failed: " + errorMessage);
 
@@ -612,21 +619,20 @@ void MainComponent::handleFileDroppedInArea(const juce::String& filePath, const 
 
 //==============================================================================
 // DropArea implementations
-bool MainComponent::DropArea::isInterestedInFileDrag(const juce::StringArray& files)
-{
+bool MainComponent::DropArea::isInterestedInFileDrag(
+    const juce::StringArray& files) {
     return files.size() == 1 && juce::File(files[0]).exists();
 }
 
-void MainComponent::DropArea::filesDropped(const juce::StringArray& files, int x, int y)
-{
+void MainComponent::DropArea::filesDropped(const juce::StringArray& files,
+                                           int x, int y) {
     juce::ignoreUnused(x, y);
     isHighlighted = false;
     repaint();
 
-    if (files.isEmpty())
-        return;
+    if (files.isEmpty()) return;
 
-    juce::File droppedFile (files[0]);
+    juce::File droppedFile(files[0]);
     juce::MemoryBlock fileContentData;
 
     if (droppedFile.existsAsFile())
@@ -636,16 +642,15 @@ void MainComponent::DropArea::filesDropped(const juce::StringArray& files, int x
         onFileDropped(droppedFile.getFullPathName(), fileContentData);
 }
 
-void MainComponent::DropArea::fileDragEnter(const juce::StringArray&, int, int)
-{
+void MainComponent::DropArea::fileDragEnter(const juce::StringArray&, int,
+                                            int) {
     isHighlighted = true;
     repaint();
 }
 
 void MainComponent::DropArea::fileDragMove(const juce::StringArray&, int, int) {}
 
-void MainComponent::DropArea::fileDragExit(const juce::StringArray&)
-{
+void MainComponent::DropArea::fileDragExit(const juce::StringArray&) {
     isHighlighted = false;
     repaint();
 }

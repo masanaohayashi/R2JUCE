@@ -39,6 +39,7 @@ public:
     
     void setGoogleCredentials(const juce::String& clientId, const juce::String& clientSecret);
     void setOneDriveCredentials(const juce::String& clientId, const juce::String& clientSecret);
+    void setAppGroupId(const juce::String& groupId);
 
 #if JUCE_MAC || JUCE_IOS
     void setIcloudContainerId(const juce::String& containerId);
@@ -77,6 +78,7 @@ private:
     
     juce::String googleClientId, googleClientSecret;
     juce::String oneDriveClientId, oneDriveClientSecret;
+    juce::String appGroupId;
     
 #if JUCE_MAC || JUCE_IOS
     juce::String iCloudContainerId;
@@ -87,8 +89,6 @@ private:
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(R2CloudManager)
 };
-
-// The factory function declaration is no longer needed here.
 
 } // namespace r2juce
 
