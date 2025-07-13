@@ -587,6 +587,7 @@ void R2GoogleDriveProvider::createFolder(const juce::String& folderName, const j
 bool R2GoogleDriveProvider::loadTokens()
 {
     auto tokenFile = getTokenFile();
+    DBG(tokenFile.getFullPathName());
     if (!tokenFile.existsAsFile())
         return false;
 
@@ -627,9 +628,15 @@ void R2GoogleDriveProvider::saveTokens()
 
 juce::File R2GoogleDriveProvider::getTokenFile() const
 {
+#if JUCE_MAC || JUCE_IOS
     return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-           .getChildFile("R2JUCE_CloudApp")
-           .getChildFile("google_drive_tokens.json");
+        .getChildFile("CloudDoc")
+        .getChildFile("google_drive_tokens.json");
+#else
+    return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+        .getChildFile("STUDIO-R/CloudDoc")
+        .getChildFile("google_drive_tokens.json");
+#endif
 }
 
 } // namespace r2juce

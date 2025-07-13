@@ -16,6 +16,7 @@
     </array>
 	<key>com.apple.security.application-groups</key>
 	<array>
+		<string>group.tokyo.studio-r.r2juce.examples.clouddoc</string>
 	</array>
 </dict>
 </plist>

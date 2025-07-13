@@ -159,6 +159,11 @@ MainComponent::MainComponent (CloudDocAudioProcessor& p)
 
 
     //[UserPreSize]
+#if !(JUCE_MAC || JUCE_IOS)
+    // On non-Apple platforms, disable iCloud option.
+    comboService->setItemEnabled(2, false);
+#endif
+
 #if JucePlugin_Build_AUv3 && !JUCE_STANDALONE_APPLICATION
     // In an AUv3 plugin, only Local and iCloud are reliable.
     // Disable other options that require unrestricted network access.
@@ -212,6 +217,7 @@ MainComponent::~MainComponent()
     audioProcessor.setCurrentPath(textEditorPath->getText().trim());
     audioProcessor.setCurrentFilename(textEditorFilename->getText().trim());
     audioProcessor.setCurrentServiceId(comboService->getSelectedId());
+    audioProcessor.setCurrentFileContent(textEditorData->getText()); // THIS LINE IS THE FIX
 
     cloudManager.onStateChanged = nullptr;
     //[/Destructor_pre]
@@ -660,7 +666,7 @@ void MainComponent::DropArea::fileDragExit(const juce::StringArray&) {
 
 //==============================================================================
 #if 0
-/*  -- Projucer information section --
+/* -- Projucer information section --
 
     This is where the Projucer stores the metadata that describe this GUI layout, so
     make changes in here at your peril!

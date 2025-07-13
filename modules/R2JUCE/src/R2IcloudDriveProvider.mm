@@ -5,7 +5,6 @@
 
 namespace r2juce {
 
-// The Pimpl class implementation remains the same
 class IcloudImpl {
 public:
     IcloudImpl(const juce::String& containerId) {
@@ -32,122 +31,109 @@ public:
     juce::String getDisplayName() const { return displayName; }
     R2CloudStorageProvider::ServiceType getServiceType() const { return R2CloudStorageProvider::ServiceType::iCloudDrive; }
 
+    // All file operations are now synchronous. Callbacks are posted to the message thread if provided.
     void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, R2CloudStorageProvider::FileOperationCallback callback)
     {
-        juce::Thread::launch([this, filePath, data, callback]() {
-            if (status == R2CloudStorageProvider::Status::Error) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, "iCloud not available"); });
-                return;
-            }
-            auto targetFile = rootContainerDirectory.getChildFile(filePath);
-            targetFile.getParentDirectory().createDirectory();
-            bool success = targetFile.replaceWithData(data.getData(), data.getSize());
-            juce::MessageManager::callAsync([callback, success]() { if (callback) callback(success, success ? "" : "Failed to write file to iCloud"); });
-        });
+        if (status == R2CloudStorageProvider::Status::Error) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, "iCloud not available"); });
+            return;
+        }
+        auto targetFile = rootContainerDirectory.getChildFile(filePath);
+        targetFile.getParentDirectory().createDirectory();
+        bool success = targetFile.replaceWithData(data.getData(), data.getSize());
+        if (callback) juce::MessageManager::callAsync([callback, success]() { callback(success, success ? "" : "Failed to write file to iCloud"); });
     }
 
     void downloadFileByPath(const juce::String& filePath, R2CloudStorageProvider::DownloadCallback callback)
     {
-        juce::Thread::launch([this, filePath, callback]() {
-            if (status == R2CloudStorageProvider::Status::Error) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, {}, "iCloud not available"); });
-                return;
-            }
-            auto file = rootContainerDirectory.getChildFile(filePath);
-            if (!file.existsAsFile()) {
-                juce::MessageManager::callAsync([callback, filePath]() { if (callback) callback(false, {}, "File not found in iCloud: " + filePath); });
-                return;
-            }
-            juce::MemoryBlock data;
-            bool success = file.loadFileAsData(data);
-            juce::MessageManager::callAsync([callback, success, data]() { if (callback) callback(success, data, success ? "" : "Failed to read file from iCloud"); });
-        });
+        if (status == R2CloudStorageProvider::Status::Error) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, {}, "iCloud not available"); });
+            return;
+        }
+        auto file = rootContainerDirectory.getChildFile(filePath);
+        if (!file.existsAsFile()) {
+            if (callback) juce::MessageManager::callAsync([callback, filePath]() { callback(false, {}, "File not found in iCloud: " + filePath); });
+            return;
+        }
+        juce::MemoryBlock data;
+        bool success = file.loadFileAsData(data);
+        if (callback) juce::MessageManager::callAsync([callback, success, data]() { callback(success, data, success ? "" : "Failed to read file from iCloud"); });
     }
 
     void listFiles(const juce::String& folderId, R2CloudStorageProvider::FileListCallback callback)
     {
-        juce::Thread::launch([this, folderId, callback]() {
-            if (status == R2CloudStorageProvider::Status::Error) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, {}, "iCloud not available"); });
-                return;
-            }
-            juce::Array<R2CloudStorageProvider::FileInfo> files;
-            auto folder = getFileFromId(folderId);
-            if (!folder.exists() || !folder.isDirectory()) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, {}, "Folder not found in iCloud"); });
-                return;
-            }
-            for (const auto& child : folder.findChildFiles(juce::File::findFilesAndDirectories, false)) {
-                R2CloudStorageProvider::FileInfo info;
-                info.name = child.getFileName();
-                info.id = getIdFromFile(child);
-                info.isFolder = child.isDirectory();
-                info.size = child.getSize();
-                info.modifiedTime = child.getLastModificationTime();
-                files.add(info);
-            }
-            juce::MessageManager::callAsync([callback, files]() { if (callback) callback(true, files, ""); });
-        });
+        if (status == R2CloudStorageProvider::Status::Error) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, {}, "iCloud not available"); });
+            return;
+        }
+        juce::Array<R2CloudStorageProvider::FileInfo> files;
+        auto folder = getFileFromId(folderId);
+        if (!folder.exists() || !folder.isDirectory()) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, {}, "Folder not found in iCloud"); });
+            return;
+        }
+        for (const auto& child : folder.findChildFiles(juce::File::findFilesAndDirectories, false)) {
+            R2CloudStorageProvider::FileInfo info;
+            info.name = child.getFileName();
+            info.id = getIdFromFile(child);
+            info.isFolder = child.isDirectory();
+            info.size = child.getSize();
+            info.modifiedTime = child.getLastModificationTime();
+            files.add(info);
+        }
+        if (callback) juce::MessageManager::callAsync([callback, files]() { callback(true, files, ""); });
     }
 
     void uploadFile(const juce::String& fileName, const juce::MemoryBlock& data, const juce::String& folderId, R2CloudStorageProvider::FileOperationCallback callback)
     {
-        juce::Thread::launch([this, fileName, data, folderId, callback]() {
-            if (status == R2CloudStorageProvider::Status::Error) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, "iCloud not available"); });
-                return;
-            }
-            auto folder = getFileFromId(folderId);
-            if (!folder.exists()) folder.createDirectory();
-            auto targetFile = folder.getChildFile(fileName);
-            bool success = targetFile.replaceWithData(data.getData(), data.getSize());
-            juce::MessageManager::callAsync([callback, success]() { if (callback) callback(success, success ? "" : "Failed to write file to iCloud"); });
-        });
+        if (status == R2CloudStorageProvider::Status::Error) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, "iCloud not available"); });
+            return;
+        }
+        auto folder = getFileFromId(folderId);
+        if (!folder.exists()) folder.createDirectory();
+        auto targetFile = folder.getChildFile(fileName);
+        bool success = targetFile.replaceWithData(data.getData(), data.getSize());
+        if (callback) juce::MessageManager::callAsync([callback, success]() { callback(success, success ? "" : "Failed to write file to iCloud"); });
     }
 
     void downloadFile(const juce::String& fileId, R2CloudStorageProvider::DownloadCallback callback)
     {
-        juce::Thread::launch([this, fileId, callback]() {
-            if (status == R2CloudStorageProvider::Status::Error) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, {}, "iCloud not available"); });
-                return;
-            }
-            auto file = getFileFromId(fileId);
-            if (!file.exists() || file.isDirectory()) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, {}, "File not found in iCloud"); });
-                return;
-            }
-            juce::MemoryBlock data;
-            bool success = file.loadFileAsData(data);
-            juce::MessageManager::callAsync([callback, success, data]() { if (callback) callback(success, data, success ? "" : "Failed to read file from iCloud"); });
-        });
+        if (status == R2CloudStorageProvider::Status::Error) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, {}, "iCloud not available"); });
+            return;
+        }
+        auto file = getFileFromId(fileId);
+        if (!file.exists() || file.isDirectory()) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, {}, "File not found in iCloud"); });
+            return;
+        }
+        juce::MemoryBlock data;
+        bool success = file.loadFileAsData(data);
+        if (callback) juce::MessageManager::callAsync([callback, success, data]() { callback(success, data, success ? "" : "Failed to read file from iCloud"); });
     }
 
     void deleteFile(const juce::String& fileId, R2CloudStorageProvider::FileOperationCallback callback)
     {
-        juce::Thread::launch([this, fileId, callback]() {
-            if (status == R2CloudStorageProvider::Status::Error) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, "iCloud not available"); });
-                return;
-            }
-            auto file = getFileFromId(fileId);
-            bool success = file.exists() && file.deleteRecursively();
-            juce::MessageManager::callAsync([callback, success]() { if (callback) callback(success, success ? "" : "Failed to delete file from iCloud"); });
-        });
+        if (status == R2CloudStorageProvider::Status::Error) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, "iCloud not available"); });
+            return;
+        }
+        auto file = getFileFromId(fileId);
+        bool success = file.exists() && file.deleteRecursively();
+        if (callback) juce::MessageManager::callAsync([callback, success]() { callback(success, success ? "" : "Failed to delete file from iCloud"); });
     }
 
     void createFolder(const juce::String& folderName, const juce::String& parentId, R2CloudStorageProvider::FileOperationCallback callback)
     {
-        juce::Thread::launch([this, folderName, parentId, callback]() {
-            if (status == R2CloudStorageProvider::Status::Error) {
-                juce::MessageManager::callAsync([callback]() { if (callback) callback(false, "iCloud not available"); });
-                return;
-            }
-            auto parent = getFileFromId(parentId);
-            auto newFolder = parent.getChildFile(folderName);
-            bool success = newFolder.createDirectory();
-            juce::MessageManager::callAsync([callback, success]() { if (callback) callback(success, success ? "" : "Failed to create folder in iCloud"); });
-        });
+        if (status == R2CloudStorageProvider::Status::Error) {
+            if (callback) juce::MessageManager::callAsync([callback]() { callback(false, "iCloud not available"); });
+            return;
+        }
+        auto parent = getFileFromId(parentId);
+        auto newFolder = parent.getChildFile(folderName);
+        bool success = newFolder.createDirectory();
+        if (callback) juce::MessageManager::callAsync([callback, success]() { callback(success, success ? "" : "Failed to create folder in iCloud"); });
     }
 
 private:
@@ -199,6 +185,8 @@ R2IcloudDriveProvider::R2IcloudDriveProvider(const juce::String& containerId)
 
 R2IcloudDriveProvider::~R2IcloudDriveProvider() = default;
 
+// The public methods now simply forward the call to the synchronous pimpl methods.
+// The pimpl methods will post the callback to the message thread if one is provided.
 void R2IcloudDriveProvider::authenticate(AuthCallback c) { if (pimpl) pimpl->authenticate(c); else if (c) c(false, "pimpl not initialized"); }
 void R2IcloudDriveProvider::signOut() { if (pimpl) pimpl->signOut(); }
 R2CloudStorageProvider::Status R2IcloudDriveProvider::getAuthStatus() const { return pimpl ? pimpl->getStatus() : Status::NotAuthenticated; }

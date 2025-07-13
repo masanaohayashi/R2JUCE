@@ -306,6 +306,7 @@ void R2OneDriveProvider::saveTokens()
 bool R2OneDriveProvider::loadTokens()
 {
     auto tokenFile = getTokenFile();
+    DBG(tokenFile.getFullPathName());
     if (!tokenFile.existsAsFile()) return false;
     
     juce::var parsed = juce::JSON::parse(tokenFile);
@@ -324,10 +325,14 @@ bool R2OneDriveProvider::loadTokens()
 
 juce::File R2OneDriveProvider::getTokenFile() const
 {
-    auto appDataDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
-    auto cloudDocDir = appDataDir.getChildFile("R2JuceCloudApp");
-    if (!cloudDocDir.exists()) cloudDocDir.createDirectory();
-    return cloudDocDir.getChildFile("onedrive_tokens.json");
+#if JUCE_MAC || JUCE_IOS
+    return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+        .getChildFile("CloudDoc")
+#else
+    return juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
+        .getChildFile("STUDIO-R/CloudDoc")
+#endif
+        .getChildFile("onedrive_tokens.json");
 }
 
 } // namespace r2juce

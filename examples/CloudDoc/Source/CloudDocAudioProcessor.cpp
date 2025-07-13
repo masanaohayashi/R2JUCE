@@ -47,15 +47,17 @@ CloudDocAudioProcessor::CloudDocAudioProcessor()
     if (!settingsDir.isDirectory()) {
         settingsDir =
             juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-            .getChildFile("CloudDoc");
+            .getChildFile(JucePlugin_Name);
     }
 #else
     auto settingsDir =
         juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory)
-        .getChildFile("CloudDoc");
+        .getChildFile(JucePlugin_Name);
 #endif
 
     if (!settingsDir.exists()) settingsDir.createDirectory();
+    
+    jassert(settingsDir.isDirectory());
 
     juce::File settingsFileLocation = settingsDir.getChildFile("settings.xml");
     settingsFile.reset(new juce::PropertiesFile(
@@ -83,9 +85,10 @@ CloudDocAudioProcessor::~CloudDocAudioProcessor() {
         juce::MemoryBlock data(fileContent.toRawUTF8(),
                                fileContent.getNumBytesAsUTF8());
 
-        // For cloud services, we must wait for the async operation to complete
+        // For true web services, we must wait for the async operation to complete
         // to avoid leaks and ensure data is saved. This will block the UI.
-        if (currentServiceType != r2juce::R2CloudManager::ServiceType::Local) {
+        if (currentServiceType == r2juce::R2CloudManager::ServiceType::GoogleDrive ||
+            currentServiceType == r2juce::R2CloudManager::ServiceType::OneDrive) {
             juce::WaitableEvent saveFinishedEvent;
 
             cloudManager->saveFile(fullPath, data,
@@ -97,8 +100,10 @@ CloudDocAudioProcessor::~CloudDocAudioProcessor() {
             if (!saveFinishedEvent.wait(10000)) {
                 DBG("*** WARNING: Timed out waiting for cloud save on exit.");
             }
-        } else {
-            // For local storage, the operation is synchronous, so we can just call it.
+        }
+        else
+        {
+            // For local storage and iCloud, the operation is fast enough to be treated as synchronous.
             cloudManager->saveFile(fullPath, data, nullptr);
         }
     }
