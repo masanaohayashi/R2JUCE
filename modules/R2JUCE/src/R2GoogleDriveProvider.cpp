@@ -1,4 +1,5 @@
 #include "R2GoogleDriveProvider.h"
+#include "R2LocalStorageProvider.h"
 
 namespace r2juce {
 
@@ -7,6 +8,16 @@ R2GoogleDriveProvider::R2GoogleDriveProvider(const juce::String& newClientId, co
 {
     currentStatus = Status::NotAuthenticated;
     loadTokens();
+}
+
+R2GoogleDriveProvider::~R2GoogleDriveProvider()
+{
+    // Wait briefly for any background thread to finish
+    if (isUploading)
+    {
+        juce::ScopedLock lock(uploadLock);
+        isUploading = false; // Signal thread to stop
+    }
 }
 
 R2CloudStorageProvider::ServiceType R2GoogleDriveProvider::getServiceType() const
@@ -80,6 +91,283 @@ R2CloudStorageProvider::Status R2GoogleDriveProvider::getAuthStatus() const { re
 juce::String R2GoogleDriveProvider::getDisplayName() const { return "Google Drive"; }
 bool R2GoogleDriveProvider::isTokenValid() const { return accessToken.isNotEmpty() && juce::Time::getCurrentTime() < tokenExpiry; }
 
+void R2GoogleDriveProvider::configureCaching(std::shared_ptr<R2LocalStorageProvider> newCacheProvider)
+{
+    DBG("R2GoogleDriveProvider::configureCaching called. newCacheProvider is " + juce::String(newCacheProvider ? "valid" : "null"));
+    cacheProvider = newCacheProvider;
+}
+
+bool R2GoogleDriveProvider::isCachingEnabled() const
+{
+    bool enabled = cacheProvider != nullptr;
+    DBG("R2GoogleDriveProvider::isCachingEnabled check. Result: " + juce::String(enabled ? "true" : "false"));
+    return enabled;
+}
+
+void R2GoogleDriveProvider::uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
+{
+    if (isCachingEnabled())
+    {
+        cacheProvider->uploadFileByPath(filePath, data, [this, filePath, callback](bool success, const juce::String& errorMessage) {
+            if (success)
+            {
+                triggerBackgroundUpload(filePath);
+            }
+            if (callback)
+            {
+                callback(success, errorMessage);
+            }
+        });
+    }
+    else
+    {
+        uploadDirectToCloud(filePath, data, callback);
+    }
+}
+
+void R2GoogleDriveProvider::uploadDirectToCloud(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
+{
+    auto startTime = juce::Time::getMillisecondCounterHiRes();
+    uploadFile(filePath, data, "path", [callback, startTime, filePath](bool success, const juce::String& errorMessage) {
+        auto endTime = juce::Time::getMillisecondCounterHiRes();
+        DBG("Google Drive: uploadDirectToCloud for " + filePath + " took " + juce::String(endTime - startTime) + " ms.");
+        if (callback)
+        {
+            callback(success, errorMessage);
+        }
+    });
+}
+
+void R2GoogleDriveProvider::downloadFileByPath(const juce::String& filePath, DownloadCallback callback)
+{
+    auto startTime = juce::Time::getMillisecondCounterHiRes();
+    if (isCachingEnabled())
+    {
+        auto deliveredInitialContent = std::make_shared<std::atomic<bool>>(false);
+        
+        cacheProvider->downloadFileByPath(filePath, [this, filePath, callback, deliveredInitialContent, startTime](bool success, const juce::MemoryBlock& data, const juce::String&) {
+            if (success)
+            {
+                DBG("Cache hit for: " + filePath + ". Delivering cached content immediately.");
+                deliveredInitialContent->store(true);
+                if (callback) callback(true, data, "");
+            }
+            else
+            {
+                DBG("Cache miss for: " + filePath);
+            }
+
+            DBG("Checking cloud for metadata for: " + filePath);
+            getCloudFileMetadata(filePath, [this, filePath, callback, deliveredInitialContent, startTime](bool metaSuccess, const FileInfo& cloudInfo) {
+                if (metaSuccess)
+                {
+                    DBG("Successfully fetched cloud metadata for: " + filePath);
+                    if (auto* localCacheProvider = dynamic_cast<R2LocalStorageProvider*>(cacheProvider.get()))
+                    {
+                        juce::File cacheFile = localCacheProvider->getLocalStorageRoot().getChildFile(filePath);
+
+                        if (!cacheFile.exists() || cloudInfo.modifiedTime > cacheFile.getLastModificationTime())
+                        {
+                            DBG("Cloud file is newer or cache does not exist. Downloading from cloud...");
+                            findFileByPath(juce::StringArray::fromTokens(filePath, "/", ""), "root", 0, [this, filePath, callback, deliveredInitialContent, startTime](bool dlSuccess, const juce::MemoryBlock& newData, const juce::String& dlError) {
+                                auto endTime = juce::Time::getMillisecondCounterHiRes();
+                                DBG("Google Drive: downloadFileByPath (cache miss, cloud download) for " + filePath + " took " + juce::String(endTime - startTime) + " ms.");
+                                if (dlSuccess)
+                                {
+                                    DBG("Successfully downloaded newer version of " + filePath + ". Updating cache and delivering content.");
+                                    cacheProvider->uploadFileByPath(filePath, newData, nullptr);
+                                    if (callback) callback(true, newData, "");
+                                }
+                                else if (!deliveredInitialContent->load())
+                                {
+                                    DBG("Failed to download " + filePath + " and no cached version was delivered. Error: " + dlError);
+                                    if (callback) callback(false, {}, dlError);
+                                }
+                            }, false);
+                        }
+                        else
+                        {
+                             DBG("Cache is up-to-date for: " + filePath);
+                        }
+                    }
+                }
+                else if (!deliveredInitialContent->load())
+                {
+                    DBG("Failed to get cloud metadata for " + filePath + " and no cached version was delivered.");
+                    if (callback) callback(false, {}, "File not in cache and could not check cloud.");
+                }
+            });
+        });
+    }
+    else
+    {
+        auto pathParts = juce::StringArray::fromTokens(filePath, "/", "");
+        pathParts.removeEmptyStrings();
+        if (pathParts.isEmpty())
+        {
+            if (callback) juce::MessageManager::callAsync([callback] { callback(false, {}, "Invalid file path"); });
+            return;
+        }
+        findFileByPath(pathParts, "root", 0, [callback, startTime, filePath](bool success, const juce::MemoryBlock& data, const juce::String& errorMessage) {
+            auto endTime = juce::Time::getMillisecondCounterHiRes();
+            DBG("Google Drive: downloadFileByPath (no cache) for " + filePath + " took " + juce::String(endTime - startTime) + " ms.");
+            if (callback)
+            {
+                callback(success, data, errorMessage);
+            }
+        });
+    }
+}
+
+void R2GoogleDriveProvider::triggerBackgroundUpload(const juce::String& filePath)
+{
+    juce::ScopedLock lock(uploadLock);
+    pendingUploadPath = filePath;
+
+    if (!isUploading)
+    {
+        isUploading = true;
+        auto self = std::static_pointer_cast<R2GoogleDriveProvider>(shared_from_this());
+        juce::Thread::launch([self]() { self->performUpload(); });
+    }
+}
+
+void R2GoogleDriveProvider::performUpload()
+{
+    while (true)
+    {
+        juce::String path_to_upload;
+        {
+            juce::ScopedLock lock(uploadLock);
+            if (!isUploading) break;
+            path_to_upload = pendingUploadPath;
+            pendingUploadPath.clear();
+        }
+
+        if (onSyncStatusChanged)
+            onSyncStatusChanged(R2CloudStorageProvider::SyncStatus::Syncing, "Uploading " + path_to_upload);
+        
+        juce::MemoryBlock dataToUpload;
+        cacheProvider->downloadFileByPath(path_to_upload, [&dataToUpload](bool success, const juce::MemoryBlock& data, const juce::String&) {
+            if (success) dataToUpload = data;
+        });
+
+        if (dataToUpload.getSize() > 0)
+        {
+            uploadDirectToCloud(path_to_upload, dataToUpload, [this, path_to_upload](bool success, const juce::String& errorMessage) {
+                if (onSyncStatusChanged)
+                {
+                    if (success)
+                        onSyncStatusChanged(R2CloudStorageProvider::SyncStatus::Synced, "Synced: " + path_to_upload);
+                    else
+                        onSyncStatusChanged(R2CloudStorageProvider::SyncStatus::SyncError, "Sync Error: " + errorMessage);
+                }
+            });
+        }
+        else
+        {
+             if (onSyncStatusChanged)
+                onSyncStatusChanged(R2CloudStorageProvider::SyncStatus::SyncError, "Sync Error: Could not read from cache for upload.");
+        }
+
+        {
+            juce::ScopedLock lock(uploadLock);
+            if (pendingUploadPath.isEmpty())
+            {
+                isUploading = false;
+                if (onSyncStatusChanged) onSyncStatusChanged(R2CloudStorageProvider::SyncStatus::Idle, "");
+                return;
+            }
+        }
+    }
+}
+
+void R2GoogleDriveProvider::getCloudFileMetadata(const juce::String& filePath, std::function<void(bool, const FileInfo&)> callback)
+{
+    auto pathParts = juce::StringArray::fromTokens(filePath, "/", "");
+    pathParts.removeEmptyStrings();
+    if (pathParts.isEmpty())
+    {
+        if (callback) juce::MessageManager::callAsync([callback] { callback(false, {}); });
+        return;
+    }
+
+    findFileByPath(pathParts, "root", 0, [callback](bool success, const juce::MemoryBlock&, const juce::String& errorMessage) {
+        if (success)
+        {
+            FileInfo info;
+            auto json = juce::JSON::parse(errorMessage);
+            if (auto* obj = json.getDynamicObject()) {
+                info.id = obj->getProperty("id").toString();
+                info.name = obj->getProperty("name").toString();
+                info.mimeType = obj->getProperty("mimeType").toString();
+                info.isFolder = (info.mimeType == "application/vnd.google-apps.folder");
+                info.modifiedTime = juce::Time::fromISO8601(obj->getProperty("modifiedTime").toString());
+                if (obj->hasProperty("size"))
+                    info.size = obj->getProperty("size").toString().getLargeIntValue();
+                if (callback) callback(true, info);
+                return;
+            }
+        }
+        if (callback) callback(false, {});
+
+    }, true);
+}
+
+
+void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, const juce::String& currentFolderId, int pathIndex, DownloadCallback callback, bool metadataOnly)
+{
+    if (pathIndex >= pathParts.size())
+    {
+        if (callback) juce::MessageManager::callAsync([callback] { callback(false, {}, "Invalid path index."); });
+        return;
+    }
+    
+    auto targetName = pathParts[pathIndex];
+    bool isLastPart = (pathIndex == pathParts.size() - 1);
+    
+    listFiles(currentFolderId, [=](bool success, juce::Array<FileInfo> files, juce::String errorMessage)
+    {
+        if (!success)
+        {
+            if (callback) callback(false, {}, "Failed to list files: " + errorMessage);
+            return;
+        }
+        
+        for (const auto& file : files)
+        {
+            if (file.name == targetName)
+            {
+                if (isLastPart && !file.isFolder)
+                {
+                    if (metadataOnly)
+                    {
+                        juce::DynamicObject::Ptr obj = new juce::DynamicObject();
+                        obj->setProperty("id", file.id);
+                        obj->setProperty("name", file.name);
+                        obj->setProperty("mimeType", file.mimeType);
+                        obj->setProperty("modifiedTime", file.modifiedTime.toISO8601(true));
+                        obj->setProperty("size", file.size);
+                        callback(true, {}, juce::JSON::toString(juce::var(obj.get())));
+                    }
+                    else
+                    {
+                        downloadFile(file.id, callback);
+                    }
+                    return;
+                }
+                if (!isLastPart && file.isFolder)
+                {
+                    findFileByPath(pathParts, file.id, pathIndex + 1, callback, metadataOnly);
+                    return;
+                }
+            }
+        }
+        
+        if (callback) callback(false, {}, "File or folder not found: " + targetName);
+    });
+}
+
 void R2GoogleDriveProvider::refreshAccessToken(std::function<void(bool)> callback)
 {
     if (refreshToken.isEmpty())
@@ -92,10 +380,13 @@ void R2GoogleDriveProvider::refreshAccessToken(std::function<void(bool)> callbac
 
     juce::Thread::launch([this, self, callback]()
     {
-        juce::String postData = "client_id=" + juce::URL::addEscapeChars(clientId, false)
-                              + "&client_secret=" + juce::URL::addEscapeChars(clientSecret, false)
-                              + "&refresh_token=" + juce::URL::addEscapeChars(refreshToken, false)
-                              + "&grant_type=refresh_token";
+        juce::String postData = "client_id=";
+        postData += juce::URL::addEscapeChars(clientId, false);
+        postData += "&client_secret=";
+        postData += juce::URL::addEscapeChars(clientSecret, false);
+        postData += "&refresh_token=";
+        postData += juce::URL::addEscapeChars(refreshToken, false);
+        postData += "&grant_type=refresh_token";
 
         juce::URL url("https://oauth2.googleapis.com/token");
         url = url.withPOSTData(postData);
@@ -222,64 +513,6 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
     makeAPIRequest(endpoint, httpMethod, headers, juce::MemoryBlock(postData.toRawUTF8(), postData.getNumBytesAsUTF8()), callback);
 }
 
-void R2GoogleDriveProvider::uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
-{
-    uploadFile(filePath, data, "path", callback);
-}
-
-void R2GoogleDriveProvider::downloadFileByPath(const juce::String& filePath, DownloadCallback callback)
-{
-    auto pathParts = juce::StringArray::fromTokens(filePath, "/", "");
-    pathParts.removeEmptyStrings();
-    if (pathParts.isEmpty())
-    {
-        if (callback) juce::MessageManager::callAsync([callback] { callback(false, {}, "Invalid file path"); });
-        return;
-    }
-    findFileByPath(pathParts, "root", 0, callback);
-}
-
-void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, const juce::String& currentFolderId, int pathIndex, DownloadCallback callback)
-{
-    if (pathIndex >= pathParts.size())
-    {
-        if (callback) juce::MessageManager::callAsync([callback] { callback(false, {}, "Invalid path index."); });
-        return;
-    }
-    
-    auto targetName = pathParts[pathIndex];
-    bool isLastPart = (pathIndex == pathParts.size() - 1);
-    
-    listFiles(currentFolderId, [=](bool success, juce::Array<FileInfo> files, juce::String errorMessage)
-    {
-        if (!success)
-        {
-            if (callback) callback(false, {}, "Failed to list files: " + errorMessage);
-            return;
-        }
-        
-        for (const auto& file : files)
-        {
-            if (file.name == targetName)
-            {
-                if (isLastPart && !file.isFolder)
-                {
-                    downloadFile(file.id, callback);
-                    return;
-                }
-                if (!isLastPart && file.isFolder)
-                {
-                    findFileByPath(pathParts, file.id, pathIndex + 1, callback);
-                    return;
-                }
-            }
-        }
-        
-        if (callback) callback(false, {}, "File or folder not found: " + targetName);
-    });
-}
-
-
 void R2GoogleDriveProvider::uploadFile(const juce::String& fileName, const juce::MemoryBlock& data, const juce::String& folderId, FileOperationCallback callback)
 {
     if (folderId == "path")
@@ -288,7 +521,7 @@ void R2GoogleDriveProvider::uploadFile(const juce::String& fileName, const juce:
         pathParts.removeEmptyStrings();
         if (pathParts.size() <= 1)
         {
-            uploadToFolder(fileName, data, "root", callback);
+            uploadToFolder(pathParts.isEmpty() ? fileName : pathParts[0], data, "root", callback);
         }
         else
         {
@@ -519,27 +752,28 @@ void R2GoogleDriveProvider::downloadFile(const juce::String& fileId, DownloadCal
 {
     juce::String endpoint = "https://www.googleapis.com/drive/v3/files/" + fileId + "?alt=media";
     
-    auto requestLogic = [=]()
+    auto requestLogic = [this, endpoint, callback]()
     {
-        juce::Thread::launch([=]()
+        auto self = std::static_pointer_cast<R2GoogleDriveProvider>(shared_from_this());
+        juce::Thread::launch([self, endpoint, callback]()
         {
             juce::URL url(endpoint);
             auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
                                .withConnectionTimeoutMs(60000)
-                               .withExtraHeaders("Authorization: Bearer " + accessToken);
+                               .withExtraHeaders("Authorization: Bearer " + self->accessToken);
 
             if (auto stream = url.createInputStream(options))
             {
                 juce::MemoryBlock data;
                 stream->readIntoMemoryBlock(data);
                 
-                juce::MessageManager::callAsync([=] {
+                juce::MessageManager::callAsync([callback, data] {
                     if (callback) callback(true, data, "");
                 });
             }
             else
             {
-                juce::MessageManager::callAsync([=] {
+                juce::MessageManager::callAsync([callback] {
                     if (callback) callback(false, {}, "Failed to create download stream.");
                 });
             }

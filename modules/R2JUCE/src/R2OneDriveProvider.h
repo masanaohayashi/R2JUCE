@@ -1,19 +1,17 @@
 #pragma once
 
 #include "R2CloudStorageProvider.h"
+#include <atomic>
 
 namespace r2juce {
+
+class R2LocalStorageProvider;
 
 class R2OneDriveProvider : public R2CloudStorageProvider
 {
 public:
-    /**
-     * @brief Constructs an OneDrive provider with the necessary client credentials.
-     * @param clientId The Application (client) ID from the Azure portal.
-     * @param clientSecret The client secret value.
-     */
     R2OneDriveProvider(const juce::String& clientId, const juce::String& clientSecret);
-    ~R2OneDriveProvider() override = default;
+    ~R2OneDriveProvider() override;
     
     //==============================================================================
     void authenticate(AuthCallback callback) override;
@@ -34,7 +32,13 @@ public:
     //==============================================================================
     void setTokens(const juce::String& accessToken, const juce::String& refreshToken);
 
+    //== Caching ===================================================================
+    void configureCaching(std::shared_ptr<R2LocalStorageProvider> cacheProvider) override;
+    bool isCachingEnabled() const override;
+
 private:
+    void uploadDirectToCloud(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback);
+
     juce::String clientId, clientSecret, accessToken, refreshToken;
     juce::Time tokenExpiry;
     
@@ -50,9 +54,24 @@ private:
                         const juce::MemoryBlock& body,
                         std::function<void(bool, int, const juce::var&)> callback);
 
+    void getCloudFileMetadata(const juce::String& filePath, std::function<void(bool, const FileInfo&)> callback);
+
     void saveTokens();
     bool loadTokens();
     juce::File getTokenFile() const;
+
+    //== Caching Implementation ==================================================
+    void triggerBackgroundUpload(const juce::String& filePath);
+    void performUpload();
+
+    // Helper function
+    static juce::String buildEscapedPath(const juce::String& rawPath);
+
+    std::shared_ptr<R2LocalStorageProvider> cacheProvider;
+
+    juce::CriticalSection uploadLock;
+    bool isUploading = false;
+    juce::String pendingUploadPath;
 };
 }
 

@@ -29,7 +29,18 @@ R2CloudStorageProvider::ServiceType R2LocalStorageProvider::getServiceType()
     return ServiceType::Local;
 }
 
+void R2LocalStorageProvider::setCacheRoot(const juce::File& newRoot)
+{
+    customRootDirectory = newRoot;
+}
+
 juce::File R2LocalStorageProvider::getLocalStorageRoot() const {
+    // If a custom root is set and valid, prioritize it.
+    if (customRootDirectory != juce::File{})
+    {
+        return customRootDirectory;
+    }
+
 #if JUCE_MAC
     if (appGroupId.isNotEmpty()) {
         auto container =

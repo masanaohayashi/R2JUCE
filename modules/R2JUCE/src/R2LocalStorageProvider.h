@@ -11,7 +11,7 @@ namespace r2juce {
  * @details On macOS, this provider uses a shared App Group container to allow
  * data sharing between applications (e.g., a plugin and its standalone
  * version). On other platforms, it uses a standard user application
- * data directory.
+ * data directory. It can also be used as a cache provider by setting a custom root.
  */
 class R2LocalStorageProvider : public R2CloudStorageProvider {
 public:
@@ -37,15 +37,23 @@ public:
     void deleteFile(const juce::String& fileId, FileOperationCallback callback) override;
     void createFolder(const juce::String& folderName, const juce::String& parentId, FileOperationCallback callback) override;
 
-private:
+    /**
+     * @brief Sets a custom root directory for this provider.
+     * @details This is primarily used when this provider acts as a cache for another cloud service.
+     * @param newRoot The file object pointing to the desired root directory.
+     */
+    void setCacheRoot(const juce::File& newRoot);
+
     /**
      * @brief Gets the root directory for local storage.
      * @return A juce::File object pointing to the root directory. This is
-     * platform-dependent.
+     * platform-dependent or the custom cache root.
      */
     juce::File getLocalStorageRoot() const;
 
+private:
     juce::String appGroupId;  // Store the App Group ID
+    juce::File customRootDirectory; // Used when acting as a cache
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(R2LocalStorageProvider)
 };

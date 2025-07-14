@@ -8,6 +8,7 @@
 namespace r2juce {
 
 class R2CloudAuthComponent;
+class R2LocalStorageProvider;
 
 /**
     @brief Manages different cloud storage providers and handles the authentication process.
@@ -25,11 +26,13 @@ public:
     using ServiceType = R2CloudStorageProvider::ServiceType;
     
     enum class AuthStatus { NotAuthenticated, Authenticating, Authenticated, Error };
+    enum class SyncStatus { Idle, Syncing, Synced, SyncError };
 
     struct AppState
     {
         ServiceType selectedService = ServiceType::Local;
         AuthStatus authStatus = AuthStatus::NotAuthenticated;
+        SyncStatus syncStatus = SyncStatus::Idle;
         juce::String statusLabelText;
         bool isSignOutButtonEnabled = false;
         bool areFileButtonsEnabled = false;
@@ -63,14 +66,27 @@ public:
     
     void initializeProviders();
 
+    /**
+     * @brief Enables or disables caching for a specific service.
+     * @param service The cloud service to configure.
+     * @param enable True to enable caching, false to disable.
+     * @param cacheDirectory The directory to use for caching. Must be valid if enabling.
+     */
+    void setCachingForService(ServiceType service, bool enable, const juce::File& cacheDirectory);
+
+    std::shared_ptr<R2CloudStorageProvider> getProvider();
+
 private:
     void startAuthenticationFlow();
     void refreshStateAndNotify();
     
-    std::shared_ptr<R2CloudStorageProvider> createProvider(ServiceType type);
+    void setSyncStatus(SyncStatus newStatus, const juce::String& message = "");
 
     AppState currentState;
     ServiceType previousServiceBeforeAuth = ServiceType::Local;
+
+    std::shared_ptr<R2LocalStorageProvider> googleCacheProvider;
+    std::shared_ptr<R2LocalStorageProvider> oneDriveCacheProvider;
 
     std::shared_ptr<R2CloudStorageProvider> localProvider;
     std::shared_ptr<R2CloudStorageProvider> googleDriveProvider;
@@ -84,8 +100,6 @@ private:
     juce::String iCloudContainerId;
     std::shared_ptr<R2CloudStorageProvider> iCloudDriveProvider;
 #endif
-    
-    std::shared_ptr<R2CloudStorageProvider> getCurrentProvider();
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(R2CloudManager)
 };

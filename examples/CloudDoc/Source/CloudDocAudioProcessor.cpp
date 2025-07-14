@@ -40,9 +40,7 @@ CloudDocAudioProcessor::CloudDocAudioProcessor()
 
     // Initialize and load settings from the appropriate location.
 #if JUCE_MAC
-    auto settingsDir =
-        juce::File::getContainerForSecurityApplicationGroupIdentifier(
-            APP_GROUP_ID);
+    auto settingsDir = juce::File::getContainerForSecurityApplicationGroupIdentifier(APP_GROUP_ID);
     // If the container is not valid, fall back to the standard location.
     if (!settingsDir.isDirectory()) {
         settingsDir =
@@ -64,13 +62,17 @@ CloudDocAudioProcessor::CloudDocAudioProcessor()
         settingsFileLocation, juce::PropertiesFile::Options{}));
 
     loadSettings();
+    applyCacheSettings();
 }
 
 CloudDocAudioProcessor::~CloudDocAudioProcessor() {
     // Save the current file content before exiting.
     if (cloudManager != nullptr && !currentPath.isEmpty() &&
         !currentFilename.isEmpty()) {
-        auto currentServiceType = cloudManager->getCurrentState().selectedService;
+        auto currentProvider = cloudManager->getProvider();
+        if (!currentProvider) return;
+
+        auto currentServiceType = currentProvider->getServiceType();
 
         juce::String fullPath;
         if (currentPath.isNotEmpty()) {
@@ -85,10 +87,10 @@ CloudDocAudioProcessor::~CloudDocAudioProcessor() {
         juce::MemoryBlock data(fileContent.toRawUTF8(),
                                fileContent.getNumBytesAsUTF8());
 
-        // For true web services, we must wait for the async operation to complete
+        // For true web services without caching, we must wait for the async operation to complete
         // to avoid leaks and ensure data is saved. This will block the UI.
-        if (currentServiceType == r2juce::R2CloudManager::ServiceType::GoogleDrive ||
-            currentServiceType == r2juce::R2CloudManager::ServiceType::OneDrive) {
+        if (currentProvider->isCachingEnabled() == false && (currentServiceType == r2juce::R2CloudManager::ServiceType::GoogleDrive ||
+            currentServiceType == r2juce::R2CloudManager::ServiceType::OneDrive)) {
             juce::WaitableEvent saveFinishedEvent;
 
             cloudManager->saveFile(fullPath, data,
@@ -103,7 +105,7 @@ CloudDocAudioProcessor::~CloudDocAudioProcessor() {
         }
         else
         {
-            // For local storage and iCloud, the operation is fast enough to be treated as synchronous.
+            // For local storage, iCloud and cached services, the operation is fast enough.
             cloudManager->saveFile(fullPath, data, nullptr);
         }
     }
@@ -119,6 +121,7 @@ void CloudDocAudioProcessor::loadSettings() {
     currentPath = settingsFile->getValue(lastFilePathKey, "STUDIO-R/CloudDoc");
     currentFilename = settingsFile->getValue(lastFileNameKey, "data.txt");
     currentServiceId = settingsFile->getIntValue(lastSelectedServiceKey, 1);
+    useLocalCache = settingsFile->getBoolValue(useLocalCacheKey, true);
 }
 
 void CloudDocAudioProcessor::saveSettings() {
@@ -126,8 +129,46 @@ void CloudDocAudioProcessor::saveSettings() {
         settingsFile->setValue(lastFilePathKey, currentPath);
         settingsFile->setValue(lastFileNameKey, currentFilename);
         settingsFile->setValue(lastSelectedServiceKey, currentServiceId);
+        settingsFile->setValue(useLocalCacheKey, useLocalCache);
         settingsFile->saveIfNeeded();
     }
+}
+
+void CloudDocAudioProcessor::applyCacheSettings()
+{
+    DBG("CloudDocAudioProcessor::applyCacheSettings called. useLocalCache is: " + juce::String(useLocalCache ? "true" : "false"));
+    
+    juce::File cacheDir;
+#if (JUCE_MAC || JUCE_IOS)
+    if (juce::String(APP_GROUP_ID).isNotEmpty())
+    {
+        cacheDir = juce::File::getContainerForSecurityApplicationGroupIdentifier(APP_GROUP_ID);
+        if (cacheDir.isDirectory())
+        {
+             DBG("Using App Group container for cache: " + cacheDir.getFullPathName());
+        }
+        else
+        {
+            DBG("App Group container not available, falling back to user app data.");
+            cacheDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(JucePlugin_Name);
+        }
+    }
+    else
+    {
+         cacheDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(JucePlugin_Name);
+    }
+#else
+    cacheDir = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory).getChildFile(JucePlugin_Name);
+#endif
+
+    cacheDir = cacheDir.getChildFile("Cache");
+    if (!cacheDir.exists())
+        cacheDir.createDirectory();
+    
+    DBG("Final cache directory: " + cacheDir.getFullPathName());
+        
+    cloudManager->setCachingForService(r2juce::R2CloudManager::ServiceType::GoogleDrive, useLocalCache, cacheDir);
+    cloudManager->setCachingForService(r2juce::R2CloudManager::ServiceType::OneDrive, useLocalCache, cacheDir);
 }
 
 const juce::String& CloudDocAudioProcessor::getInitialPath() const {
@@ -146,6 +187,11 @@ const juce::String& CloudDocAudioProcessor::getInitialFileContent() const {
     return fileContent;
 }
 
+bool CloudDocAudioProcessor::getInitialUseLocalCache() const
+{
+    return useLocalCache;
+}
+
 void CloudDocAudioProcessor::setCurrentPath(const juce::String& newPath) {
     currentPath = newPath;
 }
@@ -161,6 +207,16 @@ void CloudDocAudioProcessor::setCurrentServiceId(int newServiceId) {
 
 void CloudDocAudioProcessor::setCurrentFileContent(const juce::String& content) {
     fileContent = content;
+}
+
+void CloudDocAudioProcessor::setUseLocalCache(bool shouldUseCache)
+{
+    DBG("CloudDocAudioProcessor::setUseLocalCache called with: " + juce::String(shouldUseCache ? "true" : "false"));
+    if (useLocalCache != shouldUseCache)
+    {
+        useLocalCache = shouldUseCache;
+        applyCacheSettings();
+    }
 }
 
 //==============================================================================
@@ -195,10 +251,7 @@ bool CloudDocAudioProcessor::isMidiEffect() const {
 double CloudDocAudioProcessor::getTailLengthSeconds() const { return 0.0; }
 
 int CloudDocAudioProcessor::getNumPrograms() {
-    return 1;  // NB: some hosts don't cope very well if you tell them there are 0
-               // programs,
-               // so this should be at least 1, even if you're not really
-               // implementing programs.
+    return 1;
 }
 
 int CloudDocAudioProcessor::getCurrentProgram() { return 0; }
@@ -220,14 +273,10 @@ void CloudDocAudioProcessor::changeProgramName(int index,
 //==============================================================================
 void CloudDocAudioProcessor::prepareToPlay(double sampleRate,
                                            int samplesPerBlock) {
-    // Use this method as the place to do any pre-playback
-    // initialisation that you need..
     juce::ignoreUnused(sampleRate, samplesPerBlock);
 }
 
 void CloudDocAudioProcessor::releaseResources() {
-    // When playback stops, you can use this as an opportunity to free up any
-    // spare memory, etc.
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -237,15 +286,10 @@ bool CloudDocAudioProcessor::isBusesLayoutSupported(
     juce::ignoreUnused(layouts);
     return true;
 #else
-    // This is the place where you check if the layout is supported.
-    // In this template code we only support mono or stereo.
-    // Some plugin hosts, such as certain GarageBand versions, will only
-    // load plugins that support stereo bus layouts.
     if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono() &&
         layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
         return false;
 
-// This checks if the input layout matches the output layout
 #if !JucePlugin_IsSynth
     if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
         return false;
@@ -263,31 +307,18 @@ void CloudDocAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer,
     auto totalNumInputChannels = getTotalNumInputChannels();
     auto totalNumOutputChannels = getTotalNumOutputChannels();
 
-    // In case we have more outputs than inputs, this code clears any output
-    // channels that didn't contain input data, (because these aren't
-    // guaranteed to be empty - they may contain garbage).
-    // This is here to avoid people getting screaming feedback
-    // when they first compile a plugin, but obviously you don't need to keep
-    // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear(i, 0, buffer.getNumSamples());
 
-    // This is the place where you'd normally do the guts of your plugin's
-    // audio processing...
-    // Make sure to reset the state if your inner loop is processing
-    // the samples and the outer loop is handling the channels.
-    // Alternatively, you can process the samples with the channels
-    // interleaved by keeping the same state.
     for (int channel = 0; channel < totalNumInputChannels; ++channel) {
         auto* channelData = buffer.getWritePointer(channel);
         juce::ignoreUnused(channelData);
-        // ..do something to the data...
     }
 }
 
 //==============================================================================
 bool CloudDocAudioProcessor::hasEditor() const {
-    return true;  // (change this to false if you choose to not supply an editor)
+    return true;
 }
 
 juce::AudioProcessorEditor* CloudDocAudioProcessor::createEditor() {
@@ -296,22 +327,15 @@ juce::AudioProcessorEditor* CloudDocAudioProcessor::createEditor() {
 
 //==============================================================================
 void CloudDocAudioProcessor::getStateInformation(juce::MemoryBlock& destData) {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
     juce::ignoreUnused(destData);
 }
 
 void CloudDocAudioProcessor::setStateInformation(const void* data,
                                                  int sizeInBytes) {
-    // You should use this method to restore your parameters from this memory
-    // block, whose contents will have been created by the getStateInformation()
-    // call.
     juce::ignoreUnused(data, sizeInBytes);
 }
 
 //==============================================================================
-// This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter() {
     return new CloudDocAudioProcessor();
 }

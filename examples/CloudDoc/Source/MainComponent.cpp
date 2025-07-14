@@ -157,41 +157,39 @@ MainComponent::MainComponent (CloudDocAudioProcessor& p)
     labelStatus->setColour (juce::TextEditor::textColourId, juce::Colours::black);
     labelStatus->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
 
+    toggleUseLocalCache.reset (new juce::ToggleButton (juce::String()));
+    addAndMakeVisible (toggleUseLocalCache.get());
+    toggleUseLocalCache->setButtonText (TRANS ("Use Local Cache"));
+    toggleUseLocalCache->addListener (this);
+
+    toggleUseLocalCache->setBounds (392, 184, 150, 24);
+
 
     //[UserPreSize]
 #if !(JUCE_MAC || JUCE_IOS)
-    // On non-Apple platforms, disable iCloud option.
     comboService->setItemEnabled(2, false);
 #endif
 
 #if JucePlugin_Build_AUv3 && !JUCE_STANDALONE_APPLICATION
-    // In an AUv3 plugin, only Local and iCloud are reliable.
-    // Disable other options that require unrestricted network access.
-    comboService->setItemEnabled(3, false);  // Disable Google Drive
-    comboService->setItemEnabled(4, false);  // Disable OneDrive
+    comboService->setItemEnabled(3, false);
+    comboService->setItemEnabled(4, false);
 #endif
 
     setWantsKeyboardFocus(true);
 
-    // Connect to the manager's state changes
     cloudManager.onStateChanged =
         [this](const r2juce::R2CloudManager::AppState& newState) {
         juce::MessageManager::callAsync(
             [this, newState]() { updateUiForState(newState); });
     };
 
-    // Set initial UI state from processor's settings
-    textEditorPath->setText(audioProcessor.getInitialPath(),
-                            juce::dontSendNotification);
-    textEditorFilename->setText(audioProcessor.getInitialFilename(),
-                                juce::dontSendNotification);
-    comboService->setSelectedId(audioProcessor.getInitialServiceId(),
-                                juce::dontSendNotification);
+    textEditorPath->setText(audioProcessor.getInitialPath(), juce::dontSendNotification);
+    textEditorFilename->setText(audioProcessor.getInitialFilename(), juce::dontSendNotification);
+    comboService->setSelectedId(audioProcessor.getInitialServiceId(), juce::dontSendNotification);
+    toggleUseLocalCache->setToggleState(audioProcessor.getInitialUseLocalCache(), juce::dontSendNotification);
 
-    // Set initial UI state from manager, which will trigger the initial load
     updateUiForState(cloudManager.getInitialState());
 
-    // Initialize DropArea
     dropArea->onFileDropped = [this](const juce::String& filePath,
                                      const juce::MemoryBlock& fileContent) {
         handleFileDroppedInArea(filePath, fileContent);
@@ -213,11 +211,10 @@ MainComponent::~MainComponent()
         progressAlert->close();
         progressAlert = nullptr;
     }
-    // Save current UI state back to the processor before closing.
     audioProcessor.setCurrentPath(textEditorPath->getText().trim());
     audioProcessor.setCurrentFilename(textEditorFilename->getText().trim());
     audioProcessor.setCurrentServiceId(comboService->getSelectedId());
-    audioProcessor.setCurrentFileContent(textEditorData->getText()); // THIS LINE IS THE FIX
+    audioProcessor.setCurrentFileContent(textEditorData->getText());
 
     cloudManager.onStateChanged = nullptr;
     //[/Destructor_pre]
@@ -235,6 +232,7 @@ MainComponent::~MainComponent()
     labelData = nullptr;
     dropArea = nullptr;
     labelStatus = nullptr;
+    toggleUseLocalCache = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -259,8 +257,8 @@ void MainComponent::resized()
     //[/UserPreResize]
 
     textEditorData->setBounds ((getWidth() / 2) + -8 - ((getWidth() - 192) / 2), 112, getWidth() - 192, 56);
-    textButtonLoad->setBounds ((getWidth() / 2) + -80 - (136 / 2), 184, 136, 24);
-    textButtonSave->setBounds ((getWidth() / 2) + 80 - (136 / 2), 184, 136, 24);
+    textButtonLoad->setBounds ((getWidth() / 2) + -128 - (136 / 2), 184, 136, 24);
+    textButtonSave->setBounds ((getWidth() / 2) + 24 - (136 / 2), 184, 136, 24);
     textEditorFilename->setBounds (88, 80, getWidth() - 192, 24);
     textEditorPath->setBounds (88, 48, getWidth() - 192, 24);
     labelStatus->setBounds (8, getHeight() - 24, getWidth() - 16, 24);
@@ -277,7 +275,6 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
     if (comboBoxThatHasChanged == comboService.get())
     {
         //[UserComboBoxCode_comboService] -- add your combo box handling code here..
-        // This function now only tells the manager what the user wants.
         auto selectedId = comboService->getSelectedId();
         r2juce::R2CloudManager::ServiceType serviceToSelect;
 
@@ -299,6 +296,7 @@ void MainComponent::comboBoxChanged (juce::ComboBox* comboBoxThatHasChanged)
                 break;
         }
 
+        initialLoadAttempted = false;
         cloudManager.userSelectedService(serviceToSelect);
         //[/UserComboBoxCode_comboService]
     }
@@ -330,6 +328,13 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
         cloudManager.userSignedOut();
         //[/UserButtonCode_textButtonSignOut]
     }
+    else if (buttonThatWasClicked == toggleUseLocalCache.get())
+    {
+        //[UserButtonCode_toggleUseLocalCache] -- add your button handler code here..
+        DBG("MainComponent: toggleUseLocalCache clicked. New state: " + juce::String(toggleUseLocalCache->getToggleState() ? "true" : "false"));
+        audioProcessor.setUseLocalCache(toggleUseLocalCache->getToggleState());
+        //[/UserButtonCode_toggleUseLocalCache]
+    }
 
     //[UserbuttonClicked_Post]
     //[/UserbuttonClicked_Post]
@@ -338,10 +343,8 @@ void MainComponent::buttonClicked (juce::Button* buttonThatWasClicked)
 
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
-// other code here...
 void MainComponent::updateUiForState(
     const r2juce::R2CloudManager::AppState& state) {
-    // Set ComboBox selection without triggering a callback loop
     int serviceId = 1;
     switch (state.selectedService) {
         case r2juce::R2CloudManager::ServiceType::Local:
@@ -360,20 +363,18 @@ void MainComponent::updateUiForState(
     if (comboService->getSelectedId() != serviceId)
         comboService->setSelectedId(serviceId, juce::dontSendNotification);
 
-    // Update the status label
     if (labelStatus) {
         labelStatus->setText(state.statusLabelText, juce::dontSendNotification);
-        if (state.authStatus == r2juce::R2CloudManager::AuthStatus::Authenticated)
+        if (state.authStatus == r2juce::R2CloudManager::AuthStatus::Authenticated && state.syncStatus != r2juce::R2CloudManager::SyncStatus::SyncError)
             labelStatus->setColour(juce::Label::textColourId,
                                    juce::Colours::lightgreen);
-        else if (state.authStatus == r2juce::R2CloudManager::AuthStatus::Error)
+        else if (state.authStatus == r2juce::R2CloudManager::AuthStatus::Error || state.syncStatus == r2juce::R2CloudManager::SyncStatus::SyncError)
             labelStatus->setColour(juce::Label::textColourId,
                                    juce::Colours::orangered);
         else
             labelStatus->setColour(juce::Label::textColourId, juce::Colours::white);
     }
 
-    // Update button states
     const bool isOperationInProgress = (progressAlert != nullptr);
     textButtonSignOut->setEnabled(state.isSignOutButtonEnabled &&
                                   !isOperationInProgress);
@@ -382,21 +383,28 @@ void MainComponent::updateUiForState(
     textButtonSave->setEnabled(state.areFileButtonsEnabled &&
                                !isOperationInProgress);
 
-    // Update ComboBox state
     comboService->setEnabled(state.isComboBoxEnabled && !isOperationInProgress);
+    
+    bool isCacheableService = (state.selectedService == r2juce::R2CloudManager::ServiceType::GoogleDrive ||
+                               state.selectedService == r2juce::R2CloudManager::ServiceType::OneDrive);
+    toggleUseLocalCache->setEnabled(isCacheableService);
+    if (!isCacheableService && toggleUseLocalCache->getToggleState())
+    {
+        toggleUseLocalCache->setToggleState(false, juce::dontSendNotification);
+        audioProcessor.setUseLocalCache(false);
+    }
 
-    // Manage Auth UI visibility
+
     if (state.needsAuthUi && authComponent == nullptr) {
         showAuthUI();
     } else if (!state.needsAuthUi && authComponent != nullptr) {
         hideAuthUI();
     }
 
-    // Trigger initial file load when service becomes authenticated
     if (state.authStatus == r2juce::R2CloudManager::AuthStatus::Authenticated &&
         !initialLoadAttempted) {
         initialLoadAttempted = true;
-        loadFromFile(false);  // Load file content without showing messages
+        loadFromFile(false);
     }
 }
 
@@ -457,16 +465,19 @@ void MainComponent::loadFromFile(bool showMessages) {
         fullPath = filename;
     }
 
-    if (showMessages) {
+    auto provider = cloudManager.getProvider();
+    bool isCaching = provider ? provider->isCachingEnabled() : false;
+    DBG("MainComponent::loadFromFile called. Checking cache status... isCachingEnabled() returned: " + juce::String(isCaching ? "true" : "false"));
+    bool useProgressDialog = showMessages && !isCaching;
+
+    if (useProgressDialog) {
+        DBG("MainComponent::loadFromFile - useProgressDialog is true. Showing dialog.");
         progressAlert = r2juce::R2AlertComponent::forProgress(
             this, "Loading File", "Loading '" + filename + "'...",
-            -1.0,  // Indeterminate progress
+            -1.0,
             [this](int buttonIndex) {
-            if (buttonIndex == 1)  // Cancel
+            if (buttonIndex == 1)
             {
-                // NOTE: Cloud operation cancellation is not implemented in this
-                // version. The dialog will close itself. We just nullify the
-                // pointer.
                 progressAlert = nullptr;
                 updateUiForState(cloudManager.getCurrentState());
             }
@@ -475,21 +486,21 @@ void MainComponent::loadFromFile(bool showMessages) {
     }
 
     cloudManager.loadFile(
-        fullPath, [this, showMessages](bool success, juce::String content,
+        fullPath, [this, showMessages, useProgressDialog](bool success, juce::String content,
                                        juce::String errorMessage) {
         DBG("--- File Load Callback ---");
         DBG("Success: " << (success ? "true" : "false"));
         DBG("Content: " << content);
         DBG("Error Message: " << errorMessage);
 
-        if (progressAlert != nullptr) {
+        if (useProgressDialog && progressAlert != nullptr) {
             progressAlert->close();
             progressAlert = nullptr;
         }
 
         if (success) {
             textEditorData->setText(content);
-            if (showMessages) showMessage("Success", "File loaded successfully");
+            if (showMessages && useProgressDialog) showMessage("Success", "File loaded successfully");
         } else {
             if (showMessages)
                 showMessage("Error", "Failed to load file: " + errorMessage);
@@ -524,28 +535,41 @@ void MainComponent::saveToFile() {
 
     juce::MemoryBlock data(content.toRawUTF8(), content.getNumBytesAsUTF8());
 
-    progressAlert = r2juce::R2AlertComponent::forProgress(
-        this, "Saving File", "Saving '" + filename + "'...",
-        -1.0,  // Indeterminate progress
-        [this](int buttonIndex) {
-        if (buttonIndex == 1)  // Cancel
-        {
-            progressAlert = nullptr;
-            updateUiForState(cloudManager.getCurrentState());
-        }
-    });
+    auto provider = cloudManager.getProvider();
+    bool isCaching = provider ? provider->isCachingEnabled() : false;
+    DBG("MainComponent::saveToFile called. Checking cache status... isCachingEnabled() returned: " + juce::String(isCaching ? "true" : "false"));
+    bool useProgressDialog = !isCaching;
 
-    updateUiForState(cloudManager.getCurrentState());
+    if (useProgressDialog)
+    {
+        DBG("MainComponent::saveToFile - useProgressDialog is true. Showing dialog.");
+        progressAlert = r2juce::R2AlertComponent::forProgress(
+            this, "Saving File", "Saving '" + filename + "'...",
+            -1.0,
+            [this](int buttonIndex) {
+            if (buttonIndex == 1)
+            {
+                progressAlert = nullptr;
+                updateUiForState(cloudManager.getCurrentState());
+            }
+        });
+        updateUiForState(cloudManager.getCurrentState());
+    }
+
 
     cloudManager.saveFile(
-        fullPath, data, [this, filename](bool success, juce::String errorMessage) {
-        if (progressAlert != nullptr) {
+        fullPath, data, [this, useProgressDialog](bool success, juce::String errorMessage) {
+        if (useProgressDialog && progressAlert != nullptr) {
             progressAlert->close();
             progressAlert = nullptr;
         }
 
+        auto provider = cloudManager.getProvider();
         if (success)
-            showMessage("Success", "File saved successfully");
+        {
+            if (provider && !provider->isCachingEnabled())
+                showMessage("Success", "File saved successfully");
+        }
         else
             showMessage("Error", "File save failed: " + errorMessage);
 
@@ -555,8 +579,6 @@ void MainComponent::saveToFile() {
 
 void MainComponent::showMessage(const juce::String& title,
                                 const juce::String& message) {
-    // This is a simple implementation. For a better CX, a non-blocking
-    // toast notification would be preferable to a modal dialog.
     r2juce::R2AlertComponent::forOK(this, title, message);
 }
 
@@ -587,35 +609,44 @@ void MainComponent::handleFileDroppedInArea(
         uploadPath << droppedFile.getFileName();
     }
 
-    // Save current settings (like path) before uploading
     audioProcessor.setCurrentPath(textEditorPath->getText().trim());
     audioProcessor.setCurrentFilename(textEditorFilename->getText().trim());
     audioProcessor.setCurrentServiceId(comboService->getSelectedId());
 
-    progressAlert = r2juce::R2AlertComponent::forProgress(
-        this, "Uploading File", "Uploading '" + droppedFile.getFileName() + "'...",
-        -1.0,  // Indeterminate progress
-        [this](int buttonIndex) {
-        if (buttonIndex == 1)  // Cancel
-        {
-            progressAlert = nullptr;
-            updateUiForState(cloudManager.getCurrentState());
-        }
-    });
+    auto provider = cloudManager.getProvider();
+    bool useProgressDialog = provider && !provider->isCachingEnabled();
 
-    updateUiForState(cloudManager.getCurrentState());
+    if (useProgressDialog)
+    {
+        progressAlert = r2juce::R2AlertComponent::forProgress(
+            this, "Uploading File", "Uploading '" + droppedFile.getFileName() + "'...",
+            -1.0,
+            [this](int buttonIndex) {
+            if (buttonIndex == 1)
+            {
+                progressAlert = nullptr;
+                updateUiForState(cloudManager.getCurrentState());
+            }
+        });
+        updateUiForState(cloudManager.getCurrentState());
+    }
+
 
     cloudManager.saveFile(
         uploadPath, fileContentData,
-        [this, uploadPath](bool success, juce::String errorMessage) {
-        if (progressAlert != nullptr) {
+        [this, uploadPath, useProgressDialog](bool success, juce::String errorMessage) {
+        if (useProgressDialog && progressAlert != nullptr) {
             progressAlert->close();
             progressAlert = nullptr;
         }
-
+        
+        auto provider = cloudManager.getProvider();
         if (success)
-            showMessage("Success",
-                        "File uploaded successfully to: " + uploadPath);
+        {
+            if (provider && !provider->isCachingEnabled())
+                showMessage("Success",
+                            "File uploaded successfully to: " + uploadPath);
+        }
         else
             showMessage("Error", "File upload failed: " + errorMessage);
 
@@ -693,10 +724,10 @@ BEGIN_JUCER_METADATA
               initialText="" multiline="1" retKeyStartsLine="1" readonly="0"
               scrollbars="1" caret="1" popupmenu="1"/>
   <TEXTBUTTON name="" id="353e971405dafbf9" memberName="textButtonLoad" virtualName=""
-              explicitFocusOrder="0" pos="-80Cc 184 136 24" buttonText="Load from File"
+              explicitFocusOrder="0" pos="-128Cc 184 136 24" buttonText="Load from File"
               connectedEdges="0" needsCallback="1" radioGroupId="0"/>
   <TEXTBUTTON name="" id="bc50c6a3420f7701" memberName="textButtonSave" virtualName=""
-              explicitFocusOrder="0" pos="80Cc 184 136 24" buttonText="Save to File"
+              explicitFocusOrder="0" pos="24Cc 184 136 24" buttonText="Save to File"
               connectedEdges="0" needsCallback="1" radioGroupId="0"/>
   <LABEL name="" id="5000c983e2f78184" memberName="labelFilename" virtualName=""
          explicitFocusOrder="0" pos="16 80 72 24" edTextCol="ff000000"
@@ -731,6 +762,9 @@ BEGIN_JUCER_METADATA
          edBkgCol="0" labelText="Cloud Service" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
          fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="33"/>
+  <TOGGLEBUTTON name="" id="b1a22ba31170ec35" memberName="toggleUseLocalCache"
+                virtualName="" explicitFocusOrder="0" pos="392 184 150 24" buttonText="Use Local Cache"
+                connectedEdges="0" needsCallback="1" radioGroupId="0" state="0"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

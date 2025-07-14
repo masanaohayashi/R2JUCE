@@ -146,6 +146,7 @@ private:
     std::unique_ptr<juce::Label> labelData;
     std::unique_ptr<DropArea> dropArea;
     std::unique_ptr<juce::Label> labelStatus;
+    std::unique_ptr<juce::ToggleButton> toggleUseLocalCache;
 
 
     //==============================================================================

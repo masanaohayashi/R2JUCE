@@ -161,7 +161,6 @@ private:
     std::unique_ptr<juce::TextButton> buttonCancel;
     std::unique_ptr<juce::TextButton> buttonCopyUrl;
     std::unique_ptr<juce::TextButton> buttonCopyCode;
-    std::unique_ptr<juce::Label> labelStatus;
     std::unique_ptr<juce::ProgressBar> progressBar;
 
 

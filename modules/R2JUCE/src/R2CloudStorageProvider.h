@@ -6,6 +6,8 @@
 
 namespace r2juce {
 
+class R2LocalStorageProvider;
+
 class R2CloudStorageProvider : public std::enable_shared_from_this<R2CloudStorageProvider>
 {
 public:
@@ -15,6 +17,9 @@ public:
     enum class ServiceType { Local, iCloudDrive, GoogleDrive, OneDrive };
 
     enum class Status { NotAuthenticated, Authenticating, Authenticated, Error };
+
+    /** @brief Represents the status of background synchronization when caching is enabled. */
+    enum class SyncStatus { Idle, Syncing, Synced, SyncError };
     
     struct FileInfo
     {
@@ -49,7 +54,30 @@ public:
     virtual void createFolder(const juce::String& folderName, const juce::String& parentId,
                               FileOperationCallback callback) = 0;
                               
+    /**
+     * @brief Configures caching for this provider.
+     * @param cacheProvider A pointer to the local storage provider to use for caching.
+     * If this is nullptr, caching is disabled.
+     */
+    virtual void configureCaching(std::shared_ptr<R2LocalStorageProvider> cacheProvider)
+    {
+        juce::ignoreUnused(cacheProvider);
+    }
+
+    /**
+     * @brief Checks if caching is currently enabled for this provider.
+     * @return True if caching is enabled, false otherwise.
+     */
+    virtual bool isCachingEnabled() const
+    {
+        return false;
+    }
+
+    /** @brief Callback to report changes in the background sync status. */
+    std::function<void(SyncStatus, const juce::String&)> onSyncStatusChanged;
+
 protected:
     Status currentStatus = Status::NotAuthenticated;
 };
 }
+

@@ -67,17 +67,20 @@ public:
     const juce::String& getInitialFilename() const;
     int getInitialServiceId() const;
     const juce::String& getInitialFileContent() const;
+    bool getInitialUseLocalCache() const;
 
     // Settings state setters called from the UI
     void setCurrentPath(const juce::String& newPath);
     void setCurrentFilename(const juce::String& newFilename);
     void setCurrentServiceId(int newServiceId);
     void setCurrentFileContent(const juce::String& content);
+    void setUseLocalCache(bool shouldUseCache);
 
 private:
     //==============================================================================
     void loadSettings();
     void saveSettings();
+    void applyCacheSettings();
 
     std::unique_ptr<r2juce::R2CloudManager> cloudManager;
     std::unique_ptr<juce::PropertiesFile> settingsFile;
@@ -87,11 +90,13 @@ private:
     juce::String currentFilename;
     int currentServiceId;
     juce::String fileContent;
+    bool useLocalCache = true;
 
     // Keys for saving and loading settings
     static inline const juce::Identifier lastSelectedServiceKey{ "lastSelectedService" };
     static inline const juce::Identifier lastFilePathKey{ "lastFilePath" };
     static inline const juce::Identifier lastFileNameKey{ "lastFileName" };
+    static inline const juce::Identifier useLocalCacheKey{ "useLocalCache" };
 
   JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CloudDocAudioProcessor)
 };

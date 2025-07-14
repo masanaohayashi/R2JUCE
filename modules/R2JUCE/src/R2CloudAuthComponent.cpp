@@ -83,17 +83,6 @@ R2CloudAuthComponent::R2CloudAuthComponent ()
     buttonCopyCode->setButtonText (TRANS ("Copy Code"));
     buttonCopyCode->addListener (this);
 
-    labelStatus.reset (new juce::Label (juce::String(),
-                                        TRANS ("Status")));
-    addAndMakeVisible (labelStatus.get());
-    labelStatus->setFont (juce::Font (juce::FontOptions (15.00f, juce::Font::plain)));
-    labelStatus->setJustificationType (juce::Justification::centredLeft);
-    labelStatus->setEditable (false, false, false);
-    labelStatus->setColour (juce::TextEditor::textColourId, juce::Colours::black);
-    labelStatus->setColour (juce::TextEditor::backgroundColourId, juce::Colour (0x00000000));
-
-    labelStatus->setBounds (16, 240, 64, 24);
-
     progressBar.reset (new juce::ProgressBar (progressValue));
     addAndMakeVisible (progressBar.get());
 
@@ -152,7 +141,6 @@ R2CloudAuthComponent::~R2CloudAuthComponent()
     buttonCancel = nullptr;
     buttonCopyUrl = nullptr;
     buttonCopyCode = nullptr;
-    labelStatus = nullptr;
     progressBar = nullptr;
 
 
@@ -184,7 +172,7 @@ void R2CloudAuthComponent::resized()
     buttonCancel->setBounds ((getWidth() / 2) - (128 / 2), 280, 128, 24);
     buttonCopyUrl->setBounds ((getWidth() / 2) - (128 / 2), 136, 128, 24);
     buttonCopyCode->setBounds ((getWidth() / 2) - (128 / 2), 208, 128, 24);
-    progressBar->setBounds (getWidth() - 16 - (getWidth() - 96), 240, getWidth() - 96, 24);
+    progressBar->setBounds ((getWidth() / 2) - (288 / 2), 240, 288, 24);
     //[UserResized] Add your own custom resize handling here..
     //[/UserResized]
 }
@@ -319,11 +307,11 @@ void R2CloudAuthComponent::stopAuthentication()
         if (buttonCopyCode != nullptr)
             buttonCopyCode->setEnabled(false);
 
-        if (labelStatus != nullptr)
-        {
-            labelStatus->setText(TRANS("Authentication cancelled"), juce::dontSendNotification);
-            labelStatus->setColour(juce::Label::textColourId, juce::Colours::orange);
-        }
+        //if (labelStatus != nullptr)
+        //{
+        //    labelStatus->setText(TRANS("Authentication cancelled"), juce::dontSendNotification);
+        //    labelStatus->setColour(juce::Label::textColourId, juce::Colours::orange);
+        //}
 
         if (progressBar != nullptr)
             progressBar->repaint();
@@ -576,7 +564,7 @@ void R2CloudAuthComponent::parseTokenResponse(const juce::String& response)
 
 void R2CloudAuthComponent::updateStatus(const juce::String& status)
 {
-    labelStatus->setText (status, juce::dontSendNotification);
+    //labelStatus->setText (status, juce::dontSendNotification);
 }
 
 void R2CloudAuthComponent::showError(const juce::String& error)
@@ -597,8 +585,8 @@ void R2CloudAuthComponent::showError(const juce::String& error)
         if (progressBar != nullptr)
             progressBar->repaint();
 
-        if (labelStatus != nullptr)
-            labelStatus->setColour(juce::Label::textColourId, juce::Colours::red);
+        //if (labelStatus != nullptr)
+        //    labelStatus->setColour(juce::Label::textColourId, juce::Colours::red);
     };
 
     if (juce::MessageManager::getInstance()->isThisTheMessageThread())
@@ -641,8 +629,8 @@ void R2CloudAuthComponent::showSuccess()
         if (progressBar != nullptr)
             progressBar->repaint();
 
-        if (labelStatus != nullptr)
-            labelStatus->setColour(juce::Label::textColourId, juce::Colours::green);
+        //if (labelStatus != nullptr)
+        //    labelStatus->setColour(juce::Label::textColourId, juce::Colours::green);
     };
 
     if (juce::MessageManager::getInstance()->isThisTheMessageThread())
@@ -846,13 +834,8 @@ BEGIN_JUCER_METADATA
   <TEXTBUTTON name="" id="c06ddf2a594e77d7" memberName="buttonCopyCode" virtualName=""
               explicitFocusOrder="0" pos="0Cc 208 128 24" buttonText="Copy Code"
               connectedEdges="0" needsCallback="1" radioGroupId="0"/>
-  <LABEL name="" id="b6ec3558c7c0f3d" memberName="labelStatus" virtualName=""
-         explicitFocusOrder="0" pos="16 240 64 24" edTextCol="ff000000"
-         edBkgCol="0" labelText="Status" editableSingleClick="0" editableDoubleClick="0"
-         focusDiscardsChanges="0" fontname="Default font" fontsize="15.0"
-         kerning="0.0" bold="0" italic="0" justification="33"/>
   <GENERICCOMPONENT name="" id="2452a8ab4cd2a84c" memberName="progressBar" virtualName=""
-                    explicitFocusOrder="0" pos="16Rr 240 96M 24" class="juce::ProgressBar"
+                    explicitFocusOrder="0" pos="0Cc 240 288 24" class="juce::ProgressBar"
                     params="progressValue"/>
 </JUCER_COMPONENT>
 

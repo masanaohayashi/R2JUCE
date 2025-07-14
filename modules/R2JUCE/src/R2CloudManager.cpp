@@ -23,11 +23,25 @@ void R2CloudManager::setAppGroupId(const juce::String& groupId) {
 void R2CloudManager::initializeProviders() {
     localProvider = std::make_shared<R2LocalStorageProvider>(appGroupId);
     
-    if (googleClientId.isNotEmpty())
-        googleDriveProvider = std::make_shared<R2GoogleDriveProvider>(googleClientId, googleClientSecret);
+    auto setupProvider = [this](std::shared_ptr<R2CloudStorageProvider>& provider) {
+        if (provider)
+        {
+            provider->onSyncStatusChanged = [this](R2CloudStorageProvider::SyncStatus status, const juce::String& message) {
+                this->setSyncStatus(static_cast<R2CloudManager::SyncStatus>(status), message);
+            };
+        }
+    };
 
+    if (googleClientId.isNotEmpty())
+    {
+        googleDriveProvider = std::make_shared<R2GoogleDriveProvider>(googleClientId, googleClientSecret);
+        setupProvider(googleDriveProvider);
+    }
     if (oneDriveClientId.isNotEmpty())
+    {
         oneDriveProvider = std::make_shared<R2OneDriveProvider>(oneDriveClientId, oneDriveClientSecret);
+        setupProvider(oneDriveProvider);
+    }
 
 #if JUCE_MAC || JUCE_IOS
     if (iCloudContainerId.isNotEmpty())
@@ -36,6 +50,48 @@ void R2CloudManager::initializeProviders() {
 
     refreshStateAndNotify();
 }
+
+void R2CloudManager::setCachingForService(ServiceType service, bool enable, const juce::File& cacheDirectory)
+{
+    DBG("R2CloudManager::setCachingForService called for service " + juce::String((int)service) + " with enable: " + (enable ? "true" : "false"));
+    std::shared_ptr<R2CloudStorageProvider> provider;
+    std::shared_ptr<R2LocalStorageProvider>* cacheForService = nullptr;
+
+    switch (service)
+    {
+        case ServiceType::GoogleDrive:
+            provider = googleDriveProvider;
+            cacheForService = &googleCacheProvider;
+            break;
+        case ServiceType::OneDrive:
+            provider = oneDriveProvider;
+            cacheForService = &oneDriveCacheProvider;
+            break;
+        default:
+            return; // Caching is only for remote services
+    }
+
+    if (provider && cacheForService)
+    {
+        if (enable && cacheDirectory.isDirectory())
+        {
+            auto serviceCacheDir = cacheDirectory.getChildFile(provider->getDisplayName());
+            if (!serviceCacheDir.exists())
+                serviceCacheDir.createDirectory();
+
+            if (*cacheForService == nullptr)
+                *cacheForService = std::make_shared<R2LocalStorageProvider>("");
+
+            (*cacheForService)->setCacheRoot(serviceCacheDir);
+            provider->configureCaching(*cacheForService);
+        }
+        else
+        {
+            provider->configureCaching(nullptr);
+        }
+    }
+}
+
 
 const R2CloudManager::AppState& R2CloudManager::getInitialState() const {
     return currentState;
@@ -63,7 +119,7 @@ void R2CloudManager::setIcloudContainerId(const juce::String& containerId) {
 }
 #endif
 
-std::shared_ptr<R2CloudStorageProvider> R2CloudManager::getCurrentProvider() {
+std::shared_ptr<R2CloudStorageProvider> R2CloudManager::getProvider() {
     switch (currentState.selectedService) {
         case ServiceType::GoogleDrive:
             return googleDriveProvider;
@@ -87,7 +143,7 @@ void R2CloudManager::userSelectedService(ServiceType serviceType) {
     previousServiceBeforeAuth = currentState.selectedService;
     currentState.selectedService = serviceType;
 
-    auto provider = getCurrentProvider();
+    auto provider = getProvider();
     if (!provider) {
         currentState.authStatus = AuthStatus::Error;
         refreshStateAndNotify();
@@ -104,7 +160,7 @@ void R2CloudManager::userSelectedService(ServiceType serviceType) {
 }
 
 void R2CloudManager::startAuthenticationFlow() {
-    auto provider = getCurrentProvider();
+    auto provider = getProvider();
     if (!provider) {
         currentState.authStatus = AuthStatus::Error;
         refreshStateAndNotify();
@@ -151,7 +207,7 @@ void R2CloudManager::authenticationFinished(bool success, const juce::String&,
                                             const juce::String& refreshToken) {
     currentState.needsAuthUi = false;
     if (success) {
-        if (auto provider = getCurrentProvider()) {
+        if (auto provider = getProvider()) {
             if (auto* googleProv =
                     dynamic_cast<R2GoogleDriveProvider*>(provider.get()))
                 googleProv->setTokens(accessToken, refreshToken);
@@ -175,7 +231,7 @@ void R2CloudManager::userCancelledAuthentication() {
 }
 
 void R2CloudManager::userSignedOut() {
-    if (auto provider = getCurrentProvider()) {
+    if (auto provider = getProvider()) {
         provider->signOut();
     }
     currentState.selectedService = ServiceType::Local;
@@ -183,8 +239,15 @@ void R2CloudManager::userSignedOut() {
     refreshStateAndNotify();
 }
 
+void R2CloudManager::setSyncStatus(SyncStatus newStatus, const juce::String& message)
+{
+    juce::ignoreUnused(message);
+    currentState.syncStatus = newStatus;
+    refreshStateAndNotify();
+}
+
 void R2CloudManager::refreshStateAndNotify() {
-    auto provider = getCurrentProvider();
+    auto provider = getProvider();
     if (!provider) {
         currentState.authStatus = AuthStatus::Error;
         currentState.statusLabelText = "Error: Provider not found";
@@ -202,9 +265,10 @@ void R2CloudManager::refreshStateAndNotify() {
                 currentState.authStatus = AuthStatus::NotAuthenticated;
         }
 
+        juce::String baseStatusText;
         switch (currentState.selectedService) {
             case ServiceType::Local:
-                currentState.statusLabelText = "Local Storage";
+                baseStatusText = "Local Storage";
                 currentState.isSignOutButtonEnabled = false;
                 currentState.areFileButtonsEnabled = true;
                 break;
@@ -213,10 +277,10 @@ void R2CloudManager::refreshStateAndNotify() {
                 if (iCloudDriveProvider &&
                     iCloudDriveProvider->getAuthStatus() ==
                         R2CloudStorageProvider::Status::Authenticated) {
-                    currentState.statusLabelText = "iCloud Drive (Available)";
+                    baseStatusText = "iCloud Drive (Available)";
                     currentState.areFileButtonsEnabled = true;
                 } else {
-                    currentState.statusLabelText = "iCloud Drive (Not Available)";
+                    baseStatusText = "iCloud Drive (Not Available)";
                     currentState.areFileButtonsEnabled = false;
                 }
                 currentState.isSignOutButtonEnabled = false;
@@ -232,20 +296,45 @@ void R2CloudManager::refreshStateAndNotify() {
                 juce::String serviceName = provider->getDisplayName();
                 switch (currentState.authStatus) {
                     case AuthStatus::Authenticated:
-                        currentState.statusLabelText = serviceName + " (Authenticated)";
+                        baseStatusText = serviceName + " (Authenticated)";
                         break;
                     case AuthStatus::NotAuthenticated:
-                        currentState.statusLabelText = serviceName + " (Not Authenticated)";
+                        baseStatusText = serviceName + " (Not Authenticated)";
                         break;
                     case AuthStatus::Authenticating:
-                        currentState.statusLabelText = serviceName + " (Authenticating...)";
+                        baseStatusText = serviceName + " (Authenticating...)";
                         break;
                     case AuthStatus::Error:
-                        currentState.statusLabelText =
+                        baseStatusText =
                             serviceName + " (Authentication Error)";
                         break;
                 }
                 break;
+        }
+
+        // Append sync status if relevant
+        if (provider->isCachingEnabled())
+        {
+            switch (currentState.syncStatus)
+            {
+                case SyncStatus::Syncing:
+                    currentState.statusLabelText = baseStatusText + " - Syncing...";
+                    break;
+                case SyncStatus::Synced:
+                    currentState.statusLabelText = baseStatusText + " - Synced";
+                    break;
+                case SyncStatus::SyncError:
+                    currentState.statusLabelText = baseStatusText + " - Sync Error";
+                    break;
+                case SyncStatus::Idle:
+                default:
+                    currentState.statusLabelText = baseStatusText;
+                    break;
+            }
+        }
+        else
+        {
+            currentState.statusLabelText = baseStatusText;
         }
     }
 
@@ -261,7 +350,7 @@ void R2CloudManager::refreshStateAndNotify() {
 void R2CloudManager::saveFile(const juce::String& filePath,
                               const juce::MemoryBlock& data,
                               FileOperationCallback callback) {
-    auto provider = getCurrentProvider();
+    auto provider = getProvider();
     if (!provider) {
         if (callback) callback(false, "No provider selected");
         return;
@@ -276,7 +365,7 @@ void R2CloudManager::saveFile(const juce::String& filePath,
 
 void R2CloudManager::loadFile(const juce::String& filePath,
                               FileContentCallback callback) {
-    auto provider = getCurrentProvider();
+    auto provider = getProvider();
     if (!provider) {
         if (callback) callback(false, "", "No provider selected");
         return;

@@ -1,19 +1,17 @@
 #pragma once
 
 #include "R2CloudStorageProvider.h"
+#include <atomic>
 
 namespace r2juce {
+
+class R2LocalStorageProvider;
 
 class R2GoogleDriveProvider : public R2CloudStorageProvider
 {
 public:
-    /**
-     * @brief Constructs a Google Drive provider with the necessary client credentials.
-     * @param clientId The OAuth 2.0 Client ID from the Google API Console.
-     * @param clientSecret The OAuth 2.0 Client Secret.
-     */
     R2GoogleDriveProvider(const juce::String& clientId, const juce::String& clientSecret);
-    ~R2GoogleDriveProvider() override = default;
+    ~R2GoogleDriveProvider() override;
 
     //==============================================================================
     void authenticate(AuthCallback callback) override;
@@ -32,14 +30,15 @@ public:
     void createFolder(const juce::String& folderName, const juce::String& parentId, FileOperationCallback callback) override;
 
     //==============================================================================
-    /**
-     * @brief Sets the access and refresh tokens after a successful authentication.
-     * @param newAccessToken The new access token.
-     * @param newRefreshToken The new refresh token (can be empty if not updated).
-     */
     void setTokens(const juce::String& newAccessToken, const juce::String& newRefreshToken);
 
+    //== Caching ===================================================================
+    void configureCaching(std::shared_ptr<R2LocalStorageProvider> cacheProvider) override;
+    bool isCachingEnabled() const override;
+
 private:
+    void uploadDirectToCloud(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback);
+
     void makeAPIRequest(const juce::String& endpoint,
                         const juce::String& httpMethod,
                         const juce::StringPairArray& headers,
@@ -52,7 +51,9 @@ private:
                         const juce::String& postData,
                         std::function<void(bool success, juce::String response)> callback);
 
-    void findFileByPath(const juce::StringArray& pathParts, const juce::String& currentFolderId, int pathIndex, DownloadCallback callback);
+    void findFileByPath(const juce::StringArray& pathParts, const juce::String& currentFolderId, int pathIndex, DownloadCallback callback, bool metadataOnly = false);
+    void getCloudFileMetadata(const juce::String& filePath, std::function<void(bool, const FileInfo&)> callback);
+
     void createFolderPath(const juce::StringArray& folderPath, const juce::String& parentFolderId, int pathIndex, std::function<void(bool success, juce::String newFolderId, juce::String errorMessage)> callback);
     
     void uploadToFolder(const juce::String& fileName, const juce::MemoryBlock& data, const juce::String& folderId, FileOperationCallback callback);
@@ -66,12 +67,22 @@ private:
     void saveTokens();
     bool loadTokens();
     juce::File getTokenFile() const;
+
+    //== Caching Implementation ==================================================
+    void triggerBackgroundUpload(const juce::String& filePath);
+    void performUpload();
     
     juce::String clientId;
     juce::String clientSecret;
     juce::String accessToken;
     juce::String refreshToken;
     juce::Time tokenExpiry;
+
+    std::shared_ptr<R2LocalStorageProvider> cacheProvider;
+
+    juce::CriticalSection uploadLock;
+    bool isUploading = false;
+    juce::String pendingUploadPath;
 };
 
 } // namespace r2juce
