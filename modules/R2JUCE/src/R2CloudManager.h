@@ -57,6 +57,7 @@ public:
     using FileContentCallback = std::function<void(bool success, juce::String content, juce::String errorMessage)>;
     
     void saveFile(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback = nullptr);
+    bool saveFileSync(const juce::String& filePath, const juce::MemoryBlock& data);
     void loadFile(const juce::String& filePath, FileContentCallback callback);
     
     const AppState& getInitialState() const;

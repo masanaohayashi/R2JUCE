@@ -21,6 +21,7 @@ public:
     ServiceType getServiceType() const override;
     
     void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) override;
+    bool uploadFileByPathSync(const juce::String& filePath, const juce::MemoryBlock& data) override;
     void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) override;
 
     void listFiles(const juce::String& folderId, FileListCallback callback) override;

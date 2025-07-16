@@ -91,16 +91,10 @@ CloudDocAudioProcessor::~CloudDocAudioProcessor() {
         // to avoid leaks and ensure data is saved. This will block the UI.
         if (currentProvider->isCachingEnabled() == false && (currentServiceType == r2juce::R2CloudManager::ServiceType::GoogleDrive ||
             currentServiceType == r2juce::R2CloudManager::ServiceType::OneDrive)) {
-            juce::WaitableEvent saveFinishedEvent;
-
-            cloudManager->saveFile(fullPath, data,
-                                   [&](bool, const juce::String&) {
-                                       saveFinishedEvent.signal();
-                                   });
-
-            // Wait for up to 10 seconds for the save to complete.
-            if (!saveFinishedEvent.wait(10000)) {
-                DBG("*** WARNING: Timed out waiting for cloud save on exit.");
+            
+            if (!cloudManager->saveFileSync(fullPath, data))
+            {
+                DBG("*** WARNING: Failed to save file synchronously on exit.");
             }
         }
         else

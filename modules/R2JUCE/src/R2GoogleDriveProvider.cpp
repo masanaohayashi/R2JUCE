@@ -125,6 +125,123 @@ void R2GoogleDriveProvider::uploadFileByPath(const juce::String& filePath, const
     }
 }
 
+bool R2GoogleDriveProvider::uploadFileByPathSync(const juce::String& filePath, const juce::MemoryBlock& data)
+{
+    if (!isTokenValid())
+    {
+        DBG("R2GoogleDriveProvider::uploadFileByPathSync - Aborting, token is not valid.");
+        return false;
+    }
+
+    auto pathParts = juce::StringArray::fromTokens(filePath, "/", "");
+    pathParts.removeEmptyStrings();
+    if (pathParts.isEmpty()) return false;
+
+    auto fileName = pathParts.strings.getLast();
+    pathParts.remove(pathParts.size() - 1);
+
+    juce::String parentFolderId = "root";
+    for (const auto& folderName : pathParts)
+    {
+        juce::String query = "'" + parentFolderId + "' in parents and name = '" + folderName + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+        juce::String endpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false) + "&fields=files(id)";
+        
+        int statusCode = 0;
+        auto responseVar = makeAPIRequestSync(endpoint, "GET", {}, {}, statusCode);
+
+        if (statusCode < 200 || statusCode >= 300) return false;
+
+        juce::String existingFolderId;
+        if (auto* obj = responseVar.getDynamicObject())
+            if (auto* filesArray = obj->getProperty("files").getArray())
+                if (!filesArray->isEmpty())
+                    if (auto* fileObj = filesArray->getUnchecked(0).getDynamicObject())
+                        existingFolderId = fileObj->getProperty("id").toString();
+
+        if (existingFolderId.isNotEmpty())
+        {
+            parentFolderId = existingFolderId;
+        }
+        else
+        {
+            juce::DynamicObject::Ptr newFolderMeta = new juce::DynamicObject();
+            newFolderMeta->setProperty("name", folderName);
+            newFolderMeta->setProperty("mimeType", "application/vnd.google-apps.folder");
+            newFolderMeta->setProperty("parents", juce::var(juce::StringArray(parentFolderId)));
+            
+            juce::String metadata = juce::JSON::toString(juce::var(newFolderMeta.get()));
+            juce::StringPairArray createHeaders;
+            createHeaders.set("Content-Type", "application/json");
+
+            auto createResponseVar = makeAPIRequestSync("https://www.googleapis.com/drive/v3/files", "POST", createHeaders, juce::MemoryBlock(metadata.toRawUTF8(), metadata.getNumBytesAsUTF8()), statusCode);
+            
+            if (statusCode < 200 || statusCode >= 300) return false;
+
+            if (auto* createObj = createResponseVar.getDynamicObject())
+                parentFolderId = createObj->getProperty("id").toString();
+            else
+                return false;
+        }
+    }
+
+    juce::String query = "'" + parentFolderId + "' in parents and name = '" + fileName + "' and mimeType != 'application/vnd.google-apps.folder' and trashed = false";
+    juce::String fileSearchEndpoint = "https://www.googleapis.com/drive/v3/files?q=" + juce::URL::addEscapeChars(query, false) + "&fields=files(id)";
+    
+    int searchStatusCode = 0;
+    auto searchResponseVar = makeAPIRequestSync(fileSearchEndpoint, "GET", {}, {}, searchStatusCode);
+
+    if (searchStatusCode < 200 || searchStatusCode >= 300) return false;
+
+    juce::String existingFileId;
+    if (auto* obj = searchResponseVar.getDynamicObject())
+        if (auto* filesArray = obj->getProperty("files").getArray())
+            if (!filesArray->isEmpty())
+                if (auto* fileObj = filesArray->getUnchecked(0).getDynamicObject())
+                    existingFileId = fileObj->getProperty("id").toString();
+
+    int finalStatusCode = 0;
+    if (existingFileId.isNotEmpty())
+    {
+        juce::String updateEndpoint = "https://www.googleapis.com/upload/drive/v3/files/" + existingFileId + "?uploadType=media";
+        juce::StringPairArray updateHeaders;
+        updateHeaders.set("Content-Type", "application/octet-stream");
+        makeAPIRequestSync(updateEndpoint, "PATCH", updateHeaders, data, finalStatusCode);
+    }
+    else
+    {
+        juce::String boundary = "---r2juce-boundary-" + juce::String::toHexString(juce::Random::getSystemRandom().nextInt64());
+        
+        juce::DynamicObject::Ptr metadataObject = new juce::DynamicObject();
+        metadataObject->setProperty("name", fileName);
+        metadataObject->setProperty("parents", juce::var(juce::StringArray(parentFolderId)));
+        
+        juce::String metadataJson = juce::JSON::toString(juce::var(metadataObject.get()));
+        
+        juce::MemoryBlock multipartBody;
+        juce::String part1 = "--" + boundary + "\r\n";
+        multipartBody.append(part1.toRawUTF8(), part1.getNumBytesAsUTF8());
+        juce::String part2 = "Content-Type: application/json; charset=UTF-8\r\n\r\n";
+        multipartBody.append(part2.toRawUTF8(), part2.getNumBytesAsUTF8());
+        multipartBody.append(metadataJson.toRawUTF8(), metadataJson.getNumBytesAsUTF8());
+        juce::String part3 = "\r\n--" + boundary + "\r\n";
+        multipartBody.append(part3.toRawUTF8(), part3.getNumBytesAsUTF8());
+        juce::String part4 = "Content-Type: application/octet-stream\r\n\r\n";
+        multipartBody.append(part4.toRawUTF8(), part4.getNumBytesAsUTF8());
+        multipartBody.append(data.getData(), data.getSize());
+        juce::String part5 = "\r\n--" + boundary + "--\r\n";
+        multipartBody.append(part5.toRawUTF8(), part5.getNumBytesAsUTF8());
+
+        juce::String createEndpoint = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart";
+        
+        juce::StringPairArray createHeaders;
+        createHeaders.set("Content-Type", "multipart/related; boundary=" + boundary);
+        
+        makeAPIRequestSync(createEndpoint, "POST", createHeaders, multipartBody, finalStatusCode);
+    }
+    
+    return (finalStatusCode >= 200 && finalStatusCode < 300);
+}
+
 void R2GoogleDriveProvider::uploadDirectToCloud(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
 {
     auto startTime = juce::Time::getMillisecondCounterHiRes();
@@ -508,6 +625,52 @@ void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const j
     });
 }
 
+juce::var R2GoogleDriveProvider::makeAPIRequestSync(const juce::String& endpoint, const juce::String& httpMethod, const juce::StringPairArray& headers, const juce::MemoryBlock& postData, int& statusCode)
+{
+    if (!isTokenValid()) {
+        statusCode = 401;
+        return "Authentication required.";
+    }
+
+    juce::URL url(endpoint);
+
+    juce::StringPairArray finalHeaders = headers;
+    finalHeaders.set("Authorization", "Bearer " + accessToken);
+
+    juce::String headerString;
+    for (int i = 0; i < finalHeaders.size(); ++i)
+        headerString << finalHeaders.getAllKeys()[i] << ": " << finalHeaders.getAllValues()[i] << "\r\n";
+
+    if ((httpMethod == "POST" || httpMethod == "PATCH") && postData.getSize() > 0)
+    {
+        url = url.withPOSTData(postData);
+    }
+
+    auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inAddress)
+                   .withConnectionTimeoutMs(15000)
+                   .withHttpRequestCmd(httpMethod)
+                   .withExtraHeaders(headerString);
+
+    if (auto stream = url.createInputStream(options))
+    {
+        if (auto* webStream = dynamic_cast<juce::WebInputStream*>(stream.get()))
+        {
+            statusCode = webStream->getStatusCode();
+        }
+        else
+        {
+            statusCode = 0; // Should not happen with http URLs
+        }
+        auto response = stream->readEntireStreamAsString();
+        return juce::JSON::parse(response);
+    }
+    else
+    {
+        statusCode = 0; // Connection failed
+        return "Failed to connect to server.";
+    }
+}
+
 void R2GoogleDriveProvider::makeAPIRequest(const juce::String& endpoint, const juce::String& httpMethod, const juce::StringPairArray& headers, const juce::String& postData, std::function<void(bool, juce::String)> callback)
 {
     makeAPIRequest(endpoint, httpMethod, headers, juce::MemoryBlock(postData.toRawUTF8(), postData.getNumBytesAsUTF8()), callback);
@@ -525,7 +688,7 @@ void R2GoogleDriveProvider::uploadFile(const juce::String& fileName, const juce:
         }
         else
         {
-            auto actualFileName = pathParts[pathParts.size() - 1];
+            auto actualFileName = pathParts.strings.getLast();
             pathParts.remove(pathParts.size() - 1);
 
             createFolderPath(pathParts, "root", 0, [this, actualFileName, data, callback](bool success, juce::String newFolderId, juce::String errorMessage)

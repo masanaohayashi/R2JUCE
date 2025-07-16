@@ -132,6 +132,43 @@ void R2OneDriveProvider::uploadFileByPath(const juce::String& filePath, const ju
     }
 }
 
+bool R2OneDriveProvider::uploadFileByPathSync(const juce::String& filePath, const juce::MemoryBlock& data)
+{
+    if (filePath.isEmpty()) return false;
+    if (!isTokenValid()) return false;
+
+    juce::String escapedPath = buildEscapedPath(filePath);
+    juce::String endpoint = "https://graph.microsoft.com/v1.0/me/drive/root:/" + escapedPath + ":/content";
+    
+    juce::StringPairArray headers;
+    headers.set("Content-Type", "application/octet-stream");
+    headers.set("Authorization", "Bearer " + accessToken);
+
+    juce::URL url(endpoint);
+    url = url.withPOSTData(data);
+    
+    juce::String headerString;
+    for (int i = 0; i < headers.size(); ++i)
+        headerString << headers.getAllKeys()[i] << ": " << headers.getAllValues()[i] << "\r\n";
+
+    auto options = juce::URL::InputStreamOptions(juce::URL::ParameterHandling::inPostData)
+                   .withExtraHeaders(headerString)
+                   .withConnectionTimeoutMs(15000)
+                   .withHttpRequestCmd("PUT");
+
+    if (auto stream = url.createInputStream(options))
+    {
+        int statusCode = 0;
+        if (auto* webStream = dynamic_cast<juce::WebInputStream*>(stream.get()))
+        {
+            statusCode = webStream->getStatusCode();
+        }
+        return (statusCode >= 200 && statusCode < 300);
+    }
+    
+    return false;
+}
+
 void R2OneDriveProvider::uploadDirectToCloud(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback)
 {
     auto startTime = juce::Time::getMillisecondCounterHiRes();

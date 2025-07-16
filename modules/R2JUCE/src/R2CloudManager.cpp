@@ -363,6 +363,22 @@ void R2CloudManager::saveFile(const juce::String& filePath,
     provider->uploadFileByPath(filePath, data, callback);
 }
 
+bool R2CloudManager::saveFileSync(const juce::String& filePath, const juce::MemoryBlock& data)
+{
+    auto provider = getProvider();
+    if (!provider)
+    {
+        return false;
+    }
+
+    if (currentState.authStatus != AuthStatus::Authenticated)
+    {
+        return false;
+    }
+    
+    return provider->uploadFileByPathSync(filePath, data);
+}
+
 void R2CloudManager::loadFile(const juce::String& filePath,
                               FileContentCallback callback) {
     auto provider = getProvider();

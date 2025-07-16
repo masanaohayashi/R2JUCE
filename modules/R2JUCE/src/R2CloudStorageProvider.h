@@ -45,6 +45,22 @@ public:
     virtual ServiceType getServiceType() const = 0;
 
     virtual void uploadFileByPath(const juce::String& filePath, const juce::MemoryBlock& data, FileOperationCallback callback) = 0;
+
+    /**
+     * @brief Uploads a file synchronously, blocking until the operation is complete.
+     * @param filePath The destination path for the file in the cloud.
+     * @param data The file content to upload.
+     * @return True if the upload was successful, false otherwise.
+     * @note This method performs a blocking network operation and should not be called on the message thread during normal UI interaction.
+     */
+    virtual bool uploadFileByPathSync(const juce::String& filePath, const juce::MemoryBlock& data)
+    {
+        // Default implementation for providers that don't support sync operations.
+        // Must be overridden by concrete remote providers like GoogleDrive and OneDrive.
+        juce::ignoreUnused(filePath, data);
+        return false;
+    }
+
     virtual void downloadFileByPath(const juce::String& filePath, DownloadCallback callback) = 0;
     virtual void listFiles(const juce::String& folderId, FileListCallback callback) = 0;
     virtual void uploadFile(const juce::String& fileName, const juce::MemoryBlock& data,
