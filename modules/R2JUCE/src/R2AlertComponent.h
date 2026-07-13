@@ -1,43 +1,9 @@
-/*
-  ==============================================================================
-
-  This is an automatically generated GUI class created by the Projucer!
-
-  Be careful when adding custom code to these files, as only the code within
-  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
-  and re-saved.
-
-  Created with Projucer version: 7.0.12
-
-  ------------------------------------------------------------------------------
-
-  The Projucer is part of the JUCE library.
-  Copyright (c) 2020 - Raw Material Software Limited.
-
-  ==============================================================================
-*/
-
 #pragma once
 
-//[Headers]     -- You can add your own extra header files here --
 #include <JuceHeader.h>
+
 namespace r2juce {
-//[/Headers]
 
-
-
-//==============================================================================
-/**
-                                                                    //[Comments]
-  @brief A component that displays a modal alert dialog.
-
-  This class is displayed as an overlay on top of a parent component
-  to present information and prompt the user for a response.
-  It can have a title, a message, and 1 to 3 custom buttons.
-  It also supports keyboard navigation (arrow keys, Enter, Esc).
-  The result is returned via a callback function passed in the constructor.
-                                                                    //[/Comments]
-*/
 class R2AlertComponent  : public juce::Component,
                           public juce::ComponentListener,
                           public juce::Button::Listener
@@ -48,7 +14,6 @@ public:
     ~R2AlertComponent() override;
 
     //==============================================================================
-    //[UserMethods]     -- You can add your own custom methods in this section.
     void componentMovedOrResized(juce::Component& component, bool /*wasMoved*/, bool wasResized) override {
         if (wasResized && &component == getParentComponent())
             setBounds(component.getLocalBounds());
@@ -135,7 +100,6 @@ public:
 
     /** @brief 現在のアラートコンテンツスケールを取得します。 */
     static float getGlobalContentScale();
-    //[/UserMethods]
 
     void paint (juce::Graphics& g) override;
     void resized() override;
@@ -144,7 +108,6 @@ public:
 
 
 private:
-    //[UserVariables]   -- You can add your own custom variables in this section.
 
     /**
      @brief Handles the internal logic for a button click, invokes the callback, and deletes this component.
@@ -169,7 +132,6 @@ private:
     juce::Rectangle<int> contentBounds;
 
     static float globalContentScale;
-    //[/UserVariables]
 
     //==============================================================================
     std::unique_ptr<juce::Label> labelTitle;
@@ -184,7 +146,4 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (R2AlertComponent)
 };
 
-//[EndFile] You can add extra defines here...
 }   //  namespace r2juce
-//[/EndFile]
-

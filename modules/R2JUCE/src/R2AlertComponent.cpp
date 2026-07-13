@@ -1,40 +1,13 @@
-/*
-  ==============================================================================
-
-  This is an automatically generated GUI class created by the Projucer!
-
-  Be careful when adding custom code to these files, as only the code within
-  the "//[xyz]" and "//[/xyz]" sections will be retained when the file is loaded
-  and re-saved.
-
-  Created with Projucer version: 7.0.12
-
-  ------------------------------------------------------------------------------
-
-  The Projucer is part of the JUCE library.
-  Copyright (c) 2020 - Raw Material Software Limited.
-
-  ==============================================================================
-*/
-
-//[Headers] You can add your own extra header files here...
-//[/Headers]
-
 #include "R2AlertComponent.h"
 
-
-//[MiscUserDefs] You can add your own user definitions and misc code here...
 namespace r2juce {
 
 float R2AlertComponent::globalContentScale = 1.0f;
-//[/MiscUserDefs]
 
 //==============================================================================
 R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String& title, const juce::String& message, const juce::StringArray& buttonLabels, bool showProgressBar, std::function<void(int)> callback)
     : parentComponent (parent), onResult (callback), isProgressBarVisible (showProgressBar)
 {
-    //[Constructor_pre] You can add your own custom stuff here..
-    //[/Constructor_pre]
 
     labelTitle.reset (new juce::Label (juce::String(),
                                        TRANS ("(Placeholder)")));
@@ -77,7 +50,6 @@ R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String&
     addAndMakeVisible (progressBar.get());
 
 
-    //[UserPreSize]
     jassert (parent != nullptr);
     parent->addAndMakeVisible (this);
 
@@ -100,12 +72,7 @@ R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String&
     else {
         progressBar->setVisible(false);
     }
-    //[/UserPreSize]
 
-    setSize (568, 320);
-
-
-    //[Constructor] You can add your own custom stuff here..
     setSize (parent->getWidth(), parent->getHeight());
     setTopLeftPosition(0, 0);
     setWantsKeyboardFocus(true);
@@ -114,15 +81,12 @@ R2AlertComponent::R2AlertComponent (juce::Component* parent, const juce::String&
     updateButtonFocus();
     applyContentScaleIfNeeded();
     parentComponent->addComponentListener(this);
-    //[/Constructor]
 }
 
 R2AlertComponent::~R2AlertComponent()
 {
-    //[Destructor_pre]. You can add your own custom destruction code here..
     if (parentComponent != nullptr)
         parentComponent->removeComponentListener (this);
-    //[/Destructor_pre]
 
     labelTitle = nullptr;
     labelMessage = nullptr;
@@ -132,63 +96,47 @@ R2AlertComponent::~R2AlertComponent()
     progressBar = nullptr;
 
 
-    //[Destructor]. You can add your own custom destruction code here..
     progressBar = nullptr;
-    //[/Destructor]
 }
 
 //==============================================================================
 void R2AlertComponent::paint (juce::Graphics& g)
 {
-    //[UserPrePaint] Add your own custom painting code here..
-    //[/UserPrePaint]
-
     g.fillAll (juce::Colour (0xc0000000));
 
     {
         int x = (getWidth() / 2) - (proportionOfWidth (0.9155f) / 2), y = (getHeight() / 2) - (proportionOfHeight (0.5250f) / 2), width = proportionOfWidth (0.9155f), height = proportionOfHeight (0.5250f);
-        juce::Colour fillColour = juce::Colour (0xff323e44);
-        //[UserPaintCustomArguments] Customize the painting arguments here..
-        //[/UserPaintCustomArguments]
+        juce::Colour fillColour = juce::Colours::transparentBlack;
         g.setColour (fillColour);
         g.fillRect (x, y, width, height);
     }
 
-    //[UserPaint] Add your own custom painting code here..
-/*
-    const auto scale = getContentScale();
-    if (scale > 1.0f)
-    {
-        auto bounds = contentBounds;
-        if (bounds.isEmpty())
-        {
-            const int width = juce::roundToInt (520.0f * scale);
-            const int height = juce::roundToInt (168.0f * scale);
-            bounds = juce::Rectangle<int>((getWidth() - width) / 2,
-                                          (getHeight() - height) / 2,
-                                          width,
-                                          height);
-        }
+    g.fillAll (juce::Colour (0xc0000000));
 
-        g.setColour (juce::Colour (0xff323e44));
-        g.fillRect (bounds);
+    auto panelBounds = contentBounds;
+    if (panelBounds.isEmpty())
+    {
+        const auto scale = getContentScale();
+        const auto fallbackBounds = getLocalBounds().reduced (juce::jmin (16, getWidth() / 8),
+                                                              juce::jmin (16, getHeight() / 8));
+        const auto panelWidth = juce::jmin (juce::roundToInt (520.0f * scale), fallbackBounds.getWidth());
+        const auto panelHeight = juce::jmin (juce::roundToInt (220.0f * scale), fallbackBounds.getHeight());
+        panelBounds = juce::Rectangle<int> (panelWidth, panelHeight).withCentre (fallbackBounds.getCentre());
     }
-*/
-    //[/UserPaint]
+
+    g.setColour (juce::Colour (0xff323e44));
+    g.fillRect (panelBounds);
 }
 
 void R2AlertComponent::resized()
 {
-    //[UserPreResize] Add your own custom resize code here..
-    //[/UserPreResize]
-
     labelTitle->setBounds ((getWidth() / 2) - (proportionOfWidth (0.8592f) / 2), proportionOfHeight (0.2500f), proportionOfWidth (0.8592f), 32);
     labelMessage->setBounds ((getWidth() / 2) - (proportionOfWidth (0.8592f) / 2), proportionOfHeight (0.5000f) - (proportionOfHeight (0.2500f) / 2), proportionOfWidth (0.8592f), proportionOfHeight (0.2500f));
     button1->setBounds (proportionOfWidth (0.2465f) - (proportionOfWidth (0.2113f) / 2), (getHeight() / 2) + 60 - (24 / 2), proportionOfWidth (0.2113f), 24);
     button2->setBounds (proportionOfWidth (0.5000f) - (proportionOfWidth (0.2113f) / 2), (getHeight() / 2) + 60 - (24 / 2), proportionOfWidth (0.2113f), 24);
     button3->setBounds (proportionOfWidth (0.7535f) - (proportionOfWidth (0.2113f) / 2), (getHeight() / 2) + 60 - (24 / 2), proportionOfWidth (0.2113f), 24);
     progressBar->setBounds (proportionOfWidth (0.5000f) - (32 / 2), proportionOfHeight (0.5000f), 32, 32);
-    //[UserResized] Add your own custom resize handling here..
+
     if (numButtons == 1)
     {
         button1->setBounds ((getWidth() / 2) - (120 / 2), (getHeight() / 2) + 60 - (24 / 2), 120, 24);
@@ -202,41 +150,27 @@ void R2AlertComponent::resized()
         button3->setVisible (false);
     }
 
-    //layoutComponentsWithScale (getContentScale());
-    //[/UserResized]
+    layoutComponentsWithScale (getContentScale());
 }
 
 void R2AlertComponent::buttonClicked (juce::Button* buttonThatWasClicked)
 {
-    //[UserbuttonClicked_Pre]
-    //[/UserbuttonClicked_Pre]
-
     if (buttonThatWasClicked == button1.get())
     {
-        //[UserButtonCode_button1] -- add your button handler code here..
         buttonClicked (1);
-        //[/UserButtonCode_button1]
     }
     else if (buttonThatWasClicked == button2.get())
     {
-        //[UserButtonCode_button2] -- add your button handler code here..
         buttonClicked (2);
-        //[/UserButtonCode_button2]
     }
     else if (buttonThatWasClicked == button3.get())
     {
-        //[UserButtonCode_button3] -- add your button handler code here..
         buttonClicked (3);
-        //[/UserButtonCode_button3]
     }
-
-    //[UserbuttonClicked_Post]
-    //[/UserbuttonClicked_Post]
 }
 
 
 
-//[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 bool R2AlertComponent::keyPressed (const juce::KeyPress& key)
 {
     if ((key == juce::KeyPress::spaceKey) || (key == juce::KeyPress::returnKey)) // Space/Enter
@@ -374,6 +308,103 @@ void R2AlertComponent::applyContentScaleIfNeeded()
 
 void R2AlertComponent::layoutComponentsWithScale (float scale)
 {
+    {
+        const auto safeScale = juce::jmax (1.0f, scale);
+        const auto outerMargin = juce::roundToInt (16.0f * safeScale);
+        const auto availableBounds = getLocalBounds().reduced (juce::jmin (outerMargin, getWidth() / 8),
+                                                               juce::jmin (outerMargin, getHeight() / 8));
+
+        if (availableBounds.isEmpty())
+        {
+            contentBounds = {};
+            return;
+        }
+
+        const auto targetWidth = juce::roundToInt (520.0f * safeScale);
+        const auto targetHeight = juce::roundToInt ((isProgressBarVisible ? 250.0f : 220.0f) * safeScale);
+        const auto panelWidth = juce::jmin (targetWidth, availableBounds.getWidth());
+        const auto panelHeight = juce::jmin (targetHeight, availableBounds.getHeight());
+
+        contentBounds = juce::Rectangle<int> (panelWidth, panelHeight).withCentre (availableBounds.getCentre());
+
+        auto content = contentBounds.reduced (juce::jlimit (12, 28, juce::roundToInt (24.0f * safeScale)),
+                                              juce::jlimit (10, 24, juce::roundToInt (20.0f * safeScale)));
+
+        const auto titleHeight = juce::jlimit (24, 40, juce::roundToInt (32.0f * safeScale));
+        const auto gap = juce::jlimit (6, 14, juce::roundToInt (10.0f * safeScale));
+        const auto buttonHeight = juce::jlimit (24, 34, juce::roundToInt (28.0f * safeScale));
+        const auto progressHeight = isProgressBarVisible ? juce::jlimit (12, 24, juce::roundToInt (16.0f * safeScale)) : 0;
+        const auto visibleButtonCount = juce::jlimit (1, 3, numButtons);
+        const auto buttonRows = (visibleButtonCount > 1 && content.getWidth() < 260) ? visibleButtonCount : 1;
+        const auto buttonAreaHeight = (buttonRows * buttonHeight) + ((buttonRows - 1) * gap);
+        const auto progressAreaHeight = isProgressBarVisible ? progressHeight + gap : 0;
+        const auto reservedBottomHeight = progressAreaHeight + buttonAreaHeight;
+
+        if (labelTitle != nullptr)
+            labelTitle->setBounds (content.removeFromTop (juce::jmin (titleHeight, content.getHeight())));
+
+        content.removeFromTop (juce::jmin (gap, content.getHeight()));
+
+        auto bottomArea = content.removeFromBottom (juce::jmin (reservedBottomHeight, content.getHeight()));
+
+        if (labelMessage != nullptr)
+            labelMessage->setBounds (content);
+
+        if (progressBar != nullptr)
+        {
+            progressBar->setVisible (isProgressBarVisible);
+
+            if (isProgressBarVisible)
+            {
+                auto progressArea = bottomArea.removeFromTop (juce::jmin (progressHeight, bottomArea.getHeight()));
+                progressBar->setBounds (progressArea);
+                bottomArea.removeFromTop (juce::jmin (gap, bottomArea.getHeight()));
+            }
+        }
+
+        juce::TextButton* buttons[] = { button1.get(), button2.get(), button3.get() };
+
+        for (int i = 0; i < 3; ++i)
+            if (buttons[i] != nullptr)
+                buttons[i]->setVisible (i < visibleButtonCount);
+
+        if (visibleButtonCount == 1)
+        {
+            if (button1 != nullptr)
+            {
+                auto row = bottomArea.removeFromTop (juce::jmin (buttonHeight, bottomArea.getHeight()));
+                button1->setBounds (row.withSizeKeepingCentre (juce::jmin (120, row.getWidth()), row.getHeight()));
+            }
+        }
+        else if (buttonRows > 1)
+        {
+            for (int i = 0; i < visibleButtonCount; ++i)
+            {
+                auto row = bottomArea.removeFromTop (juce::jmin (buttonHeight, bottomArea.getHeight()));
+                if (buttons[i] != nullptr)
+                    buttons[i]->setBounds (row);
+
+                bottomArea.removeFromTop (juce::jmin (gap, bottomArea.getHeight()));
+            }
+        }
+        else
+        {
+            const auto totalGap = gap * (visibleButtonCount - 1);
+            const auto buttonWidth = (bottomArea.getWidth() - totalGap) / visibleButtonCount;
+            auto row = bottomArea.removeFromTop (juce::jmin (buttonHeight, bottomArea.getHeight()));
+
+            for (int i = 0; i < visibleButtonCount; ++i)
+            {
+                if (buttons[i] != nullptr)
+                    buttons[i]->setBounds (row.removeFromLeft (buttonWidth));
+
+                row.removeFromLeft (gap);
+            }
+        }
+    }
+
+    return;
+
     const auto centreX = getWidth() / 2;
     const auto centreY = getHeight() / 2;
 
@@ -452,57 +483,5 @@ void R2AlertComponent::layoutComponentsWithScale (float scale)
                                 progressHeight);
     }
 }
+
 }   //  namespace r2juce
-//[/MiscUserCode]
-
-
-//==============================================================================
-#if 0
-/*  -- Projucer information section --
-
-    This is where the Projucer stores the metadata that describe this GUI layout, so
-    make changes in here at your peril!
-
-BEGIN_JUCER_METADATA
-
-<JUCER_COMPONENT documentType="Component" className="R2AlertComponent" componentName=""
-                 parentClasses="public juce::Component, public juce::ComponentListener"
-                 constructorParams="juce::Component* parent, const juce::String&amp; title, const juce::String&amp; message, const juce::StringArray&amp; buttonLabels, bool showProgressBar, std::function&lt;void(int)&gt; callback"
-                 variableInitialisers="parentComponent (parent), onResult (callback), isProgressBarVisible (showProgressBar)"
-                 snapPixels="8" snapActive="1" snapShown="1" overlayOpacity="0.330"
-                 fixedSize="1" initialWidth="568" initialHeight="320">
-  <BACKGROUND backgroundColour="c0000000">
-    <RECT pos="0Cc 0Cc 91.549% 52.5%" fill="solid: ff323e44" hasStroke="0"/>
-  </BACKGROUND>
-  <LABEL name="" id="77b9c3f4dabcf403" memberName="labelTitle" virtualName=""
-         explicitFocusOrder="0" pos="0Cc 25% 85.915% 32" edTextCol="ff000000"
-         edBkgCol="0" labelText="(Placeholder)" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="20.0" kerning="0.0" bold="0" italic="0" justification="33"/>
-  <LABEL name="" id="7e6f7a3568e8ae72" memberName="labelMessage" virtualName=""
-         explicitFocusOrder="0" pos="0Cc 50%c 85.915% 25%" edTextCol="ff000000"
-         edBkgCol="0" labelText="label text&#10;asdasd&#10;" editableSingleClick="0"
-         editableDoubleClick="0" focusDiscardsChanges="0" fontname="Default font"
-         fontsize="15.0" kerning="0.0" bold="0" italic="0" justification="9"/>
-  <TEXTBUTTON name="" id="2940563e6100fb09" memberName="button1" virtualName=""
-              explicitFocusOrder="0" pos="24.648%c 60Cc 21.127% 24" bgColOff="ff505050"
-              buttonText="1" connectedEdges="0" needsCallback="1" radioGroupId="0"/>
-  <TEXTBUTTON name="" id="76c11804a4ff9a75" memberName="button2" virtualName=""
-              explicitFocusOrder="0" pos="50%c 60Cc 21.127% 24" bgColOff="ff505050"
-              buttonText="2" connectedEdges="0" needsCallback="1" radioGroupId="0"/>
-  <TEXTBUTTON name="" id="213a4c7b38492acb" memberName="button3" virtualName=""
-              explicitFocusOrder="0" pos="75.352%c 60Cc 21.127% 24" bgColOff="ff505050"
-              buttonText="3" connectedEdges="0" needsCallback="1" radioGroupId="0"/>
-  <GENERICCOMPONENT name="" id="2b1bfb5efa8b1aac" memberName="progressBar" virtualName="juce::ProgressBar"
-                    explicitFocusOrder="0" pos="50%c 50% 32 32" class="juce::Component"
-                    params="currentProgress, juce::ProgressBar::Style::circular"/>
-</JUCER_COMPONENT>
-
-END_JUCER_METADATA
-*/
-#endif
-
-
-//[EndFile] You can add extra defines here...
-//[/EndFile]
-
