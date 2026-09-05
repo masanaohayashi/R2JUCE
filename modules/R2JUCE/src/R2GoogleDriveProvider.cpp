@@ -464,7 +464,7 @@ void R2GoogleDriveProvider::findFileByPath(const juce::StringArray& pathParts, c
                         obj->setProperty("name", file.name);
                         obj->setProperty("mimeType", file.mimeType);
                         obj->setProperty("modifiedTime", file.modifiedTime.toISO8601(true));
-                        obj->setProperty("size", file.size);
+                        obj->setProperty("size", juce::int64 (file.size));
                         callback(true, {}, juce::JSON::toString(juce::var(obj.get())));
                     }
                     else
