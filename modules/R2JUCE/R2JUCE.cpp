@@ -20,3 +20,5 @@
 #include "src/R2CloudManager.cpp"
 #include "src/R2CloudAuthComponent.cpp"
 #include "src/R2AlertComponent.cpp"
+
+#include "src/R2CharacterLcd.cpp"
