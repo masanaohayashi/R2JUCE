@@ -39,3 +39,5 @@ END_JUCE_MODULE_DECLARATION
 #if JUCE_MAC || JUCE_IOS
 #include "src/R2IcloudDriveProvider.h"
 #endif
+
+#include "src/R2CharacterLcd.h"
