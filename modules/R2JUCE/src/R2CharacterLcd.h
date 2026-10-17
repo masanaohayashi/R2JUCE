@@ -62,6 +62,13 @@ public:
     void write(int column, int row, std::u32string_view);
     void setCursor(Cursor);
     void setDisplayEnabled(bool);
+    // A dot turning on or off fades between the unlit and the lit colour over ms (as a liquid crystal's response;
+    // 0 = at once, the default). The cursor's dots too.
+    void setFadeTime(int ms);
+    int getFadeTime() const noexcept { return fadeMs_; }
+    // The fade's clock: the component's own timer calls it (~60 Hz while dots are moving); tests can call it.
+    // True while some dot has not reached its state yet.
+    bool advanceFade(double elapsedMs);
     juce::Point<float> getNaturalSize() const;
     void paint(juce::Graphics&) override;
 
@@ -71,6 +78,8 @@ private:
     void componentPeerChanged() override;
     void componentVisibilityChanged() override;
     void updateTimer();
+    void changed();                       // the dots' states may have changed: repaint (and fade)
+    bool dotLit(int column, int row, int x, int y) const;
     Layout layout_;
     Palette palette_;
     Scaling scaling_ = Scaling::pixelAligned;
@@ -78,6 +87,10 @@ private:
     bool enabled_ = true, blinkOn_ = true;
     std::vector<CharacterCode> cells_;
     std::unordered_map<CharacterCode, Glyph> glyphs_;
+    int fadeMs_ = 0;
+    std::vector<float> level_;            // each dot's brightness 0..1 while fading (row-major over the whole panel)
+    bool fading_ = false;
+    double lastTickMs_ = 0, blinkPhaseMs_ = 0;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(R2CharacterLcd)
 };
 }

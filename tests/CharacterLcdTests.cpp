@@ -1,5 +1,6 @@
 #include "../modules/R2JUCE/src/R2CharacterLcd.h"
 #include "../modules/R2JUCE/src/R2Hd44780A00Font.h"
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 static void require(bool ok, const char* message)
@@ -112,6 +113,28 @@ int main(int argc, char** argv)
     lcd.setDisplayEnabled(true);
     require(render().getPixelAt(2,2)==juce::Colours::green, "display state lost on disable");
     require(!lcd.loadStandardCharacterSet(), "standard font accepted incompatible cell dimensions");
+    {   // the fade: a dot turning on goes from the unlit to the lit colour over the fade time, and back
+        r2juce::R2CharacterLcd f;
+        r2juce::R2CharacterLcd::Layout l;
+        l.columns=1; l.rows=1; l.glyphWidth=1; l.glyphHeight=1; l.dotGapX=0; l.dotGapY=0;
+        l.characterGap=0; l.padding=juce::BorderSize<float>(0);
+        require(f.setLayout(l), "fade layout");
+        f.setSize(1,1);
+        f.setPalette({juce::Colour(0xffffffff),juce::Colour(0xff000000),juce::Colour(0xff000000)});
+        require(f.registerCharacter(1,{{1}}) && f.registerCharacter(2,{{0}}), "fade glyphs");
+        f.setFadeTime(300);
+        f.setCell(0,0,2); f.advanceFade(0);
+        auto px=[&] { juce::Image i(juce::Image::RGB,1,1,true); juce::Graphics g(i); f.paint(g); return i.getPixelAt(0,0).getBrightness(); };
+        require(px()<0.01f, "fade: the first state at once");
+        f.setCell(0,0,1);
+        require(px()<0.01f, "fade: no jump on the change");
+        require(f.advanceFade(150) && std::abs(px()-0.5f)<0.05f, "fade: half way at half the time");
+        require(!f.advanceFade(150) && px()>0.99f, "fade: lit at the fade time, and done");
+        f.setCell(0,0,2);
+        require(f.advanceFade(75) && std::abs(px()-0.75f)<0.05f, "fade: out the same way");
+        f.setFadeTime(0);
+        require(px()<0.01f, "fade off: at once");
+    }
     {
         r2juce::R2CharacterLcd standard;
         r2juce::R2CharacterLcd::Layout l;

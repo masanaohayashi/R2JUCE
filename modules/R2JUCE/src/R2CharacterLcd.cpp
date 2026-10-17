@@ -56,7 +56,7 @@ bool R2CharacterLcd::loadStandardCharacterSet()
                 glyph.dots.push_back(static_cast<std::uint8_t>((row >> x) & 1U));
         glyphs_[static_cast<CharacterCode>(code)] = std::move(glyph);
     }
-    repaint();
+    changed();
     return true;
 }
 
@@ -67,7 +67,7 @@ bool R2CharacterLcd::registerCharacter(CharacterCode code, const Glyph& glyph)
     const auto found = glyphs_.find(code);
     if (found != glyphs_.end() && found->second.dots == glyph.dots) return true;
     glyphs_[code] = glyph;
-    repaint();
+    changed();
     return true;
 }
 bool R2CharacterLcd::registerCharacterRows(CharacterCode code, const std::array<std::uint8_t, 8>& rows)
@@ -80,19 +80,19 @@ bool R2CharacterLcd::registerCharacterRows(CharacterCode code, const std::array<
             glyph.dots.push_back(static_cast<std::uint8_t>((row >> x) & 1U));
     return registerCharacter(code, glyph);
 }
-void R2CharacterLcd::removeCharacter(CharacterCode c) { if (glyphs_.erase(c)) repaint(); }
-void R2CharacterLcd::clearCharacterSet() { glyphs_.clear(); repaint(); }
+void R2CharacterLcd::removeCharacter(CharacterCode c) { if (glyphs_.erase(c)) changed(); }
+void R2CharacterLcd::clearCharacterSet() { glyphs_.clear(); changed(); }
 void R2CharacterLcd::clear(CharacterCode c)
 {
     if (std::all_of(cells_.begin(), cells_.end(), [c](auto v) { return v == c; })) return;
     std::fill(cells_.begin(), cells_.end(), c);
-    repaint();
+    changed();
 }
 bool R2CharacterLcd::setCell(int column, int row, CharacterCode c)
 {
     if (column < 0 || column >= layout_.columns || row < 0 || row >= layout_.rows) return false;
     auto& cell = cells_[static_cast<std::size_t>(row * layout_.columns + column)];
-    if (cell != c) { cell = c; repaint(); }
+    if (cell != c) { cell = c; changed(); }
     return true;
 }
 void R2CharacterLcd::write(int column, int row, std::u32string_view text)
@@ -108,27 +108,91 @@ void R2CharacterLcd::setCursor(Cursor c)
         && cursor_.blinkOverlay == c.blinkOverlay && cursor_.blinkPeriodMs == c.blinkPeriodMs)
         return;
     cursor_ = c;
-    blinkOn_ = true;
+    blinkOn_ = true; blinkPhaseMs_ = 0;
     updateTimer();
-    repaint();
+    changed();
 }
 void R2CharacterLcd::setDisplayEnabled(bool e)
 {
     if (enabled_ == e) return;
     enabled_ = e;
     updateTimer();
-    repaint();
+    changed();
 }
 // A parent can show/hide this LCD without changing its own visible flag.
 void R2CharacterLcd::componentPeerChanged() { updateTimer(); }
 void R2CharacterLcd::componentVisibilityChanged() { updateTimer(); }
+// One timer for both: the cursor's blink (its half period), and ~60 Hz while dots fade.
 void R2CharacterLcd::updateTimer()
 {
-    if (enabled_ && isShowing() && cursor_.blinkOverlay != Cursor::Style::hidden)
-        startTimer(cursor_.blinkPeriodMs / 2);
+    const bool blink = enabled_ && isShowing() && cursor_.blinkOverlay != Cursor::Style::hidden;
+    if (fading_ && isShowing()) { if (getTimerInterval() != 16) { lastTickMs_ = juce::Time::getMillisecondCounterHiRes(); startTimer(16); } }
+    else if (blink) startTimer(cursor_.blinkPeriodMs / 2);
     else stopTimer();
 }
-void R2CharacterLcd::timerCallback() { blinkOn_ = !blinkOn_; repaint(); }
+void R2CharacterLcd::timerCallback()
+{
+    const double now = juce::Time::getMillisecondCounterHiRes();
+    const double dt = getTimerInterval() == 16 ? now - lastTickMs_ : cursor_.blinkPeriodMs / 2.0;
+    lastTickMs_ = now;
+    if (cursor_.blinkOverlay != Cursor::Style::hidden) {
+        blinkPhaseMs_ += dt;
+        if (blinkPhaseMs_ >= cursor_.blinkPeriodMs / 2.0) { blinkPhaseMs_ = 0; blinkOn_ = !blinkOn_; changed(); }
+    }
+    if (fading_) { advanceFade(dt); repaint(); }
+    updateTimer();
+}
+
+void R2CharacterLcd::setFadeTime(int ms)
+{
+    fadeMs_ = std::max(0, ms);
+    level_.clear(); fading_ = false;
+    updateTimer();
+    repaint();
+}
+
+void R2CharacterLcd::changed()
+{
+    repaint();
+    if (fadeMs_ <= 0) return;
+    fading_ = true;                       // (advanceFade finds out whether anything moves)
+    updateTimer();
+}
+
+bool R2CharacterLcd::dotLit(int column, int row, int x, int y) const
+{
+    const auto glyph = glyphs_.find(cells_[static_cast<std::size_t>(row * layout_.columns + column)]);
+    const bool cursorHere = cursor_.column == column && cursor_.row == row;
+    const auto cursorDot = [this, y](Cursor::Style style) {
+        return style == Cursor::Style::block
+            || (style == Cursor::Style::underline && y == layout_.glyphHeight - 1);
+    };
+    return enabled_ && ((glyph != glyphs_.end()
+        && glyph->second.dots[static_cast<std::size_t>(y * layout_.glyphWidth + x)] != 0)
+        || (cursorHere && (cursorDot(cursor_.style) || (blinkOn_ && cursorDot(cursor_.blinkOverlay)))));
+}
+
+bool R2CharacterLcd::advanceFade(double elapsedMs)
+{
+    const int w = layout_.columns * layout_.glyphWidth, n = w * layout_.rows * layout_.glyphHeight;
+    const bool first = level_.size() != static_cast<std::size_t>(n);
+    if (first) level_.assign(static_cast<std::size_t>(n), 0.0f);
+    const float step = fadeMs_ > 0 ? static_cast<float>(elapsedMs / fadeMs_) : 1.0f;
+    bool moving = false;
+    for (int row = 0; row < layout_.rows; ++row)
+        for (int column = 0; column < layout_.columns; ++column)
+            for (int y = 0; y < layout_.glyphHeight; ++y)
+                for (int x = 0; x < layout_.glyphWidth; ++x)
+                {
+                    auto& l = level_[static_cast<std::size_t>((row * layout_.glyphHeight + y) * w + column * layout_.glyphWidth + x)];
+                    const float target = dotLit(column, row, x, y) ? 1.0f : 0.0f;
+                    if (first) { l = target; continue; }      // (the first frame as it is)
+                    l = l < target ? std::min(target, l + step) : std::max(target, l - step);
+                    moving = moving || l != target;
+                }
+    fading_ = moving;
+    return moving;
+}
 
 juce::Point<float> R2CharacterLcd::getNaturalSize() const
 {
@@ -161,28 +225,28 @@ void R2CharacterLcd::paint(juce::Graphics& g)
     auto x0 = (getWidth() - (left + right + layout_.columns * cw + (layout_.columns - 1) * cg)) / 2 + left;
     auto y0 = (getHeight() - (top + bottom + layout_.rows * ch + (layout_.rows - 1) * lg)) / 2 + top;
     if (aligned) { x0 = std::round(x0 * physical) / physical; y0 = std::round(y0 * physical) / physical; }
-    juce::RectangleList<float> on, off;
+    // the dots by brightness: unlit, lit, and (fading) 15 steps between
+    constexpr int kSteps = 16;
+    juce::RectangleList<float> shade[kSteps + 1];
+    const int w = layout_.columns * layout_.glyphWidth;
+    const bool levels = fadeMs_ > 0 && level_.size() == static_cast<std::size_t>(w * layout_.rows * layout_.glyphHeight);
     for (int row = 0; row < layout_.rows; ++row)
         for (int column = 0; column < layout_.columns; ++column)
-        {
-            const auto glyph = glyphs_.find(cells_[static_cast<std::size_t>(row * layout_.columns + column)]);
-            const bool cursorHere = cursor_.column == column && cursor_.row == row;
             for (int y = 0; y < layout_.glyphHeight; ++y)
                 for (int x = 0; x < layout_.glyphWidth; ++x)
                 {
-                    const auto cursorDot = [this, y](Cursor::Style style) {
-                        return style == Cursor::Style::block
-                            || (style == Cursor::Style::underline && y == layout_.glyphHeight - 1);
-                    };
-                    const bool lit = enabled_ && ((glyph != glyphs_.end()
-                        && glyph->second.dots[static_cast<std::size_t>(y * layout_.glyphWidth + x)] != 0)
-                        || (cursorHere && (cursorDot(cursor_.style)
-                            || (blinkOn_ && cursorDot(cursor_.blinkOverlay)))));
-                    (lit ? on : off).addWithoutMerging({x0 + column * (cw + cg) + x * (dw + gx),
+                    int k = dotLit(column, row, x, y) ? kSteps : 0;
+                    if (levels)
+                        k = juce::roundToInt(level_[static_cast<std::size_t>((row * layout_.glyphHeight + y) * w
+                                                                           + column * layout_.glyphWidth + x)] * kSteps);
+                    shade[k].addWithoutMerging({x0 + column * (cw + cg) + x * (dw + gx),
                         y0 + row * (ch + lg) + y * (dh + gy), dw, dh});
                 }
-        }
-    g.setColour(palette_.unlit); g.fillRectList(off);
-    g.setColour(palette_.lit); g.fillRectList(on);
+    for (int k = 0; k <= kSteps; ++k)
+    {
+        if (shade[k].isEmpty()) continue;
+        g.setColour(palette_.unlit.interpolatedWith(palette_.lit, static_cast<float>(k) / kSteps));
+        g.fillRectList(shade[k]);
+    }
 }
 }
