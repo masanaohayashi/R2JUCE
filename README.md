@@ -63,6 +63,9 @@ RPN/NRPN select and data entry stay paired. An RCP's same-named `.WRD`
 companion and its MAG images load as text-screen frames when asked for.
 MDF archives are decoded by a C++ adaptation of
 [ExtractMDF](https://github.com/masanaohayashi/ExtractMDF) (MIT license).
+With `loadCm6`, a Recomposer CM6 control file for the MT-32 / CM-32L / CM-64
+loads too (on its own, as an RCP's same-named companion, or inside the MDF);
+its settings go out as SysEx before the first musical event.
 
 `r2juce::SequencePlayer` plays a loaded `SequenceFile` from an audio callback.
 `load()`, `play()`, `pause()` and `stop()` may be called from any thread;
@@ -84,6 +87,12 @@ player.process(numSamples, sampleRate,
 
 if (player.takeFinished()) { /* on the message thread: start the next track */ }
 ```
+
+For a synth that takes sample-stamped MIDI for a whole block,
+`processStamped(numSamples, sampleRate, send, other)` instead sends every event
+due in the block to `send(data, size, sampleOffset)` at its own sample, after
+`other()` has sent the caller's own events, and the caller renders the block in
+one go.
 
 Loading or stopping releases every note and resets the controllers; pausing
 releases the notes. At the end of the song (plus one bar of tail) playback

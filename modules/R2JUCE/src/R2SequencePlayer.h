@@ -4,7 +4,9 @@
 // runs on the audio thread, which owns the playback clock.
 //
 // Events go out in file order at 1 ms steps of the audio clock, so a large
-// host block cannot quantise note starts. Loading a sequence or stopping
+// host block cannot quantise note starts (process()), or for a synth that
+// takes sample-stamped MIDI, each at its own sample of the block
+// (processStamped()). Loading a sequence or stopping
 // releases every note and resets the controllers; pausing releases the
 // notes. At the end of the sequence (plus one bar) playback rewinds and
 // stops, and takeFinished() reports it once.
@@ -93,13 +95,37 @@ public:
         other (rendered);
 
         if (playingNow && position > active->totalSeconds())
+            finish();
+        positionForUi.store (position, std::memory_order_release);
+    }
+
+    // Audio thread, for a synth that takes sample-stamped MIDI for a whole
+    // block: every song event due in these `numSamples` goes to
+    // send (const uint8_t* data, int size, int sampleOffset) at its own
+    // sample, in file order; the caller then renders the block in one go.
+    // other() sends the caller's own events (host MIDI) after the transport's
+    // notes-off and resets and before the song's, for a synth whose clock
+    // never goes back.
+    template <typename SendAt, typename Other>
+    void processStamped (int numSamples, double sampleRate, SendAt&& send, Other&& other) noexcept
+    {
+        auto sendNow = [&send] (const std::uint8_t* data, int size) { send (data, size, 0); };
+        applyCommands (sendNow);
+        other();
+        if (playing.load (std::memory_order_relaxed) && active != nullptr && sampleRate > 0.0)
         {
-            // Natural completion rewinds like Stop, so the next Play starts
-            // at the first event.
-            playing.store (false, std::memory_order_release);
-            finished.store (true, std::memory_order_release);
-            position = 0.0;
-            next = 0;
+            const auto blockEnd = position + numSamples / sampleRate;
+            const auto& events = active->events;
+            while (next < events.size() && events[next].seconds < blockEnd)
+            {
+                const auto& event = events[next++];
+                const auto offset = std::clamp (static_cast<int> ((event.seconds - position) * sampleRate),
+                                                0, std::max (0, numSamples - 1));
+                send (event.bytes.data(), static_cast<int> (event.bytes.size()), offset);
+            }
+            position = blockEnd;
+            if (position > active->totalSeconds())
+                finish();
         }
         positionForUi.store (position, std::memory_order_release);
     }
@@ -158,6 +184,15 @@ private:
             position = 0.0;
             next = 0;
         }
+    }
+
+    // Natural completion rewinds like Stop, so the next Play starts at the first event.
+    void finish() noexcept
+    {
+        playing.store (false, std::memory_order_release);
+        finished.store (true, std::memory_order_release);
+        position = 0.0;
+        next = 0;
     }
 
     template <typename Send>

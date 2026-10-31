@@ -63,8 +63,10 @@ struct SequenceFile
     double songEndSeconds = 0.0;
     double lastBarSeconds = 2.0;
 
-    /** Loads a UTF-8 path. Returns false and fills in `error` if no usable SMF/RCP v2 sequence is found (including inside LZM MDF0). */
-    bool load (const std::string& path, std::string& error, bool loadWrd = true);
+    /** Loads a UTF-8 path. Returns false and fills in `error` if no usable SMF/RCP v2 sequence is found (including inside LZM MDF0).
+        With `loadCm6`, also a Recomposer CM6 control file for the MT-32 / CM-32L / CM-64: a .cm6 on its own, an RCP's
+        same-named one, or one inside the MDF; its settings go out as SysEx before the first musical event. */
+    bool load (const std::string& path, std::string& error, bool loadWrd = true, bool loadCm6 = false);
 
     /** The song plus one bar of tail, so releases and reverb are not cut off. */
     double totalSeconds() const { return songEndSeconds + lastBarSeconds; }
