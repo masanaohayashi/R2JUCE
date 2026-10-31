@@ -9,7 +9,7 @@
     name:           R2 JUCE Module
     description:    A collection of custom JUCE components
     license:        MIT
-    dependencies:   juce_gui_basics, juce_audio_devices
+    dependencies:   juce_gui_basics, juce_audio_devices, juce_audio_processors
     website:        https://studio-r.tokyo/
     minimumCppStandard: 17
 END_JUCE_MODULE_DECLARATION
@@ -17,6 +17,7 @@ END_JUCE_MODULE_DECLARATION
 
 #include <juce_gui_basics/juce_gui_basics.h>
 #include <juce_audio_devices/juce_audio_devices.h>
+#include <juce_audio_processors/juce_audio_processors.h>
 
 // Include all public headers of your module here.
 #include "src/R2CloudStorageProvider.h"

@@ -1,62 +1,36 @@
-/*
-  ==============================================================================
-
-  This is an automatically generated GUI class created by the Projucer!
-
-  Be careful when adding custom code to these "//[xyz]" and "//[/xyz]" sections.
-
-  Created with Projucer version: 7.0.12
-
-  ------------------------------------------------------------------------------
-
-  The Projucer is part of the JUCE library.
-  Copyright (c) 2020 - Raw Material Software Limited.
-
-  ==============================================================================
-*/
-
 #pragma once
 
-//[Headers]     -- You can add your own extra header files here --
 #include <JuceHeader.h>
+
 namespace r2juce {
-//[/Headers]
 
-
-//==============================================================================
-/**
- //[Comments]
-  @brief A component that displays a modal alert dialog.
-
-  This class is displayed as an overlay on top of a parent component
-  to present information and prompt the user for a response.
-  It can have a title, a message, and 1 to 3 custom buttons.
-  It also supports keyboard navigation (arrow keys, Enter, Esc).
-  The result is returned via a callback function passed in the constructor.
- //[/Comments]
- */
 class R2AlertComponent  : public juce::Component,
+                          public juce::ComponentListener,
                           public juce::Button::Listener
 {
 public:
     //==============================================================================
-    /**
-     @brief Constructs an R2AlertComponent.
-     @param parent       The parent component on which to display this alert. Must not be nullptr.
-     @param title        The title displayed at the top of the dialog.
-     @param message      The main message text to display in the dialog.
-     @param buttonLabels An array of strings for the button labels. Must contain 1 to 3 elements.
-     @param showProgressBar If true, a progress bar will be shown below the message.
-     @param callback     The function to call when a button is clicked. It receives the 1-based
-                         index of the button that was pressed.
-    */
     R2AlertComponent (juce::Component* parent, const juce::String& title, const juce::String& message, const juce::StringArray& buttonLabels, bool showProgressBar, std::function<void(int)> callback);
-
-    /** @brief Destructor. */
     ~R2AlertComponent() override;
 
     //==============================================================================
-    //[UserMethods]     -- You can add your own custom methods in this section.
+    void componentMovedOrResized(juce::Component& component, bool /*wasMoved*/, bool wasResized) override {
+        if (wasResized && &component == getParentComponent())
+            setBounds(component.getLocalBounds());
+    }
+    
+    void componentBeingDeleted(juce::Component& component) override {
+        if (&component == parentComponent.getComponent()) {
+            parentComponent->removeComponentListener (this);
+
+            parentComponent = nullptr;
+            isClosing = true;
+            delete this;
+
+            return;
+
+        }
+    }
 
     /**
      @brief Handles keyboard input events.
@@ -127,21 +101,13 @@ public:
     /** @brief 現在のアラートコンテンツスケールを取得します。 */
     static float getGlobalContentScale();
 
-    //[/UserMethods]
-
-    /** @brief Paints the component. (Overridden from juce::Component). */
     void paint (juce::Graphics& g) override;
-
-    /** @brief Adjusts the layout of child components when the component's size is changed. (Overridden from juce::Component). */
     void resized() override;
-
-    /** @brief Handles button click events. (Overridden from juce::Button::Listener). */
     void buttonClicked (juce::Button* buttonThatWasClicked) override;
 
 
 
 private:
-    //[UserVariables]   -- You can add your own custom variables in this section.
 
     /**
      @brief Handles the internal logic for a button click, invokes the callback, and deletes this component.
@@ -155,18 +121,17 @@ private:
     void applyContentScaleIfNeeded();
     void layoutComponentsWithScale (float scale);
 
-    juce::Component* parentComponent;
+    juce::Component::SafePointer<juce::Component> parentComponent;
     std::function<void(int)> onResult;
     int numButtons;
     int selectedButtonIndex;
     bool isProgressBarVisible;
+    bool isClosing { false };
     double currentProgress; // ProgressBar に直接渡す double 変数
-    std::unique_ptr<juce::ProgressBar> progressBar;
+    //std::unique_ptr<juce::ProgressBar> progressBar;
     juce::Rectangle<int> contentBounds;
 
     static float globalContentScale;
-
-    //[/UserVariables]
 
     //==============================================================================
     std::unique_ptr<juce::Label> labelTitle;
@@ -174,13 +139,11 @@ private:
     std::unique_ptr<juce::TextButton> button1;
     std::unique_ptr<juce::TextButton> button2;
     std::unique_ptr<juce::TextButton> button3;
+    std::unique_ptr<juce::ProgressBar> progressBar;
 
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (R2AlertComponent)
 };
 
-//[EndFile] You can add extra defines here...
 }   //  namespace r2juce
-//[/EndFile]
-
