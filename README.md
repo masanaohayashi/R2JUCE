@@ -48,3 +48,43 @@ cmake -S tests -B /tmp/r2-lcd-tests -DJUCE_SOURCE_DIR=/path/to/JUCE -DCMAKE_BUIL
 cmake --build /tmp/r2-lcd-tests --parallel 4
 ctest --test-dir /tmp/r2-lcd-tests --output-on-failure
 ```
+
+## SequenceFile and SequencePlayer
+
+Song files and their playback, in plain C++ (no JUCE): `R2SequenceFile`,
+`R2RcpFile`, `R2WrdFile`, `R2MdfArchive.h` and `R2SequencePlayer.h` build in a
+JUCE project through the module and anywhere else (for example Emscripten) by
+compiling the three `.cpp` files with `src` on the include path.
+
+`r2juce::SequenceFile::load()` reads a Standard MIDI File, an RCP v2 sequence
+(`RCM-PC98V2.0` header) or an LZM-compressed MDF0 archive into one
+time-ordered event list. Events that share a tick keep their file order, so
+RPN/NRPN select and data entry stay paired. An RCP's same-named `.WRD`
+companion and its MAG images load as text-screen frames when asked for.
+MDF archives are decoded by a C++ adaptation of
+[ExtractMDF](https://github.com/masanaohayashi/ExtractMDF) (MIT license).
+
+`r2juce::SequencePlayer` plays a loaded `SequenceFile` from an audio callback.
+`load()`, `play()`, `pause()` and `stop()` may be called from any thread;
+`process()` runs on the audio thread and sends the events at 1 ms steps of
+the audio clock:
+
+```cpp
+r2juce::SequenceFile song;
+std::string error;
+if (song.load(path, error, false))
+    player.load(&song); // the song must outlive its playback
+player.play();
+
+// In the audio callback:
+player.process(numSamples, sampleRate,
+    [&](const uint8_t* data, int size) { synth.sendMidi(data, size); },
+    [&](int offset, int count) { synth.render(left + offset, right + offset, count); },
+    [&](int rendered) { return numSamples; }); // or the position of your next own event
+
+if (player.takeFinished()) { /* on the message thread: start the next track */ }
+```
+
+Loading or stopping releases every note and resets the controllers; pausing
+releases the notes. At the end of the song (plus one bar of tail) playback
+rewinds and stops, and `takeFinished()` reports it once.

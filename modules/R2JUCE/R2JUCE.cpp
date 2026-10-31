@@ -22,3 +22,7 @@
 #include "src/R2AlertComponent.cpp"
 
 #include "src/R2CharacterLcd.cpp"
+
+#include "src/R2SequenceFile.cpp"
+#include "src/R2RcpFile.cpp"
+#include "src/R2WrdFile.cpp"

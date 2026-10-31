@@ -41,3 +41,7 @@ END_JUCE_MODULE_DECLARATION
 #endif
 
 #include "src/R2CharacterLcd.h"
+
+// Song files (SMF, RCP, LZM MDF, WRD) and their playback; plain C++, no JUCE.
+#include "src/R2SequenceFile.h"
+#include "src/R2SequencePlayer.h"
