@@ -2,8 +2,9 @@
 #include "R2RcpFile.h"
 #include "R2MdfArchive.h"
 #include "R2Cm6File.h"
+#include <atomic>
+#include <chrono>
 #include <fstream>
-#include <random>
 
 #include <algorithm>
 #include <cstdio>
@@ -120,10 +121,14 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
             });
             if (song == entries.end())
             { error = "MDF contains no supported MIDI or RCP v2 sequence"; return false; }
-            std::random_device random;
+            // The clock and a counter name it: std::random_device may have no entropy to read
+            // (an Emscripten AudioWorklet throws), and a name taken just moves on to the next.
+            static std::atomic<unsigned> counter { 0 };
+            const auto base = static_cast<unsigned long long> (std::chrono::system_clock::now().time_since_epoch().count());
             for (int attempt = 0; attempt < 32 && temporary.path.empty(); ++attempt)
             {
-                auto candidate = std::filesystem::temp_directory_path() / ("r2juce-mdf-" + std::to_string (random()));
+                auto candidate = std::filesystem::temp_directory_path()
+                               / ("r2juce-mdf-" + std::to_string (base) + "-" + std::to_string (counter++));
                 if (std::filesystem::create_directory (candidate)) temporary.path = std::move (candidate);
             }
             if (temporary.path.empty()) throw std::runtime_error ("Cannot create MDF temporary directory");
