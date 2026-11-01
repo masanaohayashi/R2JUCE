@@ -86,4 +86,9 @@ struct SequenceFile
         lastBarSeconds = 2.0;
     }
 };
+
+/** The song's title as the file has it (normally Shift-JIS), for a playlist: an RCP's title, or an SMF's first
+    track name, also inside an MDF; each run of blanks as one space. Reads only the file, far cheaper than load().
+    "" when there is none or the file cannot be read. */
+std::string readSequenceTitle (const std::string& path);
 } // namespace r2juce

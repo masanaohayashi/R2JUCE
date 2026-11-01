@@ -66,6 +66,102 @@ struct Reader
     }
 };
 
+// The whole file at a UTF-8 path, up to mdf::sizeLimit
+bool readSequenceBytes (const std::string& path, std::vector<uint8_t>& data, std::string& error)
+{
+   #if defined (_WIN32)
+    // JUCE supplies UTF-8 paths; the narrow Windows CRT uses the system code page.
+    const std::filesystem::path nativePath (std::u8string (path.begin(), path.end()));
+    std::FILE* file = _wfopen (nativePath.c_str(), L"rb");
+   #else
+    std::FILE* file = std::fopen (path.c_str(), "rb");
+   #endif
+    if (file == nullptr) { error = "Cannot open: " + path; return false; }
+
+    std::fseek (file, 0, SEEK_END);
+    const long size = std::ftell (file);
+    std::rewind (file);
+    if (size < 0 || static_cast<unsigned long> (size) > mdf::sizeLimit)
+    { std::fclose (file); error = "Sequence file exceeds 256 MiB limit"; return false; }
+    data.assign (static_cast<size_t> (std::max (0L, size)), 0);
+    const bool read = ! data.empty() && std::fread (data.data(), 1, data.size(), file) == data.size();
+    std::fclose (file);
+    if (! read) { error = "Cannot load: " + path; return false; }
+    return true;
+}
+
+// The archive entry an MDF plays: its first RCP v2 or SMF
+bool isSequence (const std::vector<uint8_t>& data)
+{
+    return rcp::isRcpV2 (data) || (data.size() >= 14 && std::memcmp (data.data(), "MThd", 4) == 0);
+}
+
+// An SMF's first track name (meta 03): the song's name in format 0, the conductor track's in format 1
+std::string smfTitle (const std::vector<uint8_t>& data)
+{
+    const auto be32 = [&] (std::size_t at) { return std::size_t (data[at]) << 24 | data[at + 1] << 16 | data[at + 2] << 8 | data[at + 3]; };
+    const std::size_t pos = 8 + be32 (4);
+    if (pos + 8 > data.size() || std::memcmp (data.data() + pos, "MTrk", 4) != 0)
+        return {};
+    Reader r { data.data() + pos + 8, data.data() + std::min (data.size(), pos + 8 + be32 (pos + 4)) };
+    uint8_t running = 0;
+    while (r.ok())
+    {
+        r.varlen();
+        uint8_t status = *r.p;
+        if (status & 0x80) { r.u8(); if (status < 0xf0) running = status; }
+        else               { status = running; if (status == 0) break; }
+
+        if (status == 0xff)
+        {
+            const uint8_t type = r.u8();
+            const uint32_t len = r.varlen();
+            const uint8_t* body = r.p;
+            r.p = std::min (r.end, r.p + len);
+            if (type == 0x03) return std::string (body, r.p);
+        }
+        else if (status == 0xf0 || status == 0xf7) { const uint32_t len = r.varlen(); r.p = std::min (r.end, r.p + len); }
+        else r.p = std::min (r.end, r.p + (((status & 0xf0) == 0xc0 || (status & 0xf0) == 0xd0) ? 1 : 2));
+    }
+    return {};
+}
+
+std::string sequenceTitle (const std::vector<uint8_t>& data)
+{
+    if (data.size() >= 4 && std::memcmp (data.data(), "MDF0", 4) == 0)
+    {
+        for (const auto& entry : mdf::decode (data))
+            if (isSequence (entry.data)) return sequenceTitle (entry.data);
+        return {};
+    }
+    if (rcp::isRcpV2 (data))
+        return data.size() >= 0x60 ? std::string (data.begin() + 0x20, data.begin() + 0x60) : std::string();
+    return data.size() >= 14 && std::memcmp (data.data(), "MThd", 4) == 0 ? smfTitle (data) : std::string();
+}
+
+// Each run of blanks (spaces, NULs, Shift-JIS full-width spaces 81 40) as one space, none at the ends:
+// RCP titles are padded to their 64 bytes, often in the middle too. Walked character by character.
+std::string tidied (const std::string& text)
+{
+    std::string result;
+    bool blankBefore = false;
+    for (std::size_t i = 0; i < text.size();)
+    {
+        const auto c = static_cast<uint8_t> (text[i]);
+        const std::size_t length = ((c >= 0x81 && c <= 0x9f) || (c >= 0xe0 && c <= 0xfc)) && i + 1 < text.size() ? 2 : 1;
+        if (c == ' ' || c == 0 || (length == 2 && c == 0x81 && static_cast<uint8_t> (text[i + 1]) == 0x40))
+            blankBefore = true;
+        else
+        {
+            if (blankBefore && ! result.empty()) result += ' ';
+            result.append (text, i, length);
+            blankBefore = false;
+        }
+        i += length;
+    }
+    return result;
+}
+
 struct RawEvent
 {
     uint32_t tick;
@@ -83,24 +179,9 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
     clear();
     error.clear();
 
-   #if defined (_WIN32)
-    // JUCE supplies UTF-8 paths; the narrow Windows CRT uses the system code page.
-    const std::filesystem::path nativePath (std::u8string (path.begin(), path.end()));
-    std::FILE* file = _wfopen (nativePath.c_str(), L"rb");
-   #else
-    std::FILE* file = std::fopen (path.c_str(), "rb");
-   #endif
-    if (file == nullptr) { error = "Cannot open: " + path; return false; }
-
-    std::fseek (file, 0, SEEK_END);
-    const long size = std::ftell (file);
-    std::rewind (file);
-    if (size < 0 || static_cast<unsigned long> (size) > mdf::sizeLimit)
-    { std::fclose (file); error = "Sequence file exceeds 256 MiB limit"; return false; }
-    std::vector<uint8_t> data (static_cast<size_t> (std::max (0L, size)));
-    const bool read = ! data.empty() && std::fread (data.data(), 1, data.size(), file) == data.size();
-    std::fclose (file);
-    if (! read) { error = "Cannot load: " + path; return false; }
+    std::vector<uint8_t> data;
+    if (! readSequenceBytes (path, data, error))
+        return false;
 
     if (data.size() >= 4 && std::memcmp (data.data(), "MDF0", 4) == 0)
     {
@@ -114,11 +195,7 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
         try
         {
             const auto entries = mdf::decode (data);
-            const auto song = std::find_if (entries.begin(), entries.end(), [] (const auto& entry)
-            {
-                return rcp::isRcpV2 (entry.data)
-                    || (entry.data.size() >= 14 && std::memcmp (entry.data.data(), "MThd", 4) == 0);
-            });
+            const auto song = std::find_if (entries.begin(), entries.end(), [] (const auto& entry) { return isSequence (entry.data); });
             if (song == entries.end())
             { error = "MDF contains no supported MIDI or RCP v2 sequence"; return false; }
             // The clock and a counter name it: std::random_device may have no entropy to read
@@ -324,5 +401,13 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
 
     if (events.empty()) { error = "演奏イベントがありません"; return false; }
     return true;
+}
+
+std::string readSequenceTitle (const std::string& path)
+{
+    std::vector<uint8_t> data;
+    std::string error;
+    try { return readSequenceBytes (path, data, error) ? tidied (sequenceTitle (data)) : std::string(); }
+    catch (const std::exception&) { return {}; }
 }
 } // namespace r2juce

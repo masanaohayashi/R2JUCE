@@ -68,6 +68,9 @@ loads too (on its own, as an RCP's same-named companion, or inside the MDF);
 its settings go out as SysEx before the first musical event.
 `comment` keeps the song's own text as the file has it (normally Shift-JIS):
 an RCP's title and memo, or an SMF's text events.
+`r2juce::readSequenceTitle()` reads just a song's title for a playlist (an RCP's
+title, an SMF's first track name, also inside an MDF), and `R2ShiftJis.h`
+(JUCE, include it in a .cpp) turns such Shift-JIS text into a `juce::String`.
 
 `r2juce::SequencePlayer` plays a loaded `SequenceFile` from an audio callback.
 `load()`, `play()`, `pause()` and `stop()` may be called from any thread;
