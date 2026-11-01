@@ -60,6 +60,9 @@ struct SequenceFile
     std::vector<WrdBackgroundImage> wrdBackgrounds;
     std::string wrdFilePath;
     std::string wrdParseError;
+    /** The song's own text as the file has it (normally Shift-JIS): an RCP's title and memo, or an SMF's
+        text events, one per line. Authors name what the song needs here, e.g. "for CM-64+SN-U110-07". */
+    std::string comment;
     double songEndSeconds = 0.0;
     double lastBarSeconds = 2.0;
 
@@ -78,6 +81,7 @@ struct SequenceFile
         wrdBackgrounds.clear();
         wrdFilePath.clear();
         wrdParseError.clear();
+        comment.clear();
         songEndSeconds = 0.0;
         lastBarSeconds = 2.0;
     }

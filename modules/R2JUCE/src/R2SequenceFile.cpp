@@ -206,6 +206,9 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
         {
             if (! rcp::loadRcpV2 (data, *this, error, loadWrd ? path : std::string {}))
                 return false;
+            // The header's title (0x20, 64 bytes) and memo (0x60, 12 lines of 28)
+            if (data.size() >= 0x1b0)
+                comment.assign (data.begin() + 0x20, data.begin() + 0x1b0);
             if (! loadCm6)
                 return true;
             // Same-stem CM6 works independently of WRD and of the extension case.
@@ -268,7 +271,8 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
                 const uint8_t* body = r.p;
                 r.p = std::min (r.end, r.p + len);
 
-                if (type == 0x51 && len == 3) e.tempo = (body[0] << 16) | (body[1] << 8) | body[2];
+                if (type >= 0x01 && type <= 0x07) { comment.append (body, r.p).push_back ('\n'); continue; }
+                else if (type == 0x51 && len == 3) e.tempo = (body[0] << 16) | (body[1] << 8) | body[2];
                 else if (type == 0x58 && len >= 2) { e.numerator = body[0]; e.denominator = static_cast<uint8_t> (1 << body[1]); }
                 else continue;
             }

@@ -66,6 +66,8 @@ MDF archives are decoded by a C++ adaptation of
 With `loadCm6`, a Recomposer CM6 control file for the MT-32 / CM-32L / CM-64
 loads too (on its own, as an RCP's same-named companion, or inside the MDF);
 its settings go out as SysEx before the first musical event.
+`comment` keeps the song's own text as the file has it (normally Shift-JIS):
+an RCP's title and memo, or an SMF's text events.
 
 `r2juce::SequencePlayer` plays a loaded `SequenceFile` from an audio callback.
 `load()`, `play()`, `pause()` and `stop()` may be called from any thread;
