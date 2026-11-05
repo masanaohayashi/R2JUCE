@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <limits>
 
 namespace r2juce
 {
@@ -169,6 +170,7 @@ struct RawEvent
     std::vector<uint8_t> bytes;
     uint32_t tempo;
     uint8_t numerator, denominator;
+    uint8_t port = 0;
 };
 }
 }
@@ -216,7 +218,8 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
                 output.close();
                 if (! output) throw std::runtime_error ("Cannot stage MDF sequence");
             };
-            write ("song.mid", song->data);
+            const auto stagedName = foldedName (pathFromUtf8 (song->name).extension().string()) == ".r36" ? "song.r36" : "song.mid";
+            write (stagedName, song->data);
             const auto foldedStem = [] (std::string name)
             {
                 name = name.substr (0, name.find_last_of ('.'));
@@ -261,7 +264,7 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
                 // The recursive RCP load discovers this under its synthetic stem.
                 if (control != nullptr && rcp::isRcpV2 (song->data)) write ("song.cm6", control->data);
             }
-            const auto utf8 = (temporary.path / "song.mid").u8string();
+            const auto utf8 = (temporary.path / stagedName).u8string();
             const bool loaded = load (std::string (utf8.begin(), utf8.end()), error, loadWrd, loadCm6);
             if (! wrdFilePath.empty()) wrdFilePath = path;
             if (loaded && control != nullptr && ! rcp::isRcpV2 (song->data))
@@ -281,7 +284,8 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
         }
         if (rcp::isRcpV2 (data))
         {
-            if (! rcp::loadRcpV2 (data, *this, error, loadWrd ? path : std::string {}))
+            if (! rcp::loadRcpV2 (data, *this, error, loadWrd ? path : std::string {},
+                                  foldedName (pathFromUtf8 (path).extension().string()) == ".r36"))
                 return false;
             // The header's title (0x20, 64 bytes) and memo (0x60, 12 lines of 28)
             if (data.size() >= 0x1b0)
@@ -317,21 +321,35 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
     { error = "SMPTE is not supported"; return false; }
 
     std::vector<RawEvent> raw;
-    size_t pos = 8 + ((data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7]);
+    auto be32=[](const uint8_t* p) {
+        return (uint32_t(p[0])<<24)|(uint32_t(p[1])<<16)|(uint32_t(p[2])<<8)|p[3];
+    };
+    const auto headerSize=be32(data.data()+4);
+    if (headerSize<6 || headerSize>data.size()-8)
+    { error="Invalid MIDI header length"; return false; }
+    size_t pos = 8 + size_t(headerSize);
     uint32_t order = 0;
 
-    for (uint16_t track = 0; track < trackCount && pos + 8 <= data.size(); ++track)
+    for (uint16_t track = 0; track < trackCount; ++track)
     {
-        const uint32_t length = (data[pos+4] << 24) | (data[pos+5] << 16) | (data[pos+6] << 8) | data[pos+7];
+        if (pos>data.size() || data.size()-pos<8 || std::memcmp(data.data()+pos,"MTrk",4)!=0)
+        { error="Missing MIDI track"; return false; }
+        const uint32_t length = be32(data.data()+pos+4);
+        if (length>data.size()-pos-8)
+        { error="Truncated MIDI track"; return false; }
         Reader r { data.data() + pos + 8, data.data() + std::min (data.size(), pos + 8 + length) };
         pos += 8 + length;
 
         uint32_t tick = 0;
         uint8_t running = 0;
+        uint8_t port = 0;
 
         while (r.ok())
         {
-            tick += r.varlen();
+            const auto delta=r.varlen();
+            if (!r.ok() || delta>std::numeric_limits<uint32_t>::max()-tick)
+            { error="Truncated or overflowing MIDI event"; return false; }
+            tick += delta;
             uint8_t status = *r.p;
 
             if (status & 0x80) { r.u8(); if (status < 0xf0) running = status; }
@@ -340,22 +358,29 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
             RawEvent e {};
             e.tick = tick;
             e.order = order++;
+            e.port = port;
 
             if (status == 0xff)
             {
                 const uint8_t type = r.u8();
                 const uint32_t len = r.varlen();
+                if (len>size_t(r.end-r.p)) { error="Truncated MIDI metadata"; return false; }
                 const uint8_t* body = r.p;
                 r.p = std::min (r.end, r.p + len);
 
-                if (type >= 0x01 && type <= 0x07) { comment.append (body, r.p).push_back ('\n'); continue; }
-                else if (type == 0x51 && len == 3) e.tempo = (body[0] << 16) | (body[1] << 8) | body[2];
-                else if (type == 0x58 && len >= 2) { e.numerator = body[0]; e.denominator = static_cast<uint8_t> (1 << body[1]); }
+                if (type == 0x21 && len == 1) { port = body[0]; continue; }
+                if (type >= 0x01 && type <= 0x07) { comment.append(body, r.p).push_back('\n'); continue; }
+                if (type == 0x51 && len == 3) e.tempo = (body[0] << 16) | (body[1] << 8) | body[2];
+                else if (type == 0x58 && len >= 2) {
+                    if (body[1]>7) { error="Invalid MIDI time signature"; return false; }
+                    e.numerator = body[0]; e.denominator = static_cast<uint8_t> (1 << body[1]);
+                }
                 else continue;
             }
             else if (status == 0xf0 || status == 0xf7)
             {
                 const uint32_t len = r.varlen();
+                if (len>size_t(r.end-r.p)) { error="Truncated MIDI SysEx"; return false; }
                 const uint8_t* body = r.p;
                 r.p = std::min (r.end, r.p + len);
 
@@ -365,10 +390,13 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
             else
             {
                 const int operands = ((status & 0xf0) == 0xc0 || (status & 0xf0) == 0xd0) ? 1 : 2;
+                if (status<0x80 || status>=0xf0 || size_t(r.end-r.p)<size_t(operands))
+                { error="Invalid MIDI channel message"; return false; }
                 e.bytes.push_back (status);
                 for (int i = 0; i < operands; ++i) e.bytes.push_back (r.u8());
             }
 
+            if (raw.size()>=2000000) { error="Too many MIDI events"; return false; }
             raw.push_back (std::move (e));
         }
     }
@@ -392,7 +420,7 @@ bool SequenceFile::load (const std::string& path, std::string& error, bool loadW
 
         if (! e.bytes.empty())
         {
-            events.push_back ({ seconds, e.bytes });
+            events.push_back ({ seconds, e.bytes, e.port });
             songEndSeconds = seconds;
         }
 

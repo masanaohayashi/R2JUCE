@@ -17,6 +17,8 @@
 #include <array>
 #include <atomic>
 #include <cstdint>
+#include <bitset>
+#include <type_traits>
 
 namespace r2juce
 {
@@ -65,6 +67,7 @@ public:
 
     // Audio thread. Runs `numSamples` of audio: song events go to
     // send (const uint8_t* data, int size), and render (int offset, int count)
+    // A three-argument send receives (data, size, port); the old sink merges ports.
     // renders the audio between them. other (int rendered) is visited at each
     // step after the song's events, for the caller's own events (host MIDI);
     // it returns the position of its next event, or numSamples when none.
@@ -103,14 +106,24 @@ public:
     // block: every song event due in these `numSamples` goes to
     // send (const uint8_t* data, int size, int sampleOffset) at its own
     // sample, in file order; the caller then renders the block in one go.
+    // A four-argument sink receives (data, size, sampleOffset, port).
+    // The existing three-argument sink remains supported and merges ports.
     // other() sends the caller's own events (host MIDI) after the transport's
     // notes-off and resets and before the song's, for a synth whose clock
     // never goes back.
     template <typename SendAt, typename Other>
     void processStamped (int numSamples, double sampleRate, SendAt&& send, Other&& other) noexcept
     {
-        auto sendNow = [&send] (const std::uint8_t* data, int size) { send (data, size, 0); };
-        applyCommands (sendNow);
+        if constexpr (std::is_invocable_v<SendAt&, const uint8_t*, int, int, int>)
+        {
+            auto sendNow = [&send] (const uint8_t* data, int size, int port) { send (data, size, 0, port); };
+            applyCommands (sendNow);
+        }
+        else
+        {
+            auto sendNow = [&send] (const uint8_t* data, int size) { send (data, size, 0); };
+            applyCommands (sendNow);
+        }
         other();
         if (playing.load (std::memory_order_relaxed) && active != nullptr && sampleRate > 0.0)
         {
@@ -121,7 +134,7 @@ public:
                 const auto& event = events[next++];
                 const auto offset = std::clamp (static_cast<int> ((event.seconds - position) * sampleRate),
                                                 0, std::max (0, numSamples - 1));
-                send (event.bytes.data(), static_cast<int> (event.bytes.size()), offset);
+                sendStamped (send, event.bytes.data(), static_cast<int> (event.bytes.size()), offset, event.port);
             }
             position = blockEnd;
             if (position > active->totalSeconds())
@@ -153,6 +166,20 @@ public:
     }
 
 private:
+    template <typename Send>
+    static void sendPort (Send& send, const uint8_t* data, int size, int port) noexcept
+    {
+        if constexpr (std::is_invocable_v<Send&, const uint8_t*, int, int>) send (data, size, port);
+        else send (data, size);
+    }
+
+    template <typename Send>
+    static void sendStamped (Send& send, const uint8_t* data, int size, int offset, int port) noexcept
+    {
+        if constexpr (std::is_invocable_v<Send&, const uint8_t*, int, int, int>) send (data, size, offset, port);
+        else send (data, size, offset);
+    }
+
     enum : std::uint32_t { loadCommand = 1u << 0, pauseCommand = 1u << 1, stopCommand = 1u << 2 };
 
     template <typename Send>
@@ -166,21 +193,40 @@ private:
     void applyCommands (Send& send) noexcept
     {
         const auto pendingCommands = commands.exchange (0, std::memory_order_acq_rel);
+        auto resetPorts = activePorts;
+        if ((pendingCommands & loadCommand) != 0)
+        {
+            const auto* replacement = pending.load (std::memory_order_acquire);
+            activePorts.reset();
+            activePorts.set (0);
+            if (replacement != nullptr)
+                for (const auto& event : replacement->events) activePorts.set (event.port);
+            resetPorts |= activePorts;
+        }
+        auto broadcast = [&] (const uint8_t* data, int size)
+        {
+            if constexpr (std::is_invocable_v<Send&, const uint8_t*, int, int>)
+            {
+                for (int port = 0; port < 256; ++port)
+                    if (resetPorts.test (static_cast<std::size_t> (port))) send (data, size, port);
+            }
+            else send (data, size);
+        };
         if ((pendingCommands & loadCommand) != 0)
         {
             // A new sequence must not inherit notes or controllers from the last.
             active = pending.load (std::memory_order_acquire);
             position = 0.0;
             next = 0;
-            sendAllNotesOff (send);
-            sendResetAllControllers (send);
+            sendAllNotesOff (broadcast);
+            sendResetAllControllers (broadcast);
         }
         if ((pendingCommands & pauseCommand) != 0)
-            sendAllNotesOff (send);
+            sendAllNotesOff (broadcast);
         if ((pendingCommands & stopCommand) != 0)
         {
-            sendAllNotesOff (send);
-            sendResetAllControllers (send);
+            sendAllNotesOff (broadcast);
+            sendResetAllControllers (broadcast);
             position = 0.0;
             next = 0;
         }
@@ -202,7 +248,7 @@ private:
         while (next < active->events.size() && active->events[next].seconds <= position)
         {
             const auto& event = active->events[next++];
-            send (event.bytes.data(), static_cast<int> (event.bytes.size()));
+            sendPort (send, event.bytes.data(), static_cast<int> (event.bytes.size()), event.port);
         }
     }
 
@@ -213,6 +259,7 @@ private:
 
     // Audio thread only.
     const SequenceFile* active = nullptr;
+    std::bitset<256> activePorts { 1 };
     double position = 0.0;
     std::size_t next = 0;
 };

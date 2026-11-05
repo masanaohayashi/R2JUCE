@@ -11,3 +11,10 @@ target_compile_definitions(r2_character_lcd_tests PRIVATE JUCE_WEB_BROWSER=0 JUC
 target_link_libraries(r2_character_lcd_tests PRIVATE juce::juce_gui_basics)
 enable_testing()
 add_test(NAME character_lcd COMMAND r2_character_lcd_tests)
+
+add_executable(r2_sequence_port_tests SequencePortTests.cpp
+    ../modules/R2JUCE/src/R2SequenceFile.cpp
+    ../modules/R2JUCE/src/R2RcpFile.cpp
+    ../modules/R2JUCE/src/R2WrdFile.cpp)
+target_compile_features(r2_sequence_port_tests PRIVATE cxx_std_20)
+add_test(NAME sequence_ports COMMAND r2_sequence_port_tests "${CMAKE_CURRENT_BINARY_DIR}")

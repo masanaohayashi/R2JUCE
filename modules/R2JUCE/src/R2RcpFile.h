@@ -18,5 +18,6 @@ bool isRcpV2 (const std::vector<std::uint8_t>& data) noexcept;
 bool loadRcpV2 (const std::vector<std::uint8_t>& data,
                 r2juce::SequenceFile& destination,
                 std::string& error,
-                const std::string& sourcePath = {});
+                const std::string& sourcePath = {},
+                bool dualMidiSystem = false);
 }

@@ -40,6 +40,7 @@ struct RcpEvent
 struct RcpTrack
 {
     int channel = -1;
+    std::uint8_t port = 0;
     int transposition = 0;
     int startTick = 0;
     std::uint8_t rawStartTick = 0;
@@ -63,6 +64,7 @@ struct TimedEvent
     std::int64_t tick;
     std::uint64_t order;
     std::vector<std::uint8_t> bytes;
+    std::uint8_t port = 0;
 };
 
 struct TempoModifier
@@ -190,6 +192,7 @@ bool parseRcpDocument (const std::vector<std::uint8_t>& data,
 
         RcpTrack track;
         const auto rawChannel = data[offset + 4];
+        track.port = (rawChannel & 0x10) != 0 ? 1 : 0;
         track.channel = (rawChannel == 0xff || (rawChannel & 0x80) != 0)
                       ? -1
                       : static_cast<int> (rawChannel & 0x0f);
@@ -1059,6 +1062,7 @@ private:
     std::string& error;
 
     int channel = -1;
+    std::uint8_t port = 0;
     std::uint8_t yamahaDevice = 0;
     std::uint8_t yamahaModel = 0;
     std::uint8_t yamahaBaseHigh = 0;
@@ -1259,7 +1263,8 @@ bool isRcpV2 (const std::vector<std::uint8_t>& data) noexcept
 bool loadRcpV2 (const std::vector<std::uint8_t>& data,
                 SequenceFile& destination,
                 std::string& error,
-                const std::string& sourcePath)
+                const std::string& sourcePath,
+                bool dualMidiSystem)
 {
     destination.clear();
     error.clear();
@@ -1279,15 +1284,20 @@ bool loadRcpV2 (const std::vector<std::uint8_t>& data,
     std::uint64_t order = 0;
     std::int64_t maximumTick = 0;
 
-    for (const auto& track : document.tracks)
+    for (std::size_t index = 0; index < document.tracks.size(); ++index)
     {
+        const auto& track = document.tracks[index];
         if (track.muted)
             continue;
 
+        const auto firstEvent = timedEvents.size();
         TrackExpander expander (document, track, timedEvents, tempoModifiers,
                                 order, maximumTick, error);
         if (! expander.run())
             return false;
+        // R36 uses two 18-track banks; explicit B channels also work in RCP.
+        const auto port = std::uint8_t (track.port == 1 || (dualMidiSystem && index >= 18));
+        for (auto i = firstEvent; i < timedEvents.size(); ++i) timedEvents[i].port = port;
     }
 
     if (timedEvents.empty())
@@ -1313,7 +1323,7 @@ bool loadRcpV2 (const std::vector<std::uint8_t>& data,
         }
 
         destination.events.push_back ({ timeline.secondsAt (event.tick),
-                                        std::move (event.bytes) });
+                                        std::move (event.bytes), event.port });
         destination.songEndSeconds = std::max (destination.songEndSeconds,
                                                 timeline.secondsAt (event.tick));
     }

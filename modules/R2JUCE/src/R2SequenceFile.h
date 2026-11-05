@@ -21,6 +21,7 @@ struct SequenceEvent
 {
     double seconds;
     std::vector<uint8_t> bytes;
+    std::uint8_t port = 0; // 0 = MIDI A, 1 = MIDI B; SMF port meta events are preserved.
 };
 
 /**

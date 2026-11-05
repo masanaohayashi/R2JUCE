@@ -102,3 +102,16 @@ one go.
 Loading or stopping releases every note and resets the controllers; pausing
 releases the notes. At the end of the song (plus one bar of tail) playback
 rewinds and stops, and `takeFinished()` reports it once.
+
+## Sequence MIDI ports
+
+`SequenceEvent::port` preserves the destination (0 = A, 1 = B). RCP explicit B
+channels and case-insensitive `.r36` files are supported; R36 tracks 19–36 use B.
+SMF MIDI Port meta events also set the destination for subsequent track events.
+R36 filenames inside MDF archives retain this behaviour.
+
+`SequencePlayer::processStamped` accepts a `(data, size, sampleOffset, port)`
+sink; `process` accepts `(data, size, port)`. Older sinks without a port argument
+remain supported and merge destinations. Transport note-off/reset messages reach
+ports used by both the old and replacement song. File parsing stays off audio;
+playback and transport dispatch run in the caller's audio callback.
