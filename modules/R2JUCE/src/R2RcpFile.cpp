@@ -591,8 +591,10 @@ public:
 
                 case 0x98:
                 {
-                    std::vector<std::uint8_t> body { event.param1, event.param2 };
-                    body.reserve (body.size() + 2 * (track.events.size() - index - 1));
+                    // The data starts in the following F7 events. The 98 event's own two bytes are the
+                    // values for the 0x80/0x81 placeholders, not data: XG System On is 98 + F7 "43 10" ...
+                    std::vector<std::uint8_t> body;
+                    body.reserve (2 * (track.events.size() - index - 1));
                     auto next = index + 1;
                     while (next < track.events.size()
                            && track.events[next].command == 0xf7)
