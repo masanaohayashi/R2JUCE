@@ -105,10 +105,10 @@ rewinds and stops, and `takeFinished()` reports it once.
 
 ## Sequence MIDI ports
 
-`SequenceEvent::port` preserves the destination (0 = A, 1 = B). RCP explicit B
-channels and case-insensitive `.r36` files are supported; R36 tracks 19–36 use B.
-SMF MIDI Port meta events also set the destination for subsequent track events.
-R36 filenames inside MDF archives retain this behaviour.
+`SequenceEvent::port` preserves the destination (0 = A, 1 = B). In RCP and R36
+files each track's channel byte carries the port (0x00–0x0F = A, 0x10–0x1F = B),
+whatever the track's position. SMF MIDI Port meta events also set the destination
+for subsequent track events. The same holds for R36 files inside MDF archives.
 
 `SequencePlayer::processStamped` accepts a `(data, size, sampleOffset, port)`
 sink; `process` accepts `(data, size, port)`. Older sinks without a port argument

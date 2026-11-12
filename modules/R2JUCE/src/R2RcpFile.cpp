@@ -1295,8 +1295,11 @@ bool loadRcpV2 (const std::vector<std::uint8_t>& data,
                                 order, maximumTick, error);
         if (! expander.run())
             return false;
-        // R36 uses two 18-track banks; explicit B channels also work in RCP.
-        const auto port = std::uint8_t (track.port == 1 || (dualMidiSystem && index >= 18));
+        // The port is part of each track's channel byte (0x00-0x0F = A, 0x10-0x1F = B), in R36 as in RCP.
+        // Real R36 songs put port-A tracks after track 18 (e.g. a System Exclusive track on A1), so the
+        // track position must not decide the port.
+        static_cast<void> (dualMidiSystem);
+        const auto port = std::uint8_t (track.port == 1);
         for (auto i = firstEvent; i < timedEvents.size(); ++i) timedEvents[i].port = port;
     }
 
